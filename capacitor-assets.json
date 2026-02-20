@@ -1,0 +1,18 @@
+{
+  "resources": {
+    "icon": {
+      "sources": ["icon.svg"],
+      "targets": {
+        "android": {
+          "sources": ["icon.svg"]
+        },
+        "ios": {
+          "sources": ["icon.svg"]
+        },
+        "pwa": {
+          "sources": ["icon.svg"]
+        }
+      }
+    }
+  }
+}
