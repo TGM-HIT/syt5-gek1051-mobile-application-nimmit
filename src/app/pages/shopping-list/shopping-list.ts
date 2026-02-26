@@ -1,7 +1,10 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check } from 'lucide-angular';
+import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2 } from 'lucide-angular';
 import { ShoppingItem, FilterType } from '../../models';
+import { ShoppingListService, ModalService } from '../../services';
+import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-item-modal/add-item-modal';
+import { EditListModal, EditListData, EditListResult } from '../../components/edit-list-modal/edit-list-modal';
 
 @Component({
   selector: 'app-shopping-list',
@@ -10,92 +13,37 @@ import { ShoppingItem, FilterType } from '../../models';
   styleUrl: './shopping-list.scss',
 })
 export class ShoppingList {
+  private readonly shoppingListService = inject(ShoppingListService);
+  private readonly modalService = inject(ModalService);
+
   // Lucide Icons
-  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check };
+  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2 };
 
-  // Liste Daten
-  readonly listName = signal('Franz Geburtstagsfreier');
-  readonly ownerName = signal('Franz Geburtstagsfreier');
+  // Liste Daten aus Service
+  readonly listName = this.shoppingListService.listName;
+  readonly listDescription = this.shoppingListService.listDescription;
 
-  // Such- und Filter-State
+  // Such- und Filter-State (lokal)
   readonly searchQuery = signal('');
   readonly activeFilter = signal<FilterType>('all');
   readonly expandedItemId = signal<string | null>(null);
 
-  // Mock-Daten für die Einkaufsliste
-  readonly items = signal<ShoppingItem[]>([
-    {
-      id: '1',
-      name: 'Stiegl Alkoholfrei',
-      category: 'Getränke',
-      totalQuantity: 6,
-      purchasedQuantity: 0,
-      info: 'Bitte das grüne kaufen ty.',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: '2',
-      name: 'Baccardi Razz',
-      category: 'Getränke',
-      totalQuantity: 3,
-      purchasedQuantity: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: '3',
-      name: 'Stiegl Alkoholfrei',
-      category: 'Getränke',
-      totalQuantity: 6,
-      purchasedQuantity: 6,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ]);
+  // Items aus Service
+  readonly items = this.shoppingListService.items;
 
   // Computed: Gefilterte Items
   readonly filteredItems = computed(() => {
-    let result = this.items();
-    const query = this.searchQuery().toLowerCase();
-
-    // Suchfilter
-    if (query) {
-      result = result.filter(
-        (item) =>
-          item.name.toLowerCase().includes(query) ||
-          item.category.toLowerCase().includes(query)
-      );
-    }
-
-    // Tab-Filter
-    const filter = this.activeFilter();
-    if (filter === 'notPurchased') {
-      result = result.filter((item) => item.purchasedQuantity < item.totalQuantity);
-    } else if (filter === 'purchased') {
-      result = result.filter((item) => item.purchasedQuantity >= item.totalQuantity);
-    }
-
-    return result;
+    return this.shoppingListService.getFilteredItems(
+      this.activeFilter(),
+      this.searchQuery()
+    );
   });
 
-  // Computed: Counts für Tabs
-  readonly allCount = computed(() => this.items().length);
-
-  readonly notPurchasedCount = computed(
-    () => this.items().filter((item) => item.purchasedQuantity < item.totalQuantity).length
-  );
-
-  readonly purchasedCount = computed(
-    () => this.items().filter((item) => item.purchasedQuantity >= item.totalQuantity).length
-  );
-
-  // Computed: Progress Bar Werte
-  readonly progressPercentage = computed(() => {
-    const total = this.allCount();
-    if (total === 0) return 0;
-    return (this.purchasedCount() / total) * 100;
-  });
+  // Computed: Counts für Tabs aus Service
+  readonly allCount = this.shoppingListService.allCount;
+  readonly notPurchasedCount = this.shoppingListService.notPurchasedCount;
+  readonly purchasedCount = this.shoppingListService.purchasedCount;
+  readonly progressPercentage = this.shoppingListService.progressPercentage;
 
   // Item expandieren/kollabieren
   toggleExpand(itemId: string): void {
@@ -117,33 +65,62 @@ export class ShoppingList {
 
   // Item als gekauft markieren
   markAsPurchased(item: ShoppingItem): void {
-    this.items.update((items) =>
-      items.map((i) =>
-        i.id === item.id ? { ...i, purchasedQuantity: i.totalQuantity, updatedAt: new Date() } : i
-      )
-    );
+    this.shoppingListService.markAsPurchased(item.id);
     this.expandedItemId.set(null);
   }
 
-  // Item bearbeiten (placeholder)
-  editItem(item: ShoppingItem): void {
-    console.log('Edit item:', item);
-    // TODO: Implement edit modal/page
+  // Item als nicht gekauft markieren
+  markAsNotPurchased(item: ShoppingItem): void {
+    this.shoppingListService.markAsNotPurchased(item.id);
+    this.expandedItemId.set(null);
+  }
+
+  // Item bearbeiten
+  async editItem(item: ShoppingItem): Promise<void> {
+    const result = await this.modalService.open<AddItemData, AddItemResult>({
+      component: AddItemModal,
+      data: { editItem: item }
+    });
+
+    if (result && result.id) {
+      this.shoppingListService.updateItem(result.id, {
+        name: result.name,
+        category: result.category,
+        totalQuantity: result.quantity,
+        info: result.info
+      });
+    }
+    this.expandedItemId.set(null);
   }
 
   // Item löschen
   deleteItem(item: ShoppingItem): void {
-    this.items.update((items) => items.filter((i) => i.id !== item.id));
+    this.shoppingListService.deleteItem(item.id);
     this.expandedItemId.set(null);
   }
 
   // Prüfen ob Item gekauft ist
   isPurchased(item: ShoppingItem): boolean {
-    return item.purchasedQuantity >= item.totalQuantity;
+    return this.shoppingListService.isPurchased(item);
   }
 
   // Status Text generieren
   getStatusText(item: ShoppingItem): string {
-    return `${item.purchasedQuantity} von ${item.totalQuantity} gekauft`;
+    return this.shoppingListService.getStatusText(item);
+  }
+
+  // Listennamen und Beschreibung bearbeiten
+  async editListInfo(): Promise<void> {
+    const result = await this.modalService.open<EditListData, EditListResult>({
+      component: EditListModal,
+      data: {
+        name: this.listName(),
+        description: this.listDescription()
+      }
+    });
+
+    if (result) {
+      this.shoppingListService.updateListInfo(result.name, result.description);
+    }
   }
 }

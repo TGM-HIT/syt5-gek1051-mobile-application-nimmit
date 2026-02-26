@@ -1,8 +1,13 @@
 <div class="shopping-list-page">
   <!-- Header -->
   <header class="list-header">
-    <h1 class="list-title">{{ listName() }}</h1>
-    <p class="list-owner">{{ ownerName() }}</p>
+    <div class="list-header-content">
+      <h1 class="list-title">{{ listName() }}</h1>
+      <p class="list-description">{{ listDescription() }}</p>
+    </div>
+    <button class="edit-list-btn" (click)="editListInfo()">
+      <lucide-icon [img]="icons.Pencil" [size]="20" [strokeWidth]="2"></lucide-icon>
+    </button>
   </header>
 
   <!-- Suchfeld -->
@@ -120,6 +125,27 @@
             </div>
             <lucide-icon class="expand-icon" [class.rotated]="isExpanded(item.id)" [img]="icons.ChevronDown" [size]="24" [strokeWidth]="2"></lucide-icon>
           </button>
+
+          <!-- Expandierter Inhalt für gekaufte Items -->
+          @if (isExpanded(item.id)) {
+            <div class="item-expanded">
+              @if (item.info) {
+                <div class="item-info-section">
+                  <h4>Informationen</h4>
+                  <p>{{ item.info }}</p>
+                </div>
+              }
+
+              <div class="item-actions">
+                <button class="action-btn delete" (click)="deleteItem(item)">
+                  <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
+                </button>
+                <button class="action-btn undo" (click)="markAsNotPurchased(item)">
+                  <lucide-icon [img]="icons.Undo2" [size]="24" [strokeWidth]="2"></lucide-icon>
+                </button>
+              </div>
+            </div>
+          }
         </div>
       }
     }
