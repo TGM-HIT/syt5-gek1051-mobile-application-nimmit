@@ -1,19 +1,19 @@
 @use '../../../theme' as *;
 
 .modal-content {
-  padding: $spacing-6;
-  padding-bottom: calc($spacing-6 + env(safe-area-inset-bottom, 0px));
+  padding: var(--spacing-6);
+  padding-bottom: calc(var(--spacing-6) + env(safe-area-inset-bottom, 0px));
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: $spacing-6;
+  margin-bottom: var(--spacing-6);
 }
 
 .modal-title {
-  font-size: $font-size-xl;
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--color-text);
   margin: 0;
@@ -27,7 +27,7 @@
   height: 40px;
   border: none;
   background-color: var(--color-elevated);
-  border-radius: $radius-default;
+  border-radius: var(--radius-default);
   color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -41,16 +41,16 @@
 .modal-form {
   display: flex;
   flex-direction: column;
-  gap: $spacing-5;
+  gap: var(--spacing-5);
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: $spacing-2;
+  gap: var(--spacing-2);
 
   label {
-    font-size: $font-size-sm;
+    font-size: var(--font-size-sm);
     font-weight: 500;
     color: var(--color-text-secondary);
   }
@@ -59,12 +59,12 @@
 .form-input,
 .form-textarea {
   width: 100%;
-  padding: $spacing-3 $spacing-4;
-  font-size: $font-size-base;
+  padding: var(--spacing-3) var(--spacing-4);
+  font-size: var(--font-size-base);
   color: var(--color-text);
   background-color: var(--color-elevated);
   border: 1px solid var(--color-border);
-  border-radius: $radius-default;
+  border-radius: var(--radius-default);
   outline: none;
   transition: border-color 0.2s ease;
 
@@ -84,14 +84,14 @@
 
 .submit-btn {
   width: 100%;
-  padding: $spacing-4;
-  margin-top: $spacing-2;
-  font-size: $font-size-base;
+  padding: var(--spacing-4);
+  margin-top: var(--spacing-2);
+  font-size: var(--font-size-base);
   font-weight: 600;
   color: #fff;
   background-color: var(--color-primary-500);
   border: none;
-  border-radius: $radius-default;
+  border-radius: var(--radius-default);
   cursor: pointer;
   transition: all 0.2s ease;
 

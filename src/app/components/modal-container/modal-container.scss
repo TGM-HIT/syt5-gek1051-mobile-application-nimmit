@@ -24,14 +24,14 @@
   max-width: 100%;
   max-height: 90vh;
   background-color: var(--color-surface);
-  border-radius: $radius-lg $radius-lg 0 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   overflow: hidden;
   transform: translateY(100%);
   animation: slideUp 0.3s ease forwards;
 
   @include screen-md {
     max-width: 500px;
-    border-radius: $radius-lg;
+    border-radius: var(--radius-lg);
     transform: scale(0.9);
     animation: scaleIn 0.2s ease forwards;
   }

@@ -2,7 +2,7 @@
 
 .shopping-list-page {
   min-height: 100vh;
-  padding: $spacing-4;
+  padding: var(--spacing-4);
   padding-bottom: 100px; // Platz für Navigation
   background-color: var(--color-background);
 }
@@ -12,8 +12,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: $spacing-3;
-  margin-bottom: $spacing-4;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
 }
 
 .list-header-content {
@@ -21,14 +21,14 @@
   min-width: 0;
 
   .list-title {
-    font-size: $font-size-2xl;
+    font-size: var(--font-size-2xl);
     font-weight: 700;
     color: var(--color-text);
-    margin: 0 0 $spacing-1 0;
+    margin: 0 0 var(--spacing-1) 0;
   }
 
   .list-description {
-    font-size: $font-size-sm;
+    font-size: var(--font-size-sm);
     color: var(--color-text-muted);
     margin: 0;
   }
@@ -43,7 +43,7 @@
   flex-shrink: 0;
   border: none;
   background-color: var(--color-elevated);
-  border-radius: $radius-default;
+  border-radius: var(--radius-default);
   color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -56,7 +56,7 @@
 
 // Suchfeld
 .search-container {
-  margin-bottom: $spacing-4;
+  margin-bottom: var(--spacing-4);
 }
 
 .search-input-wrapper {
@@ -67,7 +67,7 @@
 
 .search-icon {
   position: absolute;
-  left: $spacing-4;
+  left: var(--spacing-4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -77,12 +77,12 @@
 
 .search-input {
   width: 100%;
-  padding: $spacing-3 $spacing-4 $spacing-3 $spacing-12;
-  font-size: $font-size-base;
+  padding: var(--spacing-3) var(--spacing-4) var(--spacing-3) var(--spacing-12);
+  font-size: var(--font-size-base);
   color: var(--color-text);
   background-color: var(--color-surface);
   border: 3px solid var(--color-border);
-  border-radius: $radius-full;
+  border-radius: var(--radius-full);
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
@@ -148,8 +148,8 @@
 .progress-bar {
   display: flex;
   height: 4px;
-  margin-bottom: $spacing-6;
-  border-radius: $radius-full;
+  margin-bottom: var(--spacing-6);
+  border-radius: var(--radius-full);
   overflow: hidden;
   background-color: var(--color-border);
 }
@@ -164,18 +164,23 @@
   transition: width 0.3s ease;
 }
 
+.progress-empty {
+  background-color: var(--color-neutral-500);
+  transition: width 0.3s ease;
+}
+
 // Items Container
 .items-container {
   display: flex;
   flex-direction: column;
-  gap: $spacing-3;
+  gap: var(--spacing-3);
 }
 
 // Item Card
 .item-card {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: $radius-md;
+  border-radius: var(--radius-md);
   overflow: hidden;
   transition: border-color 0.2s ease;
 
@@ -198,7 +203,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: $spacing-4;
+  padding: var(--spacing-4);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -210,7 +215,7 @@
 }
 
 .item-name {
-  font-size: $font-size-lg;
+  font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--color-text);
   margin: 0 0 var(--spacing-2) 0;
@@ -234,7 +239,7 @@
 }
 
 .item-status {
-  font-size: $font-size-sm;
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
 
@@ -253,7 +258,7 @@
 
 // Expanded Content
 .item-expanded {
-  padding: 0 $spacing-4 $spacing-4;
+  padding: 0 var(--spacing-4) var(--spacing-4);
   border-top: 1px solid var(--color-border);
 }
 
@@ -268,7 +273,7 @@
   }
 
   p {
-    font-size: $font-size-sm;
+    font-size: var(--font-size-sm);
     margin: 0;
   }
 }
@@ -276,8 +281,8 @@
 // Action Buttons
 .item-actions {
   display: flex;
-  gap: $spacing-3;
-  padding-top: $spacing-3;
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-3);
 }
 
 .action-btn {
@@ -286,7 +291,7 @@
   align-items: center;
   justify-content: center;
   height: 48px;
-  border-radius: $radius-default;
+  border-radius: var(--radius-default);
   cursor: pointer;
   transition: all 0.2s ease;
 
@@ -341,8 +346,8 @@
 .section-divider {
   display: flex;
   align-items: center;
-  gap: $spacing-3;
-  padding: $spacing-2 0;
+  gap: var(--spacing-3);
+  padding: var(--spacing-2) 0;
 
   &::before,
   &::after {
@@ -353,7 +358,7 @@
   }
 
   span {
-    font-size: $font-size-sm;
+    font-size: var(--font-size-sm);
     color: var(--color-text-muted);
     white-space: nowrap;
   }

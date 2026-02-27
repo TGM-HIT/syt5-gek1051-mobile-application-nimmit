@@ -55,8 +55,12 @@
 
   <!-- Progress Bar -->
   <div class="progress-bar">
-    <div class="progress-purchased" [style.width.%]="progressPercentage()"></div>
-    <div class="progress-remaining" [style.width.%]="100 - progressPercentage()"></div>
+    @if(allCount() > 0) {
+        <div class="progress-purchased" [style.width.%]="progressPercentage()"></div>
+        <div class="progress-remaining" [style.width.%]="100 - progressPercentage()"></div>
+    } @else {
+        <div class="progress-empty" style="width: 100%;"></div>
+    }
   </div>
 
   <!-- Items Liste -->

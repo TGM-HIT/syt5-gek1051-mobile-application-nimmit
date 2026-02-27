@@ -1,19 +1,19 @@
 @use '../../../theme' as *;
 
 .modal-content {
-  padding: $spacing-6;
-  padding-bottom: calc($spacing-6 + env(safe-area-inset-bottom, 0px));
+  padding: var(--spacing-6);
+  padding-bottom: calc(var(--spacing-6) + env(safe-area-inset-bottom, 0px));
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: $spacing-6;
+  margin-bottom: var(--spacing-6);
 }
 
 .modal-title {
-  font-size: $font-size-xl;
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--color-text);
   margin: 0;
@@ -27,7 +27,7 @@
   height: 40px;
   border: none;
   background-color: var(--color-elevated);
-  border-radius: $radius-default;
+  border-radius: var(--radius-default);
   color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -41,16 +41,16 @@
 .modal-form {
   display: flex;
   flex-direction: column;
-  gap: $spacing-5;
+  gap: var(--spacing-5);
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: $spacing-2;
+  gap: var(--spacing-2);
 
   label {
-    font-size: $font-size-sm;
+    font-size: var(--font-size-sm);
     font-weight: 500;
     color: var(--color-text-secondary);
   }
@@ -60,12 +60,12 @@
 .form-select,
 .form-textarea {
   width: 100%;
-  padding: $spacing-3 $spacing-4;
-  font-size: $font-size-base;
+  padding: var(--spacing-3) var(--spacing-4);
+  font-size: var(--font-size-base);
   color: var(--color-text);
   background-color: var(--color-elevated);
   border: 1px solid var(--color-border);
-  border-radius: $radius-default;
+  border-radius: var(--radius-default);
   outline: none;
   transition: border-color 0.2s ease;
 
@@ -83,9 +83,43 @@
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right $spacing-3 center;
+  background-position: right var(--spacing-3) center;
   background-size: 20px;
-  padding-right: $spacing-10;
+  padding-right: var(--spacing-10);
+
+  // Style for dropdown options
+  option {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--font-size-base);
+
+    &:hover,
+    &:focus,
+    &:checked {
+      background-color: var(--color-primary-500);
+      color: #fff;
+    }
+  }
+}
+
+// Custom select wrapper for better cross-browser support
+.select-wrapper {
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    right: var(--spacing-4);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid var(--color-text-muted);
+  }
 }
 
 .form-textarea {
@@ -96,7 +130,7 @@
 .quantity-control {
   display: flex;
   align-items: center;
-  gap: $spacing-4;
+  gap: var(--spacing-4);
   width: fit-content;
 }
 
@@ -108,7 +142,7 @@
   height: 44px;
   border: 1px solid var(--color-border);
   background-color: var(--color-elevated);
-  border-radius: $radius-default;
+  border-radius: var(--radius-default);
   color: var(--color-text);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -126,7 +160,7 @@
 
 .quantity-value {
   min-width: 48px;
-  font-size: $font-size-xl;
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--color-text);
   text-align: center;
@@ -134,14 +168,14 @@
 
 .submit-btn {
   width: 100%;
-  padding: $spacing-4;
-  margin-top: $spacing-2;
-  font-size: $font-size-base;
+  padding: var(--spacing-4);
+  margin-top: var(--spacing-2);
+  font-size: var(--font-size-base);
   font-weight: 600;
   color: #fff;
   background-color: var(--color-primary-500);
   border: none;
-  border-radius: $radius-default;
+  border-radius: var(--radius-default);
   cursor: pointer;
   transition: all 0.2s ease;
 
