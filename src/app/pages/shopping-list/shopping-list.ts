@@ -23,19 +23,37 @@ export class ShoppingList {
   readonly listName = this.shoppingListService.listName;
   readonly listDescription = this.shoppingListService.listDescription;
 
+  // Verfügbare Kategorien
+  readonly categories = [
+    'Getränke',
+    'Obst & Gemüse',
+    'Milchprodukte',
+    'Fleisch & Fisch',
+    'Backwaren',
+    'Tiefkühl',
+    'Süßigkeiten',
+    'Haushalt',
+    'Sonstiges'
+  ];
+
   // Such- und Filter-State (lokal)
   readonly searchQuery = signal('');
   readonly activeFilter = signal<FilterType>('all');
   readonly expandedItemId = signal<string | null>(null);
+  readonly selectedCategories = signal<string[]>([]);
 
   // Items aus Service
   readonly items = this.shoppingListService.items;
+
+  // Computed: Hat Kategorie-Filter aktiv
+  readonly hasCategoryFilter = computed(() => this.selectedCategories().length > 0);
 
   // Computed: Gefilterte Items
   readonly filteredItems = computed(() => {
     return this.shoppingListService.getFilteredItems(
       this.activeFilter(),
-      this.searchQuery()
+      this.searchQuery(),
+      this.selectedCategories()
     );
   });
 
@@ -61,6 +79,21 @@ export class ShoppingList {
   // Filter setzen
   setFilter(filter: FilterType): void {
     this.activeFilter.set(filter);
+  }
+
+  // Kategorie togglen
+  toggleCategory(category: string): void {
+    const current = this.selectedCategories();
+    if (current.includes(category)) {
+      this.selectedCategories.set(current.filter(c => c !== category));
+    } else {
+      this.selectedCategories.set([...current, category]);
+    }
+  }
+
+  // Prüfen ob Kategorie ausgewählt ist
+  isCategorySelected(category: string): boolean {
+    return this.selectedCategories().includes(category);
   }
 
   // Item als gekauft markieren

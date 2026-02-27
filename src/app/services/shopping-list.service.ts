@@ -143,9 +143,9 @@ export class ShoppingListService {
   }
 
   /**
-   * Filtert Items basierend auf Filter-Typ und Suchbegriff
+   * Filtert Items basierend auf Filter-Typ, Suchbegriff und Kategorien
    */
-  getFilteredItems(filter: FilterType, searchQuery: string): ShoppingItem[] {
+  getFilteredItems(filter: FilterType, searchQuery: string, selectedCategories: string[] = []): ShoppingItem[] {
     let result = this._items();
 
     // Suchfilter
@@ -156,6 +156,11 @@ export class ShoppingListService {
           item.name.toLowerCase().includes(query) ||
           item.category.toLowerCase().includes(query)
       );
+    }
+
+    // Kategorie-Filter
+    if (selectedCategories.length > 0) {
+      result = result.filter(item => selectedCategories.includes(item.category));
     }
 
     // Tab-Filter
