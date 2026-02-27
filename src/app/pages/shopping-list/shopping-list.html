@@ -22,6 +22,9 @@
         (ngModelChange)="searchQuery.set($event)"
       />
     </div>
+    <button class="add-item-btn" (click)="addNewItem()">
+      <lucide-icon [img]="icons.Plus" [size]="24" [strokeWidth]="2"></lucide-icon>
+    </button>
   </div>
 
   <!-- Filter Tabs -->
@@ -79,6 +82,17 @@
 
   <!-- Items Liste -->
   <div class="items-container">
+    <!-- Keine Ergebnisse gefunden -->
+    @if (hasNoResults()) {
+      <div class="no-results">
+        <p>Kein Produkt gefunden</p>
+        <button class="add-not-found-btn" (click)="addNewItem(searchQuery())">
+          <lucide-icon [img]="icons.Plus" [size]="20" [strokeWidth]="2"></lucide-icon>
+          <span>"{{ searchQuery() }}" hinzufügen</span>
+        </button>
+      </div>
+    }
+
     <!-- Nicht gekaufte Items -->
     @for (item of filteredItems(); track item.id) {
       @if (!isPurchased(item)) {
@@ -134,6 +148,17 @@
                   <button class="action-btn edit" (click)="editItem(item)">
                     <lucide-icon [img]="icons.Pencil" [size]="24" [strokeWidth]="2"></lucide-icon>
                   </button>
+                  @if (item.totalQuantity > 1) {
+                    <div class="quantity-controls">
+                      <button class="quantity-btn" [disabled]="item.purchasedQuantity === 0" (click)="decrementQuantity(item)">
+                        <lucide-icon [img]="icons.Minus" [size]="18" [strokeWidth]="2"></lucide-icon>
+                      </button>
+                      <span class="quantity-display">{{ item.purchasedQuantity }}/{{ item.totalQuantity }}</span>
+                      <button class="quantity-btn" [disabled]="item.purchasedQuantity >= item.totalQuantity" (click)="incrementQuantity(item)">
+                        <lucide-icon [img]="icons.Plus" [size]="18" [strokeWidth]="2"></lucide-icon>
+                      </button>
+                    </div>
+                  }
                   <button class="action-btn confirm" (click)="markAsPurchased(item)">
                     <lucide-icon [img]="icons.Check" [size]="24" [strokeWidth]="2.5"></lucide-icon>
                   </button>

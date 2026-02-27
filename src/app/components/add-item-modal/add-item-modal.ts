@@ -6,6 +6,7 @@ import { ShoppingItem, Unit } from '../../models';
 
 export interface AddItemData {
   editItem?: ShoppingItem;
+  prefillName?: string;
 }
 
 export interface AddItemResult {
@@ -83,6 +84,8 @@ export class AddItemModal implements OnInit {
       this.info.set(item.info || '');
       this.size.set(item.size);
       this.unit.set(item.unit || 'Einheit');
+    } else if (inputData?.prefillName) {
+      this.name.set(inputData.prefillName);
     }
   }
 

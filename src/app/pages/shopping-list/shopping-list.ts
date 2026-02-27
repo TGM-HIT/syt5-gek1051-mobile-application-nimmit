@@ -1,6 +1,6 @@
 import { Component, computed, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2 } from 'lucide-angular';
+import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus } from 'lucide-angular';
 import { ShoppingItem, FilterType } from '../../models';
 import { ShoppingListService, ModalService } from '../../services';
 import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-item-modal/add-item-modal';
@@ -17,7 +17,7 @@ export class ShoppingList {
   private readonly modalService = inject(ModalService);
 
   // Lucide Icons
-  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2 };
+  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus };
 
   // Liste Daten aus Service
   readonly listName = this.shoppingListService.listName;
@@ -48,7 +48,7 @@ export class ShoppingList {
   private touchStartX = 0;
   private touchStartY = 0;
   private isSwiping = false;
-  private readonly SWIPE_THRESHOLD = 80;
+  private readonly SWIPE_THRESHOLD = 70;
 
   // Items aus Service
   readonly items = this.shoppingListService.items;
@@ -82,6 +82,11 @@ export class ShoppingList {
       this.searchQuery(),
       this.selectedCategories()
     );
+  });
+
+  // Computed: Keine Ergebnisse gefunden
+  readonly hasNoResults = computed(() => {
+    return this.searchQuery().trim().length > 0 && this.filteredItems().length === 0;
   });
 
   // Computed: Counts für Tabs aus Service
@@ -216,6 +221,35 @@ export class ShoppingList {
   markAsNotPurchased(item: ShoppingItem): void {
     this.shoppingListService.markAsNotPurchased(item.id);
     this.expandedItemId.set(null);
+  }
+
+  // Eingekaufte Menge erhöhen
+  incrementQuantity(item: ShoppingItem): void {
+    this.shoppingListService.incrementPurchasedQuantity(item.id);
+  }
+
+  // Eingekaufte Menge verringern
+  decrementQuantity(item: ShoppingItem): void {
+    this.shoppingListService.decrementPurchasedQuantity(item.id);
+  }
+
+  // Neues Item hinzufügen
+  async addNewItem(prefillName?: string): Promise<void> {
+    const result = await this.modalService.open<AddItemData, AddItemResult>({
+      component: AddItemModal,
+      data: { prefillName }
+    });
+
+    if (result) {
+      this.shoppingListService.addItem({
+        name: result.name,
+        category: result.category,
+        totalQuantity: result.quantity,
+        info: result.info,
+        size: result.size,
+        unit: result.unit
+      });
+    }
   }
 
   // Item bearbeiten

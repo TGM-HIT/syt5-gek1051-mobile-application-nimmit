@@ -123,6 +123,32 @@ export class ShoppingListService {
   }
 
   /**
+   * Erhöht die eingekaufte Menge um 1
+   */
+  incrementPurchasedQuantity(itemId: string): void {
+    this._items.update(items =>
+      items.map(item =>
+        item.id === itemId && item.purchasedQuantity < item.totalQuantity
+          ? { ...item, purchasedQuantity: item.purchasedQuantity + 1, updatedAt: new Date() }
+          : item
+      )
+    );
+  }
+
+  /**
+   * Verringert die eingekaufte Menge um 1
+   */
+  decrementPurchasedQuantity(itemId: string): void {
+    this._items.update(items =>
+      items.map(item =>
+        item.id === itemId && item.purchasedQuantity > 0
+          ? { ...item, purchasedQuantity: item.purchasedQuantity - 1, updatedAt: new Date() }
+          : item
+      )
+    );
+  }
+
+  /**
    * Aktualisiert ein Item
    */
   updateItem(itemId: string, updates: Partial<ShoppingItem>): void {
