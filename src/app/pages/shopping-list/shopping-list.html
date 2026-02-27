@@ -53,10 +53,12 @@
         <span class="badge">{{ purchasedCount() }}</span>
       </button>
       <span class="tab-divider"></span>
-      @for (category of categories; track category) {
+      @for (category of sortedCategories(); track category) {
         <button
           class="category-tab"
           [class.active]="isCategorySelected(category)"
+          [class.disabled]="!isCategoryInList(category)"
+          [disabled]="!isCategoryInList(category)"
           (click)="toggleCategory(category)"
         >
           {{ category }}

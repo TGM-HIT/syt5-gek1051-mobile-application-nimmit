@@ -45,8 +45,27 @@ export class ShoppingList {
   // Items aus Service
   readonly items = this.shoppingListService.items;
 
+  // Computed: Kategorien die in der Liste existieren
+  readonly categoriesInList = computed(() => {
+    const items = this.items();
+    return new Set(items.map(item => item.category));
+  });
+
+  // Computed: Sortierte Kategorien (existierende zuerst, dann nicht-existierende)
+  readonly sortedCategories = computed(() => {
+    const inList = this.categoriesInList();
+    const existing = this.categories.filter(c => inList.has(c));
+    const notExisting = this.categories.filter(c => !inList.has(c));
+    return [...existing, ...notExisting];
+  });
+
   // Computed: Hat Kategorie-Filter aktiv
   readonly hasCategoryFilter = computed(() => this.selectedCategories().length > 0);
+
+  // Prüfen ob Kategorie in der Liste existiert
+  isCategoryInList(category: string): boolean {
+    return this.categoriesInList().has(category);
+  }
 
   // Computed: Gefilterte Items
   readonly filteredItems = computed(() => {
