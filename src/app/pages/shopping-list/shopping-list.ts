@@ -42,6 +42,14 @@ export class ShoppingList {
   readonly expandedItemId = signal<string | null>(null);
   readonly selectedCategories = signal<string[]>([]);
 
+  // Swipe State
+  readonly swipingItemId = signal<string | null>(null);
+  readonly swipeOffset = signal<number>(0);
+  private touchStartX = 0;
+  private touchStartY = 0;
+  private isSwiping = false;
+  private readonly SWIPE_THRESHOLD = 80;
+
   // Items aus Service
   readonly items = this.shoppingListService.items;
 
@@ -115,6 +123,89 @@ export class ShoppingList {
     return this.selectedCategories().includes(category);
   }
 
+  // Swipe Handling
+  onTouchStart(event: TouchEvent, itemId: string): void {
+    this.touchStartX = event.touches[0].clientX;
+    this.touchStartY = event.touches[0].clientY;
+    this.isSwiping = false;
+    this.swipingItemId.set(itemId);
+  }
+
+  onTouchMove(event: TouchEvent): void {
+    if (!this.swipingItemId()) return;
+
+    const deltaX = event.touches[0].clientX - this.touchStartX;
+    const deltaY = event.touches[0].clientY - this.touchStartY;
+
+    // Wenn vertikales Scrollen stärker ist, abbrechen
+    if (!this.isSwiping && Math.abs(deltaY) > Math.abs(deltaX)) {
+      this.resetSwipe();
+      return;
+    }
+
+    // Horizontales Swipen aktivieren
+    if (Math.abs(deltaX) > 10) {
+      this.isSwiping = true;
+    }
+
+    if (this.isSwiping) {
+      event.preventDefault();
+      // Limit swipe offset
+      const maxOffset = 70;
+      const offset = Math.max(-maxOffset, Math.min(maxOffset, deltaX));
+      this.swipeOffset.set(offset);
+    }
+  }
+
+  onTouchEnd(item: ShoppingItem): void {
+    const offset = this.swipeOffset();
+    
+    if (Math.abs(offset) >= this.SWIPE_THRESHOLD) {
+      if (this.isPurchased(item)) {
+        // Für gekaufte Items: links = undo, rechts = delete
+        if (offset > 0) {
+          // Swipe right - delete
+          this.shoppingListService.deleteItem(item.id);
+        } else {
+          // Swipe left - mark as not purchased
+          this.shoppingListService.markAsNotPurchased(item.id);
+        }
+      } else {
+        // Für nicht gekaufte Items: links = purchased, rechts = delete
+        if (offset > 0) {
+          // Swipe right - delete
+          this.shoppingListService.deleteItem(item.id);
+        } else {
+          // Swipe left - mark as purchased
+          this.shoppingListService.markAsPurchased(item.id);
+        }
+      }
+    }
+    
+    this.resetSwipe();
+  }
+
+  private resetSwipe(): void {
+    this.swipingItemId.set(null);
+    this.swipeOffset.set(0);
+    this.isSwiping = false;
+  }
+
+  getSwipeTransform(itemId: string): string {
+    if (this.swipingItemId() === itemId) {
+      return `translateX(${this.swipeOffset()}px)`;
+    }
+    return 'translateX(0)';
+  }
+
+  isSwipingLeft(itemId: string): boolean {
+    return this.swipingItemId() === itemId && this.swipeOffset() < -20;
+  }
+
+  isSwipingRight(itemId: string): boolean {
+    return this.swipingItemId() === itemId && this.swipeOffset() > 20;
+  }
+
   // Item als gekauft markieren
   markAsPurchased(item: ShoppingItem): void {
     this.shoppingListService.markAsPurchased(item.id);
@@ -139,7 +230,9 @@ export class ShoppingList {
         name: result.name,
         category: result.category,
         totalQuantity: result.quantity,
-        info: result.info
+        info: result.info,
+        size: result.size,
+        unit: result.unit
       });
     }
     this.expandedItemId.set(null);

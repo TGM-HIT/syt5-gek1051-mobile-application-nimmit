@@ -224,19 +224,76 @@
   gap: var(--spacing-3);
 }
 
+// Swipe Container
+.swipe-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+.swipe-actions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.swipe-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 100%;
+  color: white;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+
+  &.left {
+    background-color: var(--color-error);
+  }
+
+  &.right {
+    background-color: var(--color-accent-500);
+  }
+
+  &.delete {
+    background-color: var(--color-error);
+  }
+
+  &.undo {
+    background-color: var(--color-primary-500);
+  }
+
+  &.active {
+    opacity: 1;
+  }
+}
+
 // Item Card
 .item-card {
+  position: relative;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.15s ease;
+  z-index: 1;
+
+  &.swiping {
+    transition: none;
+  }
 
   &.purchased {
-    opacity: 0.7;
-
     .item-name {
       color: var(--color-text-muted);
+    }
+
+    .item-meta {
+      opacity: 0.7;
     }
 
     .category-badge {
@@ -283,6 +340,17 @@
   font-weight: 500;
   color: var(--color-background);
   background-color: var(--color-accent-600);
+  border-radius: var(--radius-xl);
+}
+
+.size-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-0) var(--spacing-2);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background-color: var(--color-elevated);
   border-radius: var(--radius-xl);
 }
 

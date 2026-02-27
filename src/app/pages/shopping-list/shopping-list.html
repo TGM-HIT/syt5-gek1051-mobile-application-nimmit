@@ -82,42 +82,65 @@
     <!-- Nicht gekaufte Items -->
     @for (item of filteredItems(); track item.id) {
       @if (!isPurchased(item)) {
-        <div class="item-card" [class.expanded]="isExpanded(item.id)">
-          <!-- Item Header -->
-          <button class="item-header" (click)="toggleExpand(item.id)">
-            <div class="item-info">
-              <h3 class="item-name">{{ item.name }}</h3>
-              <div class="item-meta">
-                <span class="category-badge">{{ item.category }}</span>
-                <span class="item-status">{{ getStatusText(item) }}</span>
-              </div>
+        <div class="swipe-container">
+          <!-- Swipe Background Actions -->
+          <div class="swipe-actions">
+            <div class="swipe-action left" [class.active]="isSwipingRight(item.id)">
+              <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
             </div>
-            <lucide-icon class="expand-icon" [class.rotated]="isExpanded(item.id)" [img]="icons.ChevronDown" [size]="24" [strokeWidth]="2"></lucide-icon>
-          </button>
-
-          <!-- Expandierter Inhalt -->
-          @if (isExpanded(item.id)) {
-            <div class="item-expanded">
-              @if (item.info) {
-                <div class="item-info-section">
-                  <h4>Informationen</h4>
-                  <p>{{ item.info }}</p>
+            <div class="swipe-action right" [class.active]="isSwipingLeft(item.id)">
+              <lucide-icon [img]="icons.Check" [size]="24" [strokeWidth]="2"></lucide-icon>
+            </div>
+          </div>
+          
+          <!-- Swipeable Card -->
+          <div 
+            class="item-card" 
+            [class.expanded]="isExpanded(item.id)"
+            [class.swiping]="swipingItemId() === item.id"
+            [style.transform]="getSwipeTransform(item.id)"
+            (touchstart)="onTouchStart($event, item.id)"
+            (touchmove)="onTouchMove($event)"
+            (touchend)="onTouchEnd(item)"
+          >
+            <button class="item-header" (click)="toggleExpand(item.id)">
+              <div class="item-info">
+                <h3 class="item-name">{{ item.name }}</h3>
+                <div class="item-meta">
+                  <span class="category-badge">{{ item.category }}</span>
+                  @if (item.size && item.unit) {
+                    <span class="size-badge">{{ item.size }} {{ item.unit }}</span>
+                  }
+                  <span class="item-status">{{ getStatusText(item) }}</span>
                 </div>
-              }
-
-              <div class="item-actions">
-                <button class="action-btn delete" (click)="deleteItem(item)">
-                  <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
-                </button>
-                <button class="action-btn edit" (click)="editItem(item)">
-                  <lucide-icon [img]="icons.Pencil" [size]="24" [strokeWidth]="2"></lucide-icon>
-                </button>
-                <button class="action-btn confirm" (click)="markAsPurchased(item)">
-                  <lucide-icon [img]="icons.Check" [size]="24" [strokeWidth]="2.5"></lucide-icon>
-                </button>
               </div>
-            </div>
-          }
+              <lucide-icon class="expand-icon" [class.rotated]="isExpanded(item.id)" [img]="icons.ChevronDown" [size]="24" [strokeWidth]="2"></lucide-icon>
+            </button>
+
+            <!-- Expandierter Inhalt -->
+            @if (isExpanded(item.id)) {
+              <div class="item-expanded">
+                @if (item.info) {
+                  <div class="item-info-section">
+                    <h4>Informationen</h4>
+                    <p>{{ item.info }}</p>
+                  </div>
+                }
+
+                <div class="item-actions">
+                  <button class="action-btn delete" (click)="deleteItem(item)">
+                    <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
+                  </button>
+                  <button class="action-btn edit" (click)="editItem(item)">
+                    <lucide-icon [img]="icons.Pencil" [size]="24" [strokeWidth]="2"></lucide-icon>
+                  </button>
+                  <button class="action-btn confirm" (click)="markAsPurchased(item)">
+                    <lucide-icon [img]="icons.Check" [size]="24" [strokeWidth]="2.5"></lucide-icon>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
         </div>
       }
     }
@@ -132,38 +155,62 @@
     <!-- Eingekaufte Items -->
     @for (item of filteredItems(); track item.id) {
       @if (isPurchased(item)) {
-        <div class="item-card purchased" [class.expanded]="isExpanded(item.id)">
-          <button class="item-header" (click)="toggleExpand(item.id)">
-            <div class="item-info">
-              <h3 class="item-name">{{ item.name }}</h3>
-              <div class="item-meta">
-                <span class="category-badge">{{ item.category }}</span>
-                <span class="item-status">{{ getStatusText(item) }}</span>
-              </div>
+        <div class="swipe-container">
+          <!-- Swipe Background Actions -->
+          <div class="swipe-actions">
+            <div class="swipe-action left delete" [class.active]="isSwipingRight(item.id)">
+              <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
             </div>
-            <lucide-icon class="expand-icon" [class.rotated]="isExpanded(item.id)" [img]="icons.ChevronDown" [size]="24" [strokeWidth]="2"></lucide-icon>
-          </button>
-
-          <!-- Expandierter Inhalt für gekaufte Items -->
-          @if (isExpanded(item.id)) {
-            <div class="item-expanded">
-              @if (item.info) {
-                <div class="item-info-section">
-                  <h4>Informationen</h4>
-                  <p>{{ item.info }}</p>
+            <div class="swipe-action right undo" [class.active]="isSwipingLeft(item.id)">
+              <lucide-icon [img]="icons.Undo2" [size]="24" [strokeWidth]="2"></lucide-icon>
+            </div>
+          </div>
+          
+          <!-- Swipeable Card -->
+          <div 
+            class="item-card purchased" 
+            [class.expanded]="isExpanded(item.id)"
+            [class.swiping]="swipingItemId() === item.id"
+            [style.transform]="getSwipeTransform(item.id)"
+            (touchstart)="onTouchStart($event, item.id)"
+            (touchmove)="onTouchMove($event)"
+            (touchend)="onTouchEnd(item)"
+          >
+            <button class="item-header" (click)="toggleExpand(item.id)">
+              <div class="item-info">
+                <h3 class="item-name">{{ item.name }}</h3>
+                <div class="item-meta">
+                  <span class="category-badge">{{ item.category }}</span>
+                  @if (item.size && item.unit) {
+                    <span class="size-badge">{{ item.size }} {{ item.unit }}</span>
+                  }
+                  <span class="item-status">{{ getStatusText(item) }}</span>
                 </div>
-              }
-
-              <div class="item-actions">
-                <button class="action-btn delete" (click)="deleteItem(item)">
-                  <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
-                </button>
-                <button class="action-btn undo" (click)="markAsNotPurchased(item)">
-                  <lucide-icon [img]="icons.Undo2" [size]="24" [strokeWidth]="2"></lucide-icon>
-                </button>
               </div>
-            </div>
-          }
+              <lucide-icon class="expand-icon" [class.rotated]="isExpanded(item.id)" [img]="icons.ChevronDown" [size]="24" [strokeWidth]="2"></lucide-icon>
+            </button>
+
+            <!-- Expandierter Inhalt für gekaufte Items -->
+            @if (isExpanded(item.id)) {
+              <div class="item-expanded">
+                @if (item.info) {
+                  <div class="item-info-section">
+                    <h4>Informationen</h4>
+                    <p>{{ item.info }}</p>
+                  </div>
+                }
+
+                <div class="item-actions">
+                  <button class="action-btn delete" (click)="deleteItem(item)">
+                    <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
+                  </button>
+                  <button class="action-btn undo" (click)="markAsNotPurchased(item)">
+                    <lucide-icon [img]="icons.Undo2" [size]="24" [strokeWidth]="2"></lucide-icon>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
         </div>
       }
     }

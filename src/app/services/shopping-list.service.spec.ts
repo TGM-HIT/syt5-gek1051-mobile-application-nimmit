@@ -61,7 +61,8 @@ describe('ShoppingListService', () => {
       const newItem = {
         name: 'Milch',
         category: 'Milchprodukte',
-        totalQuantity: 2
+        totalQuantity: 2,
+        unit: 'Einheit' as const
       };
 
       service.addItem(newItem);
@@ -74,7 +75,8 @@ describe('ShoppingListService', () => {
       const newItem = {
         name: 'Brot',
         category: 'Backwaren',
-        totalQuantity: 1
+        totalQuantity: 1,
+        unit: 'Einheit' as const
       };
 
       service.addItem(newItem);
@@ -87,7 +89,8 @@ describe('ShoppingListService', () => {
       const newItem = {
         name: 'Äpfel',
         category: 'Obst & Gemüse',
-        totalQuantity: 5
+        totalQuantity: 5,
+        unit: 'Einheit' as const
       };
 
       service.addItem(newItem);
@@ -99,7 +102,8 @@ describe('ShoppingListService', () => {
       const newItem = {
         name: 'Käse',
         category: 'Milchprodukte',
-        totalQuantity: 1
+        totalQuantity: 1,
+        unit: 'Einheit' as const
       };
 
       service.addItem(newItem);
@@ -109,8 +113,8 @@ describe('ShoppingListService', () => {
     });
 
     it('should update allCount', () => {
-      service.addItem({ name: 'Item 1', category: 'Test', totalQuantity: 1 });
-      service.addItem({ name: 'Item 2', category: 'Test', totalQuantity: 1 });
+      service.addItem({ name: 'Item 1', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
+      service.addItem({ name: 'Item 2', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
 
       expect(service.allCount()).toBe(2);
     });
@@ -118,7 +122,7 @@ describe('ShoppingListService', () => {
 
   describe('markAsPurchased()', () => {
     it('should set purchasedQuantity to totalQuantity', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 3 });
+      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 3, unit: 'Einheit' as const });
       const itemId = service.items()[0].id;
 
       service.markAsPurchased(itemId);
@@ -127,7 +131,7 @@ describe('ShoppingListService', () => {
     });
 
     it('should update purchasedCount', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1 });
+      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
       const itemId = service.items()[0].id;
       
       expect(service.purchasedCount()).toBe(0);
@@ -138,8 +142,8 @@ describe('ShoppingListService', () => {
     });
 
     it('should update progressPercentage', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1 });
-      service.addItem({ name: 'Brot', category: 'Backwaren', totalQuantity: 1 });
+      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
+      service.addItem({ name: 'Brot', category: 'Backwaren', totalQuantity: 1, unit: 'Einheit' as const });
       
       const itemId = service.items()[0].id;
       service.markAsPurchased(itemId);
@@ -150,7 +154,7 @@ describe('ShoppingListService', () => {
 
   describe('markAsNotPurchased()', () => {
     it('should set purchasedQuantity to 0', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 3 });
+      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 3, unit: 'Einheit' as const });
       const itemId = service.items()[0].id;
       
       service.markAsPurchased(itemId);
@@ -163,7 +167,7 @@ describe('ShoppingListService', () => {
 
   describe('updateItem()', () => {
     it('should update item properties', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1 });
+      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
       const itemId = service.items()[0].id;
 
       service.updateItem(itemId, { name: 'Hafermilch', totalQuantity: 2 });
@@ -173,7 +177,7 @@ describe('ShoppingListService', () => {
     });
 
     it('should update updatedAt timestamp', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1 });
+      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
       const itemId = service.items()[0].id;
 
       service.updateItem(itemId, { name: 'Hafermilch' });
@@ -185,8 +189,8 @@ describe('ShoppingListService', () => {
 
   describe('deleteItem()', () => {
     it('should remove item from list', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1 });
-      service.addItem({ name: 'Brot', category: 'Backwaren', totalQuantity: 1 });
+      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
+      service.addItem({ name: 'Brot', category: 'Backwaren', totalQuantity: 1, unit: 'Einheit' as const });
       
       const itemId = service.items()[0].id;
       service.deleteItem(itemId);
@@ -196,7 +200,7 @@ describe('ShoppingListService', () => {
     });
 
     it('should update allCount after deletion', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1 });
+      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
       const itemId = service.items()[0].id;
 
       expect(service.allCount()).toBe(1);
@@ -209,9 +213,9 @@ describe('ShoppingListService', () => {
 
   describe('getFilteredItems()', () => {
     beforeEach(() => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1 });
-      service.addItem({ name: 'Brot', category: 'Backwaren', totalQuantity: 1 });
-      service.addItem({ name: 'Käse', category: 'Milchprodukte', totalQuantity: 1 });
+      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
+      service.addItem({ name: 'Brot', category: 'Backwaren', totalQuantity: 1, unit: 'Einheit' as const });
+      service.addItem({ name: 'Käse', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
       
       // Mark first item as purchased
       service.markAsPurchased(service.items()[0].id);
@@ -266,7 +270,8 @@ describe('ShoppingListService', () => {
         totalQuantity: 2,
         purchasedQuantity: 2,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        unit: 'Einheit'
       };
 
       expect(service.isPurchased(item)).toBe(true);
@@ -280,7 +285,8 @@ describe('ShoppingListService', () => {
         totalQuantity: 2,
         purchasedQuantity: 1,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        unit: 'Einheit'
       };
 
       expect(service.isPurchased(item)).toBe(false);
@@ -296,7 +302,8 @@ describe('ShoppingListService', () => {
         totalQuantity: 5,
         purchasedQuantity: 2,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        unit: 'Einheit'
       };
 
       expect(service.getStatusText(item)).toBe('2 von 5 gekauft');
@@ -317,9 +324,9 @@ describe('ShoppingListService', () => {
 
   describe('computed values', () => {
     it('should calculate notPurchasedCount correctly', () => {
-      service.addItem({ name: 'Item 1', category: 'Test', totalQuantity: 1 });
-      service.addItem({ name: 'Item 2', category: 'Test', totalQuantity: 1 });
-      service.addItem({ name: 'Item 3', category: 'Test', totalQuantity: 1 });
+      service.addItem({ name: 'Item 1', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
+      service.addItem({ name: 'Item 2', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
+      service.addItem({ name: 'Item 3', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
       
       service.markAsPurchased(service.items()[0].id);
 
@@ -327,8 +334,8 @@ describe('ShoppingListService', () => {
     });
 
     it('should calculate purchasedCount correctly', () => {
-      service.addItem({ name: 'Item 1', category: 'Test', totalQuantity: 1 });
-      service.addItem({ name: 'Item 2', category: 'Test', totalQuantity: 1 });
+      service.addItem({ name: 'Item 1', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
+      service.addItem({ name: 'Item 2', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
       
       service.markAsPurchased(service.items()[0].id);
       service.markAsPurchased(service.items()[1].id);
@@ -337,8 +344,8 @@ describe('ShoppingListService', () => {
     });
 
     it('should calculate progressPercentage as 100% when all items purchased', () => {
-      service.addItem({ name: 'Item 1', category: 'Test', totalQuantity: 1 });
-      service.addItem({ name: 'Item 2', category: 'Test', totalQuantity: 1 });
+      service.addItem({ name: 'Item 1', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
+      service.addItem({ name: 'Item 2', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
       
       service.markAsPurchased(service.items()[0].id);
       service.markAsPurchased(service.items()[1].id);
