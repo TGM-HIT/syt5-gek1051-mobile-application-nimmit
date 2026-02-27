@@ -1,0 +1,190 @@
+@use '../../../theme' as *;
+
+.modal-content {
+  padding: var(--spacing-6);
+  padding-bottom: calc(var(--spacing-6) + env(safe-area-inset-bottom, 0px));
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-6);
+}
+
+.modal-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background-color: var(--color-elevated);
+  border-radius: var(--radius-default);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--color-border);
+    color: var(--color-text);
+  }
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+
+  label {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+  }
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-4);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background-color: var(--color-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-default);
+  outline: none;
+  transition: border-color 0.2s ease;
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:focus {
+    border-color: var(--color-primary-500);
+  }
+}
+
+.form-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--spacing-3) center;
+  background-size: 20px;
+  padding-right: var(--spacing-10);
+
+  // Style for dropdown options
+  option {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--font-size-base);
+
+    &:hover,
+    &:focus,
+    &:checked {
+      background-color: var(--color-primary-500);
+      color: #fff;
+    }
+  }
+}
+
+// Custom select wrapper for better cross-browser support
+.select-wrapper {
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    right: var(--spacing-4);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid var(--color-text-muted);
+  }
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  width: fit-content;
+}
+
+.quantity-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-elevated);
+  border-radius: var(--radius-default);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-primary-500);
+    border-color: var(--color-primary-500);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.quantity-value {
+  min-width: 48px;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: var(--spacing-4);
+  margin-top: var(--spacing-2);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: #fff;
+  background-color: var(--color-primary-500);
+  border: none;
+  border-radius: var(--radius-default);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-primary-600);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
