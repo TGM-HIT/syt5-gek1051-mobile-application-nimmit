@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
 import { ShoppingItem, FilterType } from '../models';
+import Fuse from 'fuse.js';
 
 interface StoredListData {
   items: ShoppingItem[];
@@ -146,17 +147,14 @@ export class ShoppingListService {
    * Filtert Items basierend auf Filter-Typ und Suchbegriff
    */
   getFilteredItems(filter: FilterType, searchQuery: string): ShoppingItem[] {
-    let result = this._items();
+    const fuse = new Fuse(this._items(), {
+      keys: ['name', 'category'],
+      threshold: 0.4,
+    });
 
-    // Suchfilter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        item =>
-          item.name.toLowerCase().includes(query) ||
-          item.category.toLowerCase().includes(query)
-      );
-    }
+    let result = searchQuery
+        ? fuse.search(searchQuery).map(r => r.item)
+        : this._items();
 
     // Tab-Filter
     if (filter === 'notPurchased') {
