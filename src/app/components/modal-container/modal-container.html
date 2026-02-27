@@ -1,0 +1,7 @@
+@if (modalService.isOpen() && componentType) {
+  <div class="modal-backdrop" (click)="onBackdropClick($event)">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <ng-container *ngComponentOutlet="componentType; inputs: componentInputs"></ng-container>
+    </div>
+  </div>
+}

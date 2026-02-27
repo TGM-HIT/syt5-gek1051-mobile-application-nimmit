@@ -1,0 +1,46 @@
+<div class="modal-content">
+  <!-- Header -->
+  <div class="modal-header">
+    <h2 class="modal-title">Liste bearbeiten</h2>
+    <button class="close-btn" (click)="close()">
+      <lucide-icon [img]="icons.X" [size]="24" [strokeWidth]="2"></lucide-icon>
+    </button>
+  </div>
+
+  <!-- Form -->
+  <form class="modal-form" (ngSubmit)="submit()">
+    <!-- Listenname -->
+    <div class="form-group">
+      <label for="listName">Listenname *</label>
+      <input
+        type="text"
+        id="listName"
+        class="form-input"
+        placeholder="z.B. Wocheneinkauf..."
+        [ngModel]="name()"
+        (ngModelChange)="name.set($event)"
+        name="listName"
+        required
+      />
+    </div>
+
+    <!-- Beschreibung -->
+    <div class="form-group">
+      <label for="listDescription">Beschreibung</label>
+      <textarea
+        id="listDescription"
+        class="form-textarea"
+        placeholder="z.B. Einkauf für die Party am Samstag..."
+        [ngModel]="description()"
+        (ngModelChange)="description.set($event)"
+        name="listDescription"
+        rows="3"
+      ></textarea>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="submit-btn" [disabled]="!name().trim()">
+      Speichern
+    </button>
+  </form>
+</div>

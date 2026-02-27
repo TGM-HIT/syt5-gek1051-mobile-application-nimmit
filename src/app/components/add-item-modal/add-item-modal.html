@@ -1,0 +1,76 @@
+<div class="modal-content">
+  <!-- Header -->
+  <div class="modal-header">
+    <h2 class="modal-title">{{ isEditMode() ? 'Produkt bearbeiten' : 'Produkt hinzufügen' }}</h2>
+    <button class="close-btn" (click)="close()">
+      <lucide-icon [img]="icons.X" [size]="24" [strokeWidth]="2"></lucide-icon>
+    </button>
+  </div>
+
+  <!-- Form -->
+  <form class="modal-form" (ngSubmit)="submit()">
+    <!-- Produktname -->
+    <div class="form-group">
+      <label for="name">Produktname *</label>
+      <input
+        type="text"
+        id="name"
+        class="form-input"
+        placeholder="z.B. Milch, Brot, Äpfel..."
+        [ngModel]="name()"
+        (ngModelChange)="name.set($event)"
+        name="name"
+        required
+      />
+    </div>
+
+    <!-- Kategorie -->
+    <div class="form-group">
+      <label for="category">Kategorie</label>
+      <select
+        id="category"
+        class="form-select"
+        [ngModel]="category()"
+        (ngModelChange)="category.set($event)"
+        name="category"
+      >
+        @for (cat of categories; track cat) {
+          <option [value]="cat">{{ cat }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Menge -->
+    <div class="form-group">
+      <label>Menge</label>
+      <div class="quantity-control">
+        <button type="button" class="quantity-btn" (click)="decrementQuantity()" [disabled]="quantity() <= 1">
+          <lucide-icon [img]="icons.Minus" [size]="20" [strokeWidth]="2"></lucide-icon>
+        </button>
+        <span class="quantity-value">{{ quantity() }}</span>
+        <button type="button" class="quantity-btn" (click)="incrementQuantity()">
+          <lucide-icon [img]="icons.Plus" [size]="20" [strokeWidth]="2"></lucide-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Info/Beschreibung -->
+    <div class="form-group">
+      <label for="info">Beschreibung (optional)</label>
+      <textarea
+        id="info"
+        class="form-textarea"
+        placeholder="z.B. Bitte das grüne kaufen..."
+        [ngModel]="info()"
+        (ngModelChange)="info.set($event)"
+        name="info"
+        rows="3"
+      ></textarea>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="submit-btn" [disabled]="!name().trim()">
+      {{ isEditMode() ? 'Speichern' : 'Hinzufügen' }}
+    </button>
+  </form>
+</div>
