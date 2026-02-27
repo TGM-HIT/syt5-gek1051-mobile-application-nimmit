@@ -27,7 +27,9 @@ export class Navigation {
         name: result.name,
         category: result.category,
         totalQuantity: result.quantity,
-        info: result.info
+        info: result.info,
+        size: result.size,
+        unit: result.unit
       });
     }
   }

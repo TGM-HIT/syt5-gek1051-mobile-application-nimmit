@@ -47,6 +47,14 @@ describe('AddItemModal', () => {
       expect(component.info()).toBe('');
     });
 
+    it('should have default unit "Einheit"', () => {
+      expect(component.unit()).toBe('Einheit');
+    });
+
+    it('should have undefined size', () => {
+      expect(component.size()).toBeUndefined();
+    });
+
     it('should not be in edit mode', () => {
       expect(component.isEditMode()).toBe(false);
     });
@@ -56,6 +64,13 @@ describe('AddItemModal', () => {
       expect(component.categories).toContain('Getränke');
       expect(component.categories).toContain('Obst & Gemüse');
       expect(component.categories).toContain('Sonstiges');
+    });
+
+    it('should have predefined units', () => {
+      expect(component.units.length).toBeGreaterThan(0);
+      expect(component.units).toContain('Einheit');
+      expect(component.units).toContain('kg');
+      expect(component.units).toContain('L');
     });
   });
 
@@ -75,7 +90,9 @@ describe('AddItemModal', () => {
           purchasedQuantity: 0,
           info: 'Bio',
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          unit: 'L',
+          size: 500
         }
       } as AddItemData);
       
@@ -87,6 +104,8 @@ describe('AddItemModal', () => {
       expect(editComponent.category()).toBe('Milchprodukte');
       expect(editComponent.quantity()).toBe(3);
       expect(editComponent.info()).toBe('Bio');
+      expect(editComponent.size()).toBe(500);
+      expect(editComponent.unit()).toBe('L');
     });
   });
 
@@ -173,7 +192,8 @@ describe('AddItemModal', () => {
       expect(mockModalService.close).toHaveBeenCalledWith(expect.objectContaining({
         name: 'Milch',
         category: 'Milchprodukte',
-        quantity: 2
+        quantity: 2,
+        unit: 'Einheit'
       }));
     });
 
