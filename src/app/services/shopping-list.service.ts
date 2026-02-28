@@ -173,26 +173,26 @@ export class ShoppingListService {
    * Filtert Items basierend auf Filter-Typ, Suchbegriff und Kategorien
    */
   
-  getFilteredItems(filter: FilterType, searchQuery: string): ShoppingItem[] {
-    const fuse = new Fuse(this._items(), {
+  getFilteredItems(filter: FilterType, searchQuery: string, selectedCategories: string[] = []): ShoppingItem[] {
+    const fuse = new Fuse<ShoppingItem>(this._items(), {
       keys: ['name', 'category'],
       threshold: 0.4,
     });
 
-    let result = searchQuery
+    let result: ShoppingItem[] = searchQuery
         ? fuse.search(searchQuery).map(r => r.item)
         : this._items();
 
     // Kategorie-Filter
     if (selectedCategories.length > 0) {
-      result = result.filter(item => selectedCategories.includes(item.category));
+      result = result.filter((item: ShoppingItem) => selectedCategories.includes(item.category));
     }
 
     // Tab-Filter
     if (filter === 'notPurchased') {
-      result = result.filter(item => item.purchasedQuantity < item.totalQuantity);
+      result = result.filter((item: ShoppingItem) => item.purchasedQuantity < item.totalQuantity);
     } else if (filter === 'purchased') {
-      result = result.filter(item => item.purchasedQuantity >= item.totalQuantity);
+      result = result.filter((item: ShoppingItem) => item.purchasedQuantity >= item.totalQuantity);
     }
 
     return result;
