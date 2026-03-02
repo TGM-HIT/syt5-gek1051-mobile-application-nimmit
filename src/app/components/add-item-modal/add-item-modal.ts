@@ -2,10 +2,11 @@ import { Component, inject, signal, input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, X, Plus, Minus } from 'lucide-angular';
 import { ModalService } from '../../services/modal.service';
-import { ShoppingItem } from '../../models';
+import { ShoppingItem, Unit } from '../../models';
 
 export interface AddItemData {
   editItem?: ShoppingItem;
+  prefillName?: string;
 }
 
 export interface AddItemResult {
@@ -14,6 +15,8 @@ export interface AddItemResult {
   category: string;
   quantity: number;
   info?: string;
+  size?: number;
+  unit: Unit;
 }
 
 @Component({
@@ -35,6 +38,8 @@ export class AddItemModal implements OnInit {
   readonly category = signal('Sonstiges');
   readonly quantity = signal(1);
   readonly info = signal('');
+  readonly size = signal<number | undefined>(undefined);
+  readonly unit = signal<Unit>('Einheit');
   
   // Edit mode
   readonly isEditMode = signal(false);
@@ -53,6 +58,20 @@ export class AddItemModal implements OnInit {
     'Sonstiges'
   ];
 
+  // Verfügbare Units
+  readonly units: Unit[] = [
+    'Einheit',
+    'g',
+    'dag',
+    'kg',
+    'mL',
+    'L',
+    'Flasche',
+    'Kiste',
+    'Dose',
+    'Packung'
+  ];
+
   ngOnInit(): void {
     const inputData = this.data();
     if (inputData?.editItem) {
@@ -63,6 +82,10 @@ export class AddItemModal implements OnInit {
       this.category.set(item.category);
       this.quantity.set(item.totalQuantity);
       this.info.set(item.info || '');
+      this.size.set(item.size);
+      this.unit.set(item.unit || 'Einheit');
+    } else if (inputData?.prefillName) {
+      this.name.set(inputData.prefillName);
     }
   }
 
@@ -90,7 +113,9 @@ export class AddItemModal implements OnInit {
       name: this.name().trim(),
       category: this.category(),
       quantity: this.quantity(),
-      info: this.info().trim() || undefined
+      info: this.info().trim() || undefined,
+      size: this.size() || undefined,
+      unit: this.unit()
     };
 
     this.modalService.close(result);
