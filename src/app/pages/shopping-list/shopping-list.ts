@@ -1,6 +1,6 @@
 import { Component, computed, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus } from 'lucide-angular';
+import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, Coffee, Apple, Milk, Beef, Croissant, Snowflake, Candy, Home, ShoppingBag } from 'lucide-angular';
 import { ShoppingItem, FilterType } from '../../models';
 import { ShoppingListService, ModalService } from '../../services';
 import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-item-modal/add-item-modal';
@@ -17,7 +17,7 @@ export class ShoppingList {
   private readonly modalService = inject(ModalService);
 
   // Lucide Icons
-  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus };
+  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, Coffee, Apple, Milk, Beef, Croissant, Snowflake, Candy, Home, ShoppingBag };
 
   // Liste Daten aus Service
   readonly listName = this.shoppingListService.listName;
@@ -286,6 +286,38 @@ export class ShoppingList {
   // Status Text generieren
   getStatusText(item: ShoppingItem): string {
     return this.shoppingListService.getStatusText(item);
+  }
+
+  // Kategorie Icon holen
+  getCategoryIcon(category: string): any {
+    const iconMap: { [key: string]: any } = {
+      'Getränke': this.icons.Coffee,
+      'Obst & Gemüse': this.icons.Apple,
+      'Milchprodukte': this.icons.Milk,
+      'Fleisch & Fisch': this.icons.Beef,
+      'Backwaren': this.icons.Croissant,
+      'Tiefkühl': this.icons.Snowflake,
+      'Süßigkeiten': this.icons.Candy,
+      'Haushalt': this.icons.Home,
+      'Sonstiges': this.icons.ShoppingBag
+    };
+    return iconMap[category] || this.icons.ShoppingBag;
+  }
+
+  // Kategorie Farbe holen
+  getCategoryColor(category: string): string {
+    const colorMap: { [key: string]: string } = {
+      'Getränke': '#8B4513',
+      'Obst & Gemüse': '#22c55e',
+      'Milchprodukte': '#3b82f6',
+      'Fleisch & Fisch': '#ef4444',
+      'Backwaren': '#f97316',
+      'Tiefkühl': '#06b6d4',
+      'Süßigkeiten': '#ec4899',
+      'Haushalt': '#6b7280',
+      'Sonstiges': '#8b5cf6'
+    };
+    return colorMap[category] || '#8b5cf6';
   }
 
   // Listennamen und Beschreibung bearbeiten

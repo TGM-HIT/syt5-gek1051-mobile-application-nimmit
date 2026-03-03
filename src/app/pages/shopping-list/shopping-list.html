@@ -118,6 +118,9 @@
             (touchend)="onTouchEnd(item)"
           >
             <button class="item-header" (click)="toggleExpand(item.id)">
+              <div class="category-icon" [style.background-color]="getCategoryColor(item.category)">
+                <lucide-icon [img]="getCategoryIcon(item.category)" [size]="20" [strokeWidth]="2"></lucide-icon>
+              </div>
               <div class="item-info">
                 <h3 class="item-name">{{ item.name }}</h3>
                 <div class="item-meta">
@@ -202,6 +205,9 @@
             (touchend)="onTouchEnd(item)"
           >
             <button class="item-header" (click)="toggleExpand(item.id)">
+              <div class="category-icon" [style.background-color]="getCategoryColor(item.category)">
+                <lucide-icon [img]="getCategoryIcon(item.category)" [size]="20" [strokeWidth]="2"></lucide-icon>
+              </div>
               <div class="item-info">
                 <h3 class="item-name">{{ item.name }}</h3>
                 <div class="item-meta">
