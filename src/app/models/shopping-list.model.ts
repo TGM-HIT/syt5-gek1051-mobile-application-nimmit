@@ -8,7 +8,14 @@ export interface ShoppingItem {
   createdAt: Date;
   updatedAt: Date;
   unit: Unit;
-  size? : number;
+  size?: number;
+}
+
+export interface FavouriteItem {
+  id: string;
+  name: string;
+  unit: Unit;
+  size?: number;
 }
 
 export interface ShoppingList {
@@ -21,4 +28,4 @@ export interface ShoppingList {
 }
 
 export type FilterType = 'all' | 'notPurchased' | 'purchased';
-export type Unit = 'g' | 'dag' |'kg' | 'mL' | 'L' | 'Einheit' | 'Flasche' | 'Kiste' | 'Dose' | 'Packung' ;
+export type Unit = 'g' | 'dag' | 'kg' | 'mL' | 'L' | 'Einheit' | 'Flasche' | 'Kiste' | 'Dose' | 'Packung';

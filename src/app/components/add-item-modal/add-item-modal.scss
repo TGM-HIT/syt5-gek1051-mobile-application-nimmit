@@ -106,7 +106,7 @@
 // Custom select wrapper for better cross-browser support
 .select-wrapper {
   position: relative;
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -203,5 +203,82 @@
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+}
+
+.name-input-wrapper {
+  display: flex;
+  gap: var(--spacing-2);
+  align-items: center;
+
+  .form-input {
+    flex: 1;
+  }
+}
+
+.favourite-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-elevated);
+  border-radius: var(--radius-default);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-border);
+    color: var(--color-text);
+  }
+
+  &.active {
+    color: var(--color-warning);
+    border-color: var(--color-warning);
+    background-color: rgba(245, 158, 11, 0.1);
+  }
+
+  lucide-icon.filled ::ng-deep svg {
+    fill: currentColor;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.favourites-list {
+  display: flex;
+  gap: var(--spacing-2);
+  overflow-x: auto;
+  padding-bottom: var(--spacing-2);
+  margin-top: var(--spacing-2);
+
+  // Hide scrollbar but keep functionality
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.favourite-chip {
+  white-space: nowrap;
+  padding: var(--spacing-2) var(--spacing-3);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  /* Fully rounded */
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--color-border);
   }
 }

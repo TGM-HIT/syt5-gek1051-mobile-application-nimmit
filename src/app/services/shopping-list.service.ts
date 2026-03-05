@@ -1,11 +1,12 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
-import { ShoppingItem, FilterType } from '../models';
+import { ShoppingItem, FilterType, FavouriteItem, Unit } from '../models';
 import Fuse from 'fuse.js';
 
 interface StoredListData {
   items: ShoppingItem[];
   listName: string;
   listDescription: string;
+  favourites?: FavouriteItem[];
 }
 
 const STORAGE_KEY = 'nimmit-shopping-list';
@@ -18,21 +19,24 @@ export class ShoppingListService {
   private readonly _items = signal<ShoppingItem[]>([]);
   private readonly _listName = signal('Meine Einkaufsliste');
   private readonly _listDescription = signal('Tippe auf +, um Produkte hinzuzufügen');
+  private readonly _favourites = signal<FavouriteItem[]>([]);
 
   // Public readonly signals
   readonly items = this._items.asReadonly();
   readonly listName = this._listName.asReadonly();
   readonly listDescription = this._listDescription.asReadonly();
+  readonly favourites = this._favourites.asReadonly();
 
   constructor() {
     this.loadFromStorage();
-    
+
     // Auto-save bei Änderungen
     effect(() => {
       const data: StoredListData = {
         items: this._items(),
         listName: this._listName(),
-        listDescription: this._listDescription()
+        listDescription: this._listDescription(),
+        favourites: this._favourites()
       };
       this.saveToStorage(data);
     });
@@ -52,6 +56,9 @@ export class ShoppingListService {
         this._items.set(items);
         this._listName.set(data.listName || 'Meine Einkaufsliste');
         this._listDescription.set(data.listDescription || 'Tippe auf +, um Produkte hinzuzufügen');
+        if (data.favourites) {
+          this._favourites.set(data.favourites);
+        }
       }
     } catch (e) {
       console.error('Fehler beim Laden der Daten:', e);
@@ -172,7 +179,7 @@ export class ShoppingListService {
   /**
    * Filtert Items basierend auf Filter-Typ, Suchbegriff und Kategorien
    */
-  
+
   getFilteredItems(filter: FilterType, searchQuery: string, selectedCategories: string[] = []): ShoppingItem[] {
     const fuse = new Fuse<ShoppingItem>(this._items(), {
       keys: ['name', 'category'],
@@ -180,8 +187,8 @@ export class ShoppingListService {
     });
 
     let result: ShoppingItem[] = searchQuery
-        ? fuse.search(searchQuery).map(r => r.item)
-        : this._items();
+      ? fuse.search(searchQuery).map(r => r.item)
+      : this._items();
 
     // Kategorie-Filter
     if (selectedCategories.length > 0) {
@@ -218,5 +225,54 @@ export class ShoppingListService {
   updateListInfo(name: string, description: string): void {
     this._listName.set(name);
     this._listDescription.set(description);
+  }
+
+  // --- Favourites ---
+
+  /**
+   * Toggles a favourite item. If it exists, removes it. If it doesn't, adds it.
+   */
+  toggleFavourite(name: string, unit: Unit, size?: number): void {
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
+
+    const existingId = this.findFavouriteId(trimmedName, unit, size);
+
+    if (existingId) {
+      this.removeFavourite(existingId);
+    } else {
+      this.addFavourite(trimmedName, unit, size);
+    }
+  }
+
+  addFavourite(name: string, unit: Unit, size?: number): void {
+    const newFav: FavouriteItem = {
+      id: crypto.randomUUID(),
+      name,
+      unit,
+      size
+    };
+    this._favourites.update(favs => [...favs, newFav]);
+  }
+
+  removeFavourite(id: string): void {
+    this._favourites.update(favs => favs.filter(f => f.id !== id));
+  }
+
+  /**
+   * Helper to find if a specific combination of name/unit/size is already a favourite
+   */
+  findFavouriteId(name: string, unit: Unit, size?: number): string | undefined {
+    const trimmedName = name.trim().toLowerCase();
+    const existing = this._favourites().find(f =>
+      f.name.toLowerCase() === trimmedName &&
+      f.unit === unit &&
+      f.size === size
+    );
+    return existing?.id;
+  }
+
+  isCurrentFavourite(name: string, unit: Unit, size?: number): boolean {
+    return !!this.findFavouriteId(name, unit, size);
   }
 }
