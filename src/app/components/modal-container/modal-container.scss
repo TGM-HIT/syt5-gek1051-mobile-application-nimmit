@@ -25,7 +25,8 @@
   max-height: 90vh;
   background-color: var(--color-surface);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   transform: translateY(100%);
   animation: slideUp 0.3s ease forwards;
 

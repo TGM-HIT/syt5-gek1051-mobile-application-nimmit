@@ -11,9 +11,12 @@ const localStorageMock = (() => {
     setItem: vi.fn((key: string, value: string) => { store[key] = value; }),
     removeItem: vi.fn((key: string) => { delete store[key]; }),
     clear: vi.fn(() => { store = {}; }),
+    key: vi.fn((i: number) => Object.keys(store)[i] || null),
+    get length() { return Object.keys(store).length; },
   };
 })();
 
+// Apply mock
 Object.defineProperty(globalThis, 'localStorage', {
   value: localStorageMock,
   writable: true,

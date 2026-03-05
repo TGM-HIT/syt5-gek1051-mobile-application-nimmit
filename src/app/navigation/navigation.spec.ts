@@ -70,7 +70,8 @@ describe('Navigation', () => {
         name: 'Milch',
         category: 'Milchprodukte',
         quantity: 2,
-        info: 'Bio'
+        info: 'Bio',
+        unit: 'Einheit'
       };
       
       mockModalService.open.mockResolvedValue(mockResult);
@@ -81,7 +82,9 @@ describe('Navigation', () => {
         name: 'Milch',
         category: 'Milchprodukte',
         totalQuantity: 2,
-        info: 'Bio'
+        info: 'Bio',
+        size: undefined,
+        unit: 'Einheit'
       });
     });
 
@@ -105,7 +108,8 @@ describe('Navigation', () => {
       const mockResult: AddItemResult = {
         name: 'Brot',
         category: 'Backwaren',
-        quantity: 1
+        quantity: 1,
+        unit: 'Einheit'
         // no info
       };
       
@@ -117,7 +121,9 @@ describe('Navigation', () => {
         name: 'Brot',
         category: 'Backwaren',
         totalQuantity: 1,
-        info: undefined
+        info: undefined,
+        size: undefined,
+        unit: 'Einheit'
       });
     });
   });
