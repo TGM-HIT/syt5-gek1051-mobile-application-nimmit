@@ -4,3 +4,5 @@ package-lock.json
 android/
 ios/
 dist/
+src/environments/environment.ts
+src/environments/environment.development.ts
