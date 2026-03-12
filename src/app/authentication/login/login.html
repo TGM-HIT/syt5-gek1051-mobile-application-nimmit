@@ -1,0 +1,40 @@
+<div class="page-container">
+    <section class="login-card">
+        @if (loginSucceeded()) {
+        <h1>Willkommen zurueck</h1>
+        <p class="subtitle">Du wirst gleich weitergeleitet...</p>
+        <p class="feedback success-box">Anmeldung erfolgreich.</p>
+        } @else {
+        <h1>Anmelden</h1>
+        <p class="subtitle">Melde dich an, um auf dein Konto zuzugreifen.</p>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+            <div class="field-group">
+                <label for="email">E-Mail</label>
+                <input id="email" type="email" formControlName="email" placeholder="name@beispiel.de"
+                    autocomplete="email" [class.invalid]="isInvalid('email')" />
+                @if (isInvalid('email')) {
+                <small class="error">Bitte gib eine gueltige E-Mail-Adresse ein.</small>
+                }
+            </div>
+
+            <div class="field-group">
+                <label for="password">Passwort</label>
+                <input id="password" type="password" formControlName="password" placeholder="dein Passwort"
+                    autocomplete="current-password" [class.invalid]="isInvalid('password')" />
+                @if (isInvalid('password')) {
+                <small class="error">Bitte gib dein Passwort ein.</small>
+                }
+            </div>
+
+            @if (submitError()) {
+            <p class="feedback error-box">{{ submitError() }}</p>
+            }
+
+            <button type="submit" class="login-btn" [disabled]="isSubmitting()">
+                {{ isSubmitting() ? 'Anmeldung läuft...' : 'Anmelden' }}
+            </button>
+        </form>
+        }
+    </section>
+</div>
