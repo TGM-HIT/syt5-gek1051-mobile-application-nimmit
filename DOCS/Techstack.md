@@ -44,7 +44,10 @@
 | Technology | Version | Description |
 |------------|---------|-------------|
 | [Vitest](https://vitest.dev/config/) | 4.x | Unit testing framework |
-
+| [@vitest/coverage-v8](https://vitest.dev/config/) | 4.8 | Code Covarage Test |
+| [eslint]() | 9.39.4 | Codeanalysis |
+| [@cloudflight/eslint-plugin-angular](https://github.com/cloudflightio/cloudflight-eslint-plugin) | 1.33.x | Angular & Testing plugins |
+ 
 ## Build & Development Tools
 
 | Technology | Version | Description |
@@ -57,7 +60,7 @@
 
 | Technology | Version | Description |
 |------------|---------|-------------|
-| - | - | *Coming soon* |
+| [github actions](https://github.com/features/actions) | - | Deployment environment |
 
 ---
 
