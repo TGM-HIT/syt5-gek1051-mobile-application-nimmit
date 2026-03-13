@@ -1,3 +1,26 @@
+![Angular](https://img.shields.io/badge/Angular-21-DD0031?logo=angular&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-22+-339933?logo=node.js&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?logo=tailwindcss&logoColor=white)
+![Capacitor](https://img.shields.io/badge/Capacitor-8-119EFF?logo=capacitor&logoColor=white)
+![RxJS](https://img.shields.io/badge/RxJS-7-B7178C?logo=reactivex&logoColor=white)
+
+![License](https://img.shields.io/github/license/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+![Repo Size](https://img.shields.io/github/repo-size/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+![Last Commit](https://img.shields.io/github/last-commit/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+![Issues](https://img.shields.io/github/issues/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+![CI](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/ci.yml/badge.svg?branch=main)
+[![Coverage](https://codecov.io/gh/TGM-HIT/syt5-gek1051-mobile-application-nimmit/branch/main/graph/badge.svg)](https://codecov.io/gh/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+
+
+## CI Reports
+
+- [Latest lint report artifact (lint-report)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/ci.yml)
+- [Latest component test artifact (component-test-report)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/ci.yml)
+- [Latest coverage artifact (coverage-report)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/coverage.yml)
+
+Artifacts are generated automatically on every push and pull request run.
+
 # Nimmit
 
 A modern, offline-first mobile shopping list application built with Angular and Capacitor. Nimmit enables users to create, manage, and share shopping lists with automatic synchronization and conflict resolution.
@@ -78,6 +101,10 @@ npm run cap:open:android
 - `npm start` - Start development server
 - `npm run build` - Build for production
 - `npm test` - Run unit tests
+- `npm run test:component` - Run component tests in CI mode
+- `npm run test:coverage` - Run tests with coverage output
+- `npm run lint` - Run ESLint checks
+- `npm run lint:fix` - Run ESLint and apply automatic fixes
 - `npm run cap:sync` - Sync web assets with native platforms
 - `npm run cap:run:ios` - Build and run on iOS device/simulator
 - `npm run cap:run:android` - Build and run on Android device/emulator
