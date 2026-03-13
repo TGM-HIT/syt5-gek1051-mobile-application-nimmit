@@ -8,7 +8,9 @@
 ![License](https://img.shields.io/github/license/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
 ![Repo Size](https://img.shields.io/github/repo-size/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
 ![Last Commit](https://img.shields.io/github/last-commit/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
-![Issues](https://img.shields.io/github/issues/USERNAME/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+![Issues](https://img.shields.io/github/issues/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+![CI](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/ci.yml/badge.svg?branch=main)
+![Coverage](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/coverage.yml/badge.svg?branch=main)
 
 # Nimmit
 
@@ -90,6 +92,10 @@ npm run cap:open:android
 - `npm start` - Start development server
 - `npm run build` - Build for production
 - `npm test` - Run unit tests
+- `npm run test:component` - Run component tests in CI mode
+- `npm run test:coverage` - Run tests with coverage output
+- `npm run lint` - Run ESLint checks
+- `npm run lint:fix` - Run ESLint and apply automatic fixes
 - `npm run cap:sync` - Sync web assets with native platforms
 - `npm run cap:run:ios` - Build and run on iOS device/simulator
 - `npm run cap:run:android` - Build and run on Android device/emulator
