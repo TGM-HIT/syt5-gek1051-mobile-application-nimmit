@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run lint (generate report)
+        run: |
+          mkdir -p reports
+          npm run lint -- --format json --output-file reports/eslint-report.json
+
+      - name: Upload lint report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: reports/eslint-report.json
+
+  component-test:
+    name: Component Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run component tests (generate log)
+        run: |
+          mkdir -p reports
+          set -o pipefail
+          npm run test:component 2>&1 | tee reports/component-test.log
+
+      - name: Upload component test artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: component-test-report
+          path: reports/component-test.log
