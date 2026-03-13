@@ -10,7 +10,16 @@
 ![Last Commit](https://img.shields.io/github/last-commit/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
 ![Issues](https://img.shields.io/github/issues/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
 ![CI](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/ci.yml/badge.svg?branch=main)
-![Coverage](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/coverage.yml/badge.svg?branch=main)
+[![Coverage](https://codecov.io/gh/TGM-HIT/syt5-gek1051-mobile-application-nimmit/branch/main/graph/badge.svg)](https://codecov.io/gh/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+
+
+## CI Reports
+
+- [Latest lint report artifact (lint-report)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/ci.yml)
+- [Latest component test artifact (component-test-report)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/ci.yml)
+- [Latest coverage artifact (coverage-report)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/coverage.yml)
+
+Artifacts are generated automatically on every push and pull request run.
 
 # Nimmit
 

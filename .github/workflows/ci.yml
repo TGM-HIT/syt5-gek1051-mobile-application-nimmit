@@ -27,8 +27,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run lint
-        run: npm run lint
+      - name: Run lint (generate report)
+        run: |
+          mkdir -p reports
+          npm run lint -- --format json --output-file reports/eslint-report.json
+
+      - name: Upload lint report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: reports/eslint-report.json
 
   component-test:
     name: Component Tests
@@ -47,5 +56,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run component tests
-        run: npm run test:component
+      - name: Run component tests (generate log)
+        run: |
+          mkdir -p reports
+          set -o pipefail
+          npm run test:component 2>&1 | tee reports/component-test.log
+
+      - name: Upload component test artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: component-test-report
+          path: reports/component-test.log

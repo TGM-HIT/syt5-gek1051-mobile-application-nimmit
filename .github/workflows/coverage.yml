@@ -30,6 +30,13 @@ jobs:
       - name: Run coverage tests
         run: npm run test:coverage
 
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage/nimmit/lcov.info
+          fail_ci_if_error: false
+          verbose: true
+
       - name: Upload coverage artifact
         if: always()
         uses: actions/upload-artifact@v4
