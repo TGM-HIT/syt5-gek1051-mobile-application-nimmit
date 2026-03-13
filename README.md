@@ -1,3 +1,15 @@
+![Angular](https://img.shields.io/badge/Angular-21-DD0031?logo=angular&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-22+-339933?logo=node.js&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?logo=tailwindcss&logoColor=white)
+![Capacitor](https://img.shields.io/badge/Capacitor-8-119EFF?logo=capacitor&logoColor=white)
+![RxJS](https://img.shields.io/badge/RxJS-7-B7178C?logo=reactivex&logoColor=white)
+
+![License](https://img.shields.io/github/license/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+![Repo Size](https://img.shields.io/github/repo-size/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+![Last Commit](https://img.shields.io/github/last-commit/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+![Issues](https://img.shields.io/github/issues/USERNAME/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+
 # Nimmit
 
 A modern, offline-first mobile shopping list application built with Angular and Capacitor. Nimmit enables users to create, manage, and share shopping lists with automatic synchronization and conflict resolution.
