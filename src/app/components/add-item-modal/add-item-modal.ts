@@ -8,6 +8,8 @@ import { ShoppingItem, Unit, FavouriteItem } from '../../models';
 export interface AddItemData {
   editItem?: ShoppingItem;
   prefillName?: string;
+  prefillUnit?: Unit;
+  prefillSize?: number;
 }
 
 export interface AddItemResult {
@@ -41,8 +43,28 @@ export class AddItemModal implements OnInit {
     return this.shoppingListService.isCurrentFavourite(this.name(), this.unit(), this.size());
   });
 
+  readonly filteredFavourites = computed(() => {
+    const query = this.name().toLowerCase().trim();
+    const favs = this.favourites();
+    if (!query) {
+      return favs;
+    }
+    return favs.filter(fav => fav.name.toLowerCase().includes(query));
+  });
+
   // Form State
   readonly name = signal('');
+  readonly showAutocomplete = signal(false);
+  readonly isNameEmpty = computed(() => !this.name().trim());
+
+  readonly shouldShowAutocomplete = computed(() =>
+    this.showAutocomplete() && !this.isNameEmpty() && this.filteredFavourites().length > 0
+  );
+
+  readonly shouldShowFavouritesList = computed(() =>
+    this.isNameEmpty() && this.favourites().length > 0
+  );
+
   readonly category = signal('Sonstiges');
   readonly quantity = signal(1);
   readonly info = signal('');
@@ -52,6 +74,9 @@ export class AddItemModal implements OnInit {
   // Edit mode
   readonly isEditMode = signal(false);
   private editItemId: string | undefined;
+
+  readonly modalTitle = computed(() => this.isEditMode() ? 'Produkt bearbeiten' : 'Produkt hinzufügen');
+  readonly submitButtonText = computed(() => this.isEditMode() ? 'Speichern' : 'Hinzufügen');
 
   // Predefined categories
   readonly categories = [
@@ -92,8 +117,16 @@ export class AddItemModal implements OnInit {
       this.info.set(item.info || '');
       this.size.set(item.size);
       this.unit.set(item.unit || 'Einheit');
-    } else if (inputData?.prefillName) {
-      this.name.set(inputData.prefillName);
+    } else if (inputData) {
+      if (inputData.prefillName) {
+        this.name.set(inputData.prefillName);
+      }
+      if (inputData.prefillUnit) {
+        this.unit.set(inputData.prefillUnit);
+      }
+      if (inputData.prefillSize !== undefined) {
+        this.size.set(inputData.prefillSize);
+      }
     }
   }
 
@@ -112,7 +145,7 @@ export class AddItemModal implements OnInit {
   }
 
   submit(): void {
-    if (!this.name().trim()) {
+    if (this.isNameEmpty()) {
       return;
     }
 
@@ -130,13 +163,33 @@ export class AddItemModal implements OnInit {
   }
 
   toggleFavourite(): void {
-    if (!this.name().trim()) return;
+    if (this.isNameEmpty()) return;
     this.shoppingListService.toggleFavourite(this.name(), this.unit(), this.size());
+  }
+
+  getFavouriteDetails(fav: FavouriteItem): string {
+    const sizeStr = fav.size ? `${fav.size} ` : '';
+    const unitStr = fav.unit !== 'Einheit' ? fav.unit : '';
+    return `${sizeStr}${unitStr}`;
+  }
+
+  hasFavouriteDetails(fav: FavouriteItem): boolean {
+    return !!(fav.size || fav.unit !== 'Einheit');
   }
 
   selectFavourite(fav: FavouriteItem): void {
     this.name.set(fav.name);
     this.unit.set(fav.unit);
     this.size.set(fav.size);
+    this.showAutocomplete.set(false);
+  }
+
+  onNameChange(newName: string): void {
+    this.name.set(newName);
+    this.showAutocomplete.set(true);
+  }
+
+  hideAutocomplete(): void {
+    this.showAutocomplete.set(false);
   }
 }

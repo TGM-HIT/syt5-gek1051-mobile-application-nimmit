@@ -140,6 +140,60 @@
   }
 }
 
+.autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: var(--spacing-1);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-default);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  z-index: 50;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.autocomplete-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-4);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: background-color 0.2s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover,
+  &:focus {
+    background-color: var(--color-elevated);
+  }
+
+  lucide-icon.filled ::ng-deep svg {
+    fill: var(--color-warning);
+    color: var(--color-warning);
+  }
+
+  .item-name {
+    flex: 1;
+    font-weight: 500;
+  }
+
+  .item-details {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+}
+
 .filter-tab {
   flex-shrink: 0;
   display: flex;

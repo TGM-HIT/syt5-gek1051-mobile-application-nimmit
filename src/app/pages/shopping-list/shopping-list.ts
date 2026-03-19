@@ -1,7 +1,7 @@
 import { Component, computed, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus } from 'lucide-angular';
-import { ShoppingItem, FilterType } from '../../models';
+import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, Star } from 'lucide-angular';
+import { ShoppingItem, FilterType, FavouriteItem } from '../../models';
 import { ShoppingListService, ModalService } from '../../services';
 import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-item-modal/add-item-modal';
 import { EditListModal, EditListData, EditListResult } from '../../components/edit-list-modal/edit-list-modal';
@@ -17,7 +17,7 @@ export class ShoppingList {
   private readonly modalService = inject(ModalService);
 
   // Lucide Icons
-  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus };
+  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, Star };
 
   // Liste Daten aus Service
   readonly listName = this.shoppingListService.listName;
@@ -38,6 +38,7 @@ export class ShoppingList {
 
   // Such- und Filter-State (lokal)
   readonly searchQuery = signal('');
+  readonly showAutocomplete = signal(false);
   readonly activeFilter = signal<FilterType>('all');
   readonly expandedItemId = signal<string | null>(null);
   readonly selectedCategories = signal<string[]>([]);
@@ -88,6 +89,65 @@ export class ShoppingList {
   readonly hasNoResults = computed(() => {
     return this.searchQuery().trim().length > 0 && this.filteredItems().length === 0;
   });
+
+  // Autocomplete und Favourites
+  readonly favourites = this.shoppingListService.favourites;
+  readonly isQueryEmpty = computed(() => !this.searchQuery().trim());
+
+  readonly filteredFavourites = computed(() => {
+    const query = this.searchQuery().toLowerCase().trim();
+    const favs = this.favourites();
+    if (!query) return [];
+    return favs.filter(fav => fav.name.toLowerCase().includes(query));
+  });
+
+  readonly shouldShowAutocomplete = computed(() =>
+    this.showAutocomplete() && !this.isQueryEmpty() && this.filteredFavourites().length > 0
+  );
+
+  onSearchQueryChange(newQuery: string): void {
+    this.searchQuery.set(newQuery);
+    this.showAutocomplete.set(true);
+  }
+
+  hideAutocomplete(): void {
+    this.showAutocomplete.set(false);
+  }
+
+  getFavouriteDetails(fav: FavouriteItem): string {
+    const sizeStr = fav.size ? `${fav.size} ` : '';
+    const unitStr = fav.unit !== 'Einheit' ? fav.unit : '';
+    return `${sizeStr}${unitStr}`;
+  }
+
+  hasFavouriteDetails(fav: FavouriteItem): boolean {
+    return !!(fav.size || fav.unit !== 'Einheit');
+  }
+
+  async addFavouriteItem(fav: FavouriteItem): Promise<void> {
+    this.showAutocomplete.set(false);
+    this.searchQuery.set('');
+
+    const result = await this.modalService.open<AddItemData, AddItemResult>({
+      component: AddItemModal,
+      data: {
+        prefillName: fav.name,
+        prefillUnit: fav.unit,
+        prefillSize: fav.size
+      }
+    });
+
+    if (result) {
+      this.shoppingListService.addItem({
+        name: result.name,
+        category: result.category,
+        totalQuantity: result.quantity,
+        info: result.info,
+        size: result.size,
+        unit: result.unit
+      });
+    }
+  }
 
   // Computed: Counts für Tabs aus Service
   readonly allCount = this.shoppingListService.allCount;
@@ -164,7 +224,7 @@ export class ShoppingList {
 
   onTouchEnd(item: ShoppingItem): void {
     const offset = this.swipeOffset();
-    
+
     if (Math.abs(offset) >= this.SWIPE_THRESHOLD) {
       if (this.isPurchased(item)) {
         // Für gekaufte Items: links = undo, rechts = delete
@@ -186,7 +246,7 @@ export class ShoppingList {
         }
       }
     }
-    
+
     this.resetSwipe();
   }
 
