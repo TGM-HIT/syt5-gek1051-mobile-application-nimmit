@@ -38,6 +38,7 @@ A modern, offline-first mobile shopping list application built with Angular and 
 ## Tech Stack
 
 This project uses Angular 21 with Capacitor 8 for cross-platform mobile development. For a complete overview of the technology stack, see [DOCS/Techstack.md](DOCS/Techstack.md).
+For a detailed architecture and implementation guide with code snippets, see [Technical Documentation](DOCS/Technologies.md).
 
 **Key Technologies:**
 - Angular 21 + TypeScript
@@ -127,6 +128,7 @@ src/
 
 - [User Stories](DOCS/STORIES.md)
 - [Tech Stack Details](DOCS/Techstack.md)
+- [Technical Documentation](DOCS/Technologies.md)
 - [Supabase CLI Guide](DOCS/Supabase-cli.md)
 - [Synchronization Strategy](DOCS/Synchronization.md)
 - [Contributing Guidelines](CONTRIBUTING.md)
