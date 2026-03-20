@@ -1,0 +1,53 @@
+name: Sync Story Status
+
+on:
+  workflow_dispatch:
+  issues:
+    types: [opened, reopened, closed]
+  push:
+    branches: [main]
+    paths:
+      - DOCS/STORIES.md
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: sync-story-status
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Sync Status Column
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.repository.default_branch || 'main' }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Update DOCS/STORIES.md status
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/update-stories-status.mjs
+
+      - name: Commit changes
+        run: |
+          if git diff --quiet -- DOCS/STORIES.md; then
+            echo "Story status unchanged."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add DOCS/STORIES.md
+          git commit -m "chore: sync story status [skip ci]"
+          git push

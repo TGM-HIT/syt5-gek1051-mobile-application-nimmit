@@ -8,7 +8,7 @@
 [![Commits](https://img.shields.io/badge/Commits-open%20history-6e7781)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/commits/main)
 [![Issues](https://img.shields.io/badge/Issues-open%20tracker-6e7781)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/issues)
 ![CI](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/ci.yml/badge.svg?branch=main)
-[![Coverage](https://codecov.io/gh/TGM-HIT/syt5-gek1051-mobile-application-nimmit/branch/main/graph/badge.svg)](https://codecov.io/gh/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+[![Coverage](.github/badges/coverage.svg)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/coverage.yml)
 
 ## CI Reports
 
@@ -38,6 +38,7 @@ A modern, offline-first mobile shopping list application built with Angular and 
 ## Tech Stack
 
 This project uses Angular 21 with Capacitor 8 for cross-platform mobile development. For a complete overview of the technology stack, see [DOCS/Techstack.md](DOCS/Techstack.md).
+For a detailed architecture and implementation guide with code snippets, see [Technical Documentation](DOCS/Technologies.md).
 
 **Key Technologies:**
 - Angular 21 + TypeScript
@@ -53,6 +54,10 @@ This project uses Angular 21 with Capacitor 8 for cross-platform mobile developm
 - Angular CLI
 - For iOS development: Xcode
 - For Android development: Android Studio
+
+## Testing
+
+For instructions on running tests, generating coverage, and running ESLint, see [DOCS/Testing.md](DOCS/Testing.md).
 
 ## Installation
 
@@ -126,7 +131,9 @@ src/
 ## Documentation
 
 - [User Stories](DOCS/STORIES.md)
+- [Testing & Linting](DOCS/Testing.md)
 - [Tech Stack Details](DOCS/Techstack.md)
+- [Technical Documentation](DOCS/Technologies.md)
 - [Supabase CLI Guide](DOCS/Supabase-cli.md)
 - [Synchronization Strategy](DOCS/Synchronization.md)
 - [Contributing Guidelines](CONTRIBUTING.md)
