@@ -3,11 +3,13 @@ import { AddItemModal, AddItemData, AddItemResult } from './add-item-modal';
 import { ModalService } from '../../services/modal.service';
 import { ShoppingListService } from '../../services/shopping-list.service';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { signal } from '@angular/core';
 
 describe('AddItemModal', () => {
   let component: AddItemModal;
   let fixture: ComponentFixture<AddItemModal>;
   let mockModalService: { dismiss: Mock, close: Mock };
+  let mockShoppingListService: { favourites: any, isCurrentFavourite: Mock, toggleFavourite: Mock };
 
   beforeEach(async () => {
     mockModalService = {
@@ -15,10 +17,17 @@ describe('AddItemModal', () => {
       close: vi.fn()
     };
 
+    mockShoppingListService = {
+      favourites: signal([]),
+      isCurrentFavourite: vi.fn().mockReturnValue(false),
+      toggleFavourite: vi.fn()
+    };
+
     await TestBed.configureTestingModule({
       imports: [AddItemModal],
       providers: [
-        { provide: ModalService, useValue: mockModalService }
+        { provide: ModalService, useValue: mockModalService },
+        { provide: ShoppingListService, useValue: mockShoppingListService }
       ]
     }).compileComponents();
 
@@ -245,6 +254,10 @@ describe('AddItemModal', () => {
       { id: '2', name: 'Brot', unit: 'Einheit' },
       { id: '3', name: 'Milka', unit: 'g', size: 100 }
     ];
+
+    beforeEach(() => {
+      mockShoppingListService.favourites.set(mock_favoriten);
+    });
 
     it('should filter favourites correctly', () => {
       component.name.set('Mil');
