@@ -18,7 +18,9 @@
     "cap:open:ios": "npx cap open ios",
     "cap:open:android": "npx cap open android",
     "cap:run:ios": "npx cap run ios",
-    "cap:run:android": "npx cap run android"
+    "cap:run:android": "npx cap run android",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
   },
   "prettier": {
     "printWidth": 100,
@@ -62,6 +64,7 @@
     "@tailwindcss/postcss": "^4.2.2",
     "@vitest/coverage-v8": "^4.1.0",
     "autoprefixer": "^10.4.27",
+    "cypress": "^15.12.0",
     "eslint": "^9.39.4",
     "jsdom": "^29.0.0",
     "postcss": "^8.5.6",
