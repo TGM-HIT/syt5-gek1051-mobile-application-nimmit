@@ -1,10 +1,14 @@
-import { Component, computed, signal, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus } from 'lucide-angular';
-import { ShoppingItem, FilterType } from '../../models';
-import { ShoppingListService, ModalService } from '../../services';
+import { ActivatedRoute } from '@angular/router';
 import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-item-modal/add-item-modal';
 import { EditListModal, EditListData, EditListResult } from '../../components/edit-list-modal/edit-list-modal';
+import { ModalService } from '../../services/modal.service';
+import { ShoppingListDataService, ShoppingItemRow } from '../../services/shopping-list-data.service';
+import { SupabaseConnector } from '../../services/supabase-connector';
+import { FilterType } from '../../types';
+import { PowerSyncService } from '../../services/powersync';
 
 @Component({
   selector: 'app-shopping-list',
@@ -12,16 +16,20 @@ import { EditListModal, EditListData, EditListResult } from '../../components/ed
   templateUrl: './shopping-list.html',
   styleUrl: './shopping-list.scss',
 })
-export class ShoppingList {
-  private readonly shoppingListService = inject(ShoppingListService);
+export class ShoppingList implements OnInit, OnDestroy {
+  private readonly shoppingListData = inject(ShoppingListDataService);
+  private readonly supabase = inject(SupabaseConnector);
+  private readonly route = inject(ActivatedRoute);
   private readonly modalService = inject(ModalService);
+  private readonly powerSync = inject(PowerSyncService);
+  private readonly items = signal<ShoppingItemRow[]>([]);
+  readonly listName = signal('Meine Einkaufsliste');
+  readonly listDescription = signal('Tippe auf +, um Produkte hinzuzufuegen');
+  private readonly listId = signal<bigint | null>(null);
+  private isDisposed = false;
 
   // Lucide Icons
   readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus };
-
-  // Liste Daten aus Service
-  readonly listName = this.shoppingListService.listName;
-  readonly listDescription = this.shoppingListService.listDescription;
 
   // Verfügbare Kategorien
   readonly categories = [
@@ -50,9 +58,6 @@ export class ShoppingList {
   private isSwiping = false;
   private readonly SWIPE_THRESHOLD = 70;
 
-  // Items aus Service
-  readonly items = this.shoppingListService.items;
-
   // Computed: Kategorien die in der Liste existieren
   readonly categoriesInList = computed(() => {
     const items = this.items();
@@ -77,11 +82,31 @@ export class ShoppingList {
 
   // Computed: Gefilterte Items
   readonly filteredItems = computed(() => {
-    return this.shoppingListService.getFilteredItems(
-      this.activeFilter(),
-      this.searchQuery(),
-      this.selectedCategories()
-    );
+    const activeFilter = this.activeFilter();
+    const search = this.searchQuery().trim().toLowerCase();
+    const selectedCategories = this.selectedCategories();
+
+    return this.items().filter((item) => {
+      if (activeFilter === 'purchased' && !this.isPurchased(item)) {
+        return false;
+      }
+      if (activeFilter === 'notPurchased' && this.isPurchased(item)) {
+        return false;
+      }
+
+      if (selectedCategories.length > 0 && !selectedCategories.includes(item.category)) {
+        return false;
+      }
+
+      if (!search) {
+        return true;
+      }
+      return (
+        item.name.toLowerCase().includes(search)
+        || item.category.toLowerCase().includes(search)
+        || (item.info?.toLowerCase().includes(search) ?? false)
+      );
+    });
   });
 
   // Computed: Keine Ergebnisse gefunden
@@ -90,10 +115,117 @@ export class ShoppingList {
   });
 
   // Computed: Counts für Tabs aus Service
-  readonly allCount = this.shoppingListService.allCount;
-  readonly notPurchasedCount = this.shoppingListService.notPurchasedCount;
-  readonly purchasedCount = this.shoppingListService.purchasedCount;
-  readonly progressPercentage = this.shoppingListService.progressPercentage;
+  readonly allCount = computed(() => this.items().length);
+  readonly purchasedCount = computed(() => this.items().filter((item) => this.isPurchased(item)).length);
+  readonly notPurchasedCount = computed(() => this.items().filter((item) => !this.isPurchased(item)).length);
+  readonly progressPercentage = computed(() => {
+    const total = this.allCount();
+    if (total === 0) {
+      return 0;
+    }
+    return Math.round((this.purchasedCount() / total) * 100);
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  async ngOnInit() {
+
+    await this.resolveListId();
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    this.powerSync.ready$.subscribe(async initialized => {
+      if (initialized) {
+        await this.watchListInfo();
+        this.watchItems();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.isDisposed = true;
+  }
+
+  private async resolveListId(): Promise<void> {
+    const listIdParam = this.route.snapshot.queryParamMap.get('listId');
+    const parsed = listIdParam ? BigInt(listIdParam) : BigInt(-1);
+
+    if (parsed > BigInt(-1)) {
+      this.listId.set(parsed);
+      return;
+    }
+
+    const session = await this.supabase.getSession();
+    const userId = session?.user.id;
+
+    if (!userId) {
+      return;
+    }
+
+    const latestListId = await this.shoppingListData.getLatestListIdForUser(userId);
+    this.listId.set(latestListId);
+  }
+
+  private async watchListInfo(): Promise<void> {
+    const listId = this.listId();
+
+    if (!listId) {
+      return;
+    }
+
+    const sql = `
+      SELECT id, li_id, name, description FROM "Lists" where li_id = ?`;
+
+    
+    this.powerSync.watchWithCallback(sql, (result) => {
+      // eslint-disable-next-line no-underscore-dangle
+      if (result.rows?._array) {
+        // eslint-disable-next-line no-underscore-dangle
+        const list = result.rows._array[0] as { id: bigint, li_id: bigint, name: string, description: string };
+        this.listName.set(list.name || 'Meine Einkaufsliste');
+        this.listDescription.set(list.description || 'Tippe auf +, um Produkte hinzuzufuegen');
+      } else {
+
+      this.listName.set('Meine Einkaufsliste');
+      this.listDescription.set('Tippe auf +, um Produkte hinzuzufuegen');
+      }
+    }, [listId]);
+  }
+
+  private watchItems(): void {
+    const listId = this.listId();
+
+    if (!listId) {
+      this.items.set([]);
+      return;
+    }
+
+    const sql = `SELECT 
+        li.id,
+        li.item AS itemId,
+        i.name,
+        COALESCE(c.name, 'Sonstiges') AS category,
+        li.target_amount AS totalQuantity,
+        li.curr_amount AS purchasedQuantity,
+        i.description AS info,
+        i.content AS size,
+        li.amount_unit AS unit,
+        li.created_at AS createdAt,
+        li.updated_at AS updatedAt
+        FROM "ListItems" li 
+        JOIN "Item" i ON i.i_id = li.item 
+        LEFT JOIN "Category" c ON c.c_id = i.category
+        WHERE li.liste = ? ORDER BY createdAt ASC`;
+
+    this.powerSync.watchWithCallback(sql, (result) => {
+      // eslint-disable-next-line no-underscore-dangle
+      if (result.rows?._array) {
+        // eslint-disable-next-line no-underscore-dangle
+        this.items.set(result.rows._array as ShoppingItemRow[]);
+      } else {
+        this.items.set([]);
+      }
+    }, [this.listId()]);
+  }
+
+
 
   // Item expandieren/kollabieren
   toggleExpand(itemId: string): void {
@@ -162,7 +294,7 @@ export class ShoppingList {
     }
   }
 
-  onTouchEnd(item: ShoppingItem): void {
+  onTouchEnd(item: ShoppingItemRow): void {
     const offset = this.swipeOffset();
     
     if (Math.abs(offset) >= this.SWIPE_THRESHOLD) {
@@ -170,19 +302,19 @@ export class ShoppingList {
         // Für gekaufte Items: links = undo, rechts = delete
         if (offset > 0) {
           // Swipe right - delete
-          this.shoppingListService.deleteItem(item.id);
+          void this.shoppingListData.deleteListItem(item.id);
         } else {
           // Swipe left - mark as not purchased
-          this.shoppingListService.markAsNotPurchased(item.id);
+          void this.shoppingListData.setPurchasedQuantity(item.id, 0);
         }
       } else {
         // Für nicht gekaufte Items: links = purchased, rechts = delete
         if (offset > 0) {
           // Swipe right - delete
-          this.shoppingListService.deleteItem(item.id);
+          void this.shoppingListData.deleteListItem(item.id);
         } else {
           // Swipe left - mark as purchased
-          this.shoppingListService.markAsPurchased(item.id);
+          void this.shoppingListData.setPurchasedQuantity(item.id, item.totalQuantity);
         }
       }
     }
@@ -212,25 +344,27 @@ export class ShoppingList {
   }
 
   // Item als gekauft markieren
-  markAsPurchased(item: ShoppingItem): void {
-    this.shoppingListService.markAsPurchased(item.id);
+  markAsPurchased(item: ShoppingItemRow): void {
+    void this.shoppingListData.setPurchasedQuantity(item.id, item.totalQuantity);
     this.expandedItemId.set(null);
   }
 
   // Item als nicht gekauft markieren
-  markAsNotPurchased(item: ShoppingItem): void {
-    this.shoppingListService.markAsNotPurchased(item.id);
+  markAsNotPurchased(item: ShoppingItemRow): void {
+    void this.shoppingListData.setPurchasedQuantity(item.id, 0);
     this.expandedItemId.set(null);
   }
 
   // Eingekaufte Menge erhöhen
-  incrementQuantity(item: ShoppingItem): void {
-    this.shoppingListService.incrementPurchasedQuantity(item.id);
+  incrementQuantity(item: ShoppingItemRow): void {
+    const nextAmount = Math.min(item.totalQuantity, item.purchasedQuantity + 1);
+    void this.shoppingListData.setPurchasedQuantity(item.id, nextAmount);
   }
 
   // Eingekaufte Menge verringern
-  decrementQuantity(item: ShoppingItem): void {
-    this.shoppingListService.decrementPurchasedQuantity(item.id);
+  decrementQuantity(item: ShoppingItemRow): void {
+    const nextAmount = Math.max(0, item.purchasedQuantity - 1);
+    void this.shoppingListData.setPurchasedQuantity(item.id, nextAmount);
   }
 
   // Neues Item hinzufügen
@@ -240,52 +374,47 @@ export class ShoppingList {
       data: { prefillName }
     });
 
-    if (result) {
-      this.shoppingListService.addItem({
-        name: result.name,
-        category: result.category,
-        totalQuantity: result.quantity,
-        info: result.info,
-        size: result.size,
-        unit: result.unit
-      });
+    const listId = this.listId();
+    if (result && listId !== null) {
+      const user = await this.supabase.getCurrentUser();
+      if (!user) {
+        await this.shoppingListData.addItemToList(listId, result, null);
+        return;
+      }
+      await this.shoppingListData.addItemToList(listId, result, user.id ?? null);
     }
   }
 
   // Item bearbeiten
-  async editItem(item: ShoppingItem): Promise<void> {
+  async editItem(item: ShoppingItemRow): Promise<void> {
     const result = await this.modalService.open<AddItemData, AddItemResult>({
       component: AddItemModal,
       data: { editItem: item }
     });
 
-    if (result && result.id) {
-      this.shoppingListService.updateItem(result.id, {
-        name: result.name,
-        category: result.category,
-        totalQuantity: result.quantity,
-        info: result.info,
-        size: result.size,
-        unit: result.unit
-      });
+    if (result && item.itemId) {
+      await this.shoppingListData.updateItemInList(item.id, item.itemId, result);
     }
     this.expandedItemId.set(null);
   }
 
   // Item löschen
-  deleteItem(item: ShoppingItem): void {
-    this.shoppingListService.deleteItem(item.id);
+  deleteItem(item: ShoppingItemRow): void {
+    void this.shoppingListData.deleteListItem(item.id);
     this.expandedItemId.set(null);
   }
 
   // Prüfen ob Item gekauft ist
-  isPurchased(item: ShoppingItem): boolean {
-    return this.shoppingListService.isPurchased(item);
+  isPurchased(item: ShoppingItemRow): boolean {
+    return item.purchasedQuantity >= item.totalQuantity;
   }
 
   // Status Text generieren
-  getStatusText(item: ShoppingItem): string {
-    return this.shoppingListService.getStatusText(item);
+  getStatusText(item: ShoppingItemRow): string {
+    if (item.totalQuantity <= 1) {
+      return this.isPurchased(item) ? 'Eingekauft' : 'Offen';
+    }
+    return `${item.purchasedQuantity}/${item.totalQuantity}`;
   }
 
   // Listennamen und Beschreibung bearbeiten
@@ -298,8 +427,9 @@ export class ShoppingList {
       }
     });
 
-    if (result) {
-      this.shoppingListService.updateListInfo(result.name, result.description);
+    const listId = this.listId();
+    if (result && listId !== null) {
+      await this.shoppingListData.updateListInfo(listId, result.name, result.description);
     }
   }
 }
