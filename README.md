@@ -8,7 +8,7 @@
 [![Commits](https://img.shields.io/badge/Commits-open%20history-6e7781)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/commits/main)
 [![Issues](https://img.shields.io/badge/Issues-open%20tracker-6e7781)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/issues)
 ![CI](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/ci.yml/badge.svg?branch=main)
-[![Coverage](https://codecov.io/gh/TGM-HIT/syt5-gek1051-mobile-application-nimmit/branch/main/graph/badge.svg)](https://codecov.io/gh/TGM-HIT/syt5-gek1051-mobile-application-nimmit)
+[![Coverage](.github/badges/coverage.svg)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/coverage.yml)
 
 ## CI Reports
 
