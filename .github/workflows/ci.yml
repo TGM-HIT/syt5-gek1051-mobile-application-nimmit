@@ -84,10 +84,13 @@ jobs:
           node-version: 22
           package-manager-cache: false
 
+      - name: Install dependencies
+        run: npm install
+
       - name: Cypress run
         uses: cypress-io/github-action@v6
         with:
-          install-command: npm install
+          install: false
           build: npm run build
           start: npm run start
           wait-on: 'http://localhost:4200'
