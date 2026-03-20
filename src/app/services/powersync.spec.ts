@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { SupabaseConnector } from './supabase-connector';
+import { PowerSyncService } from './powersync';
 
-describe('Supabase', () => {
-  let service: SupabaseConnector;
+describe('Powersync', () => {
+  let service: PowerSyncService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(SupabaseConnector);
+    service = TestBed.inject(PowerSyncService);
   });
 
   it('should be created', () => {
