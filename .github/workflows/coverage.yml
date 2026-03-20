@@ -37,8 +37,8 @@ jobs:
       - name: Generate coverage badge
         run: |
           mkdir -p .github/badges
-          read COVERAGE_PCT BADGE_COLOR < <(node -e "const fs=require('fs'); const summary=JSON.parse(fs.readFileSync('coverage/nimmit/coverage-summary.json','utf8')); const pct=Number(summary?.total?.lines?.pct ?? summary?.total?.statements?.pct ?? 0); const rounded=(Math.round(pct*100)/100).toFixed(2); let color='red'; if(pct>=90) color='brightgreen'; else if(pct>=80) color='green'; else if(pct>=70) color='yellowgreen'; else if(pct>=60) color='yellow'; else if(pct>=50) color='orange'; process.stdout.write(rounded + ' ' + color);")
-          curl -sSL "https://img.shields.io/badge/coverage-${COVERAGE_PCT}%25-${BADGE_COLOR}.svg" -o .github/badges/coverage.svg
+          read -r COVERAGE_PCT BADGE_COLOR < <(node -e "const fs=require('fs'); const summary=JSON.parse(fs.readFileSync('coverage/nimmit/coverage-summary.json','utf8')); const pct=Number(summary?.total?.lines?.pct ?? summary?.total?.statements?.pct ?? 0); const rounded=(Math.round(pct*100)/100).toFixed(2); let color='red'; if(pct>=90) color='brightgreen'; else if(pct>=80) color='green'; else if(pct>=70) color='yellowgreen'; else if(pct>=60) color='yellow'; else if(pct>=50) color='orange'; process.stdout.write(rounded + ' ' + color + '\n');")
+          curl -sSLo .github/badges/coverage.svg -L "https://img.shields.io/badge/coverage-${COVERAGE_PCT}%25-${BADGE_COLOR}.svg"
 
       - name: Commit coverage badge
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
