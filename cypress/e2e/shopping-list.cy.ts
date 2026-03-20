@@ -145,4 +145,56 @@ describe('Shopping List', () => {
     cy.get('.item-name').contains(itemName).should('be.visible');
     cy.get('.search-input').clear();
   });
+
+  it('should prevent submitting if name is empty', () => {
+    cy.get('.add-item-btn').first().click();
+    cy.get('.modal-content').should('be.visible');
+
+    // The submit button should be disabled natively when name is empty
+    cy.get('.submit-btn').should('be.disabled');
+
+    // Type name, button becomes enabled
+    cy.get('#name').type('A test Name');
+    cy.get('.submit-btn').should('not.be.disabled');
+
+    // Clear name, button becomes disabled again
+    cy.get('#name').clear();
+    cy.get('.submit-btn').should('be.disabled');
+
+    // Close modal
+    cy.get('.close-btn').click();
+  });
+
+  it('should be able to edit an existing item', () => {
+    const itemName = 'To Edit ' + Date.now();
+    const newName = 'Totally New Name ' + Date.now();
+
+    // Add item first
+    cy.get('.add-item-btn').first().click();
+    cy.get('#name').type(itemName);
+    cy.get('.submit-btn').click();
+    cy.get('.modal-content').should('not.exist');
+
+    // Expand the item
+    cy.get('.item-name').contains(itemName).parents('.item-card').as('editCard');
+    cy.get('@editCard').find('.item-header').click();
+
+    // Wait for the expansion animation or just force click
+    cy.get('@editCard').find('.action-btn.edit').should('be.visible');
+    cy.wait(500); 
+    cy.get('@editCard').find('.action-btn.edit').click({ force: true });
+    cy.get('.modal-content').should('be.visible');
+
+    // Verify modal is in edit mode
+    cy.get('.modal-title').should('contain.text', 'Produkt bearbeiten');
+    cy.get('#name').should('have.value', itemName);
+
+    // Change name and submit
+    cy.get('#name').clear().type(newName);
+    cy.get('.submit-btn').click();
+
+    // Verify item name changed in list
+    cy.get('.item-name').contains(newName).should('be.visible');
+    cy.get('.item-name').contains(itemName).should('not.exist');
+  });
 });

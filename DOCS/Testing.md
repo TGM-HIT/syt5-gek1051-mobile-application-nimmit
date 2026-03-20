@@ -413,3 +413,6 @@ pm run cypress:run\ - Runs the Cypress tests in headless mode (useful for CI/CD)
 - **Filter by Category**: Ensures that assigning an item a category and clicking the matching category tab only shows items belonging to that category, and toggles back properly when clicked again.
 
 - **Add directly from Search**: Ensures that when searching for an item that doesn't exist, clicking the 'Hinzufügen' fallback button auto-fills the queried string into the item creation modal.
+
+- **Form Validation**: Tests edge cases in the item modal, verifying the 'Speichern/Hinzufügen' button is disabled as long as the mandatory name field is empty.
+- **Edit Existing Item**: Verifies the modification flow by expanding an item, clicking edit, modifying the form, and ensuring the UI reflects the updated name afterward.
