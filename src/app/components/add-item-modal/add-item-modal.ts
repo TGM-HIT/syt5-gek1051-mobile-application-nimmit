@@ -2,10 +2,12 @@ import { Component, inject, signal, input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, X, Plus, Minus } from 'lucide-angular';
 import { ModalService } from '../../services/modal.service';
-import { ShoppingItem, Unit } from '../../models';
+import { ShoppingItemRow, Unit } from '../../services/shopping-list-data.service';
+
+type EditableShoppingItem = Pick<ShoppingItemRow, 'id' | 'name' | 'category' | 'totalQuantity' | 'info' | 'size' | 'unit'>;
 
 export interface AddItemData {
-  editItem?: ShoppingItem;
+  editItem?: EditableShoppingItem;
   prefillName?: string;
 }
 
