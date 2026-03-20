@@ -371,3 +371,45 @@ These are the default Capacitor/Android template tests.
 
 **Suite:** `ExampleInstrumentedTest`
 - `useAppContext` (asserts the app context package name matches the expected application id)
+
+
+## End-to-End (E2E) Testing with Cypress
+
+### Overview
+We use Cypress for end-to-end testing to ensure that the core use cases of the application work seamlessly from a user's perspective. Our tests simulate user interactions to cover navigation, shopping list management, and authentication flows. Synchronization features are currently excluded from testing as they are not yet fully implemented.
+
+### Setup and Running Tests
+Cypress was installed via NPM and the \package.json\ was updated with relevant scripts:
+
+- \
+pm run cypress:open\ - Opens the Cypress interactive Test Runner.
+- \
+pm run cypress:run\ - Runs the Cypress tests in headless mode (useful for CI/CD).
+
+### Documented Use Cases
+
+#### 1. Navigation (\cypress/e2e/navigation.cy.ts\)
+**Goal:** Verify that the bottom navigation bar correctly routes the user between different pages.
+- **Navigate to Groups**: Clicks the 'Groups' icon in the navigation bar and verifies that the URL changes to \/groups\.
+- **Navigate to Settings**: Clicks the 'Settings' icon and verifies that the URL changes to \/settings\.
+- **Navigate to Shopping List**: Clicks the 'List' icon from another page to ensure the user is routed back to \/list\.
+
+#### 2. Shopping List (\cypress/e2e/shopping-list.cy.ts\)
+**Goal:** Ensure users can manage items on their shopping list.
+- **Display List**: Verifies that the initial shopping list UI and search input render correctly.
+- **Open Add Item Modal**: Clicks the global add button to open the modal and verifies its visibility.
+- **Add New Item**: Fills out the 'Add Item' form (name, quantity, size, info) and submits it. Verifies the newly created item appears in the list.
+- **Delete Item**: Expands an existing item card and clicks the delete button, then verifies the item is removed from the DOM.
+
+#### 3. Authentication (\cypress/e2e/authentication.cy.ts\)
+**Goal:** Test the display and client-side validation of the login/register flows.
+- **Display Login Page**: Verifies that the email input, password input, and login button render properly.
+- **Validation Errors**: Triggers form submission or blur events on empty fields to ensure that the proper validation messages appear.
+- **Navigate to Register**: Tests the link to switch from the login page to the registration screen.
+- **Attempt Login**: Simulates an invalid user login to verify that an error message is returned from the system.
+
+
+- **Filter by Search Query**: Verifies that typing a term into the search bar successfully filters the visible items down to those matching the criteria, and that a 'No Results' view is shown for non-existent items.
+- **Filter by Category**: Ensures that assigning an item a category and clicking the matching category tab only shows items belonging to that category, and toggles back properly when clicked again.
+
+- **Add directly from Search**: Ensures that when searching for an item that doesn't exist, clicking the 'Hinzufügen' fallback button auto-fills the queried string into the item creation modal.
