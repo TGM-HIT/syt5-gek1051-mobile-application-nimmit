@@ -2,8 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Profile, SupabaseService } from '../../services/supabase';
 import { User } from '@supabase/supabase-js';
+import { SupabaseConnector } from '../../services/supabase-connector';
+import { Profile, Timestamp } from '../../types';
 
 @Component({
   selector: 'app-account',
@@ -13,7 +14,7 @@ import { User } from '@supabase/supabase-js';
 })
 export class Account implements OnInit {
   private readonly fb = inject(FormBuilder);
-  private readonly supabaseService = inject(SupabaseService);
+  private readonly supabaseService = inject(SupabaseConnector);
   private readonly router = inject(Router);
 
   readonly isLoading = signal(true);
@@ -74,7 +75,7 @@ export class Account implements OnInit {
     }
   }
 
-  formatUpdatedAt(updatedAt?: Date): string {
+  formatUpdatedAt(updatedAt?: Timestamp): string {
     if (!updatedAt) {
       return '-';
     }
@@ -82,7 +83,7 @@ export class Account implements OnInit {
     return new Intl.DateTimeFormat('de-DE', {
       dateStyle: 'medium',
       timeStyle: 'short',
-    }).format(updatedAt);
+    }).format(new Date(updatedAt));
   }
 
   private async loadAccountData(): Promise<void> {
@@ -110,11 +111,19 @@ export class Account implements OnInit {
       const errorMsg =
         error instanceof Error ? error.message : 'Account-Daten konnten nicht geladen werden.';
 
-      // Redirect to login if auth session is missing
-      if (
+      const errorCode =
+        typeof error === 'object' && error !== null && 'code' in error
+          ? String((error as { code: unknown }).code)
+          : '';
+
+      const isAuthError =
         errorMsg.includes('Auth session missing') ||
-        errorMsg.includes('Kein eingeloggter Benutzer')
-      ) {
+        errorMsg.includes('Kein eingeloggter Benutzer') ||
+        /jwt|token|session/i.test(errorMsg) ||
+        errorCode.startsWith('PGRST3');
+
+      // Redirect to login if auth session is missing
+      if (isAuthError) {
         void this.router.navigateByUrl('/login');
         return;
       }
@@ -136,7 +145,7 @@ export class Account implements OnInit {
 
     this.editForm.setValue({
       username: profile?.username ?? '',
-      sync_interval: profile?.settings.sync_interval ?? 15,
+      sync_interval: profile?.settings?.sync_interval ?? 15,
     });
   }
 }

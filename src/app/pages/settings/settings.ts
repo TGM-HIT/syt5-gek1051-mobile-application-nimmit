@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
-import { ThemeService, Theme } from '../../services';
+import { ThemeService } from '../../services';
 import { RouterLink } from '@angular/router';
+import { Theme } from '../../types';
 
 @Component({
   selector: 'app-settings',
