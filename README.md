@@ -55,6 +55,10 @@ For a detailed architecture and implementation guide with code snippets, see [Te
 - For iOS development: Xcode
 - For Android development: Android Studio
 
+## Testing
+
+For instructions on running tests, generating coverage, and running ESLint, see [DOCS/Testing.md](DOCS/Testing.md).
+
 ## Installation
 
 1. Clone the repository:
@@ -127,6 +131,7 @@ src/
 ## Documentation
 
 - [User Stories](DOCS/STORIES.md)
+- [Testing & Linting](DOCS/Testing.md)
 - [Tech Stack Details](DOCS/Techstack.md)
 - [Technical Documentation](DOCS/Technologies.md)
 - [Supabase CLI Guide](DOCS/Supabase-cli.md)
