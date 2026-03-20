@@ -12,6 +12,7 @@ on:
 permissions:
   contents: write
   issues: read
+  pull-requests: write
 
 concurrency:
   group: sync-story-status
@@ -39,15 +40,12 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/update-stories-status.mjs
 
-      - name: Commit changes
-        run: |
-          if git diff --quiet -- DOCS/STORIES.md; then
-            echo "Story status unchanged."
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add DOCS/STORIES.md
-          git commit -m "chore: sync story status [skip ci]"
-          git push
+      - name: Create Pull Request for Story Status
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore: sync story status [skip ci]"
+          title: "chore: sync story status"
+          body: "Automated PR to sync story status."
+          branch: "chore/sync-story-status"
+          base: main
+          add-paths: DOCS/STORIES.md
