@@ -8,17 +8,26 @@ export const routes: Routes = [
   },
   {
     path: 'list',
-    loadComponent: () =>
-      import('./pages/shopping-list/shopping-list').then((m) => m.ShoppingList),
+    loadComponent: () => import('./pages/shopping-list/shopping-list').then((m) => m.ShoppingList),
   },
   {
     path: 'groups',
-    loadComponent: () =>
-      import('./pages/groups/groups').then((m) => m.Groups),
+    loadComponent: () => import('./pages/groups/groups').then((m) => m.Groups),
   },
   {
     path: 'settings',
-    loadComponent: () =>
-      import('./pages/settings/settings').then((m) => m.Settings),
+    loadComponent: () => import('./pages/settings/settings').then((m) => m.Settings),
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./authentication/login/login').then((m) => m.Login),
+  },
+  {
+    path: 'register',
+    loadComponent: () => import('./authentication/register/register').then((m) => m.Register),
+  },
+  {
+    path: 'account',
+    loadComponent: () => import('./authentication/account/account').then((m) => m.Account),
   },
 ];

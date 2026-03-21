@@ -1,0 +1,71 @@
+<div class="page-container">
+    <h1>Account</h1>
+
+    <div class="setting-item" *ngIf="isLoading()">
+        <span class="setting-label">Lade Account-Daten...</span>
+    </div>
+
+    <div class="setting-item error" *ngIf="!isLoading() && errorMessage()">
+        <span class="setting-label">Fehler</span>
+        <span>{{ errorMessage() }}</span>
+    </div>
+
+    <ng-container *ngIf="!isLoading() && profile() as profile">
+        <div class="setting-item">
+            <span class="setting-label">Profilinformationen</span>
+
+            <div class="attribute-grid">
+                <div class="attribute-row">
+                    <span class="attribute-key">u_id</span>
+                    <span class="attribute-value">{{ profile.u_id || '-' }}</span>
+                </div>
+                <div class="attribute-row">
+                    <span class="attribute-key">username</span>
+                    <span class="attribute-value">{{ profile.username }}</span>
+                </div>
+                <div class="attribute-row">
+                    <span class="attribute-key">settings.theme</span>
+                    <span class="attribute-value">{{ profile.settings.theme }}</span>
+                </div>
+                <div class="attribute-row">
+                    <span class="attribute-key">settings.sync_interval</span>
+                    <span class="attribute-value">{{ profile.settings.sync_interval }} min</span>
+                </div>
+                <div class="attribute-row">
+                    <span class="attribute-key">updated_at</span>
+                    <span class="attribute-value">{{ formatUpdatedAt(profile.updated_at) }}</span>
+                </div>
+                <div class="attribute-row">
+                    <span class="attribute-key">auth.email</span>
+                    <span class="attribute-value">{{ user()?.email || '-' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="setting-item">
+            <div class="edit-header">
+                <span class="setting-label">Edit Mode</span>
+                <button class="theme-btn" [class.active]="isEditMode()" (click)="toggleEditMode()">
+                    {{ isEditMode() ? 'Bearbeiten beenden' : 'Bearbeiten aktivieren' }}
+                </button>
+            </div>
+
+            <form class="edit-form" *ngIf="isEditMode()" [formGroup]="editForm" (ngSubmit)="saveChanges()">
+                <label class="field-label" for="username">Username</label>
+                <input id="username" type="text" class="text-input" formControlName="username" />
+
+                <label class="field-label" for="sync_interval">
+                    Sync-Intervall: {{ editForm.controls.sync_interval.value }} min
+                </label>
+                <input id="sync_interval" class="slider-input" type="range" min="1" max="60" step="1"
+                    formControlName="sync_interval" />
+
+                <button class="theme-btn active" type="submit" [disabled]="isSaving()">
+                    {{ isSaving() ? 'Speichere...' : 'Änderungen speichern' }}
+                </button>
+            </form>
+        </div>
+        <button type="button" class="theme-btn back-link" (click)="this.logout()">Abmelden</button>
+        <a class="theme-btn back-link" routerLink="/settings">Zurück zu Einstellungen</a>
+    </ng-container>
+</div>

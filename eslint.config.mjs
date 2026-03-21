@@ -1,5 +1,6 @@
 import { cloudflightAngularConfig } from '@cloudflight/eslint-plugin-angular';
 import { includeIgnoreFile } from '@eslint/compat';
+import { globalIgnores } from '@eslint/config-helpers';
 import { dirname, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -12,6 +13,9 @@ export default [
     rootDirectory: directory,
     tsConfigFiles: ['./tsconfig.app.json', './tsconfig.spec.json'],
   }),
+  globalIgnores([
+    "src/app/authentication/*"
+  ]),
   // Transitional overrides so the existing codebase can adopt Cloudflight rules incrementally.
   {
     rules: {
