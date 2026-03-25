@@ -22,7 +22,7 @@ export type AmountUnit =
 // 📂 Category
 // ----------------------------------
 export interface Category {
-  c_id: number;
+  id: bigint;
   created_at: Timestamp;
   name: string;
 }
@@ -31,12 +31,12 @@ export interface Category {
 // 📦 Item
 // ----------------------------------
 export interface Item {
-  i_id: number;
+  id: bigint;
   created_at: Timestamp;
   name: string;
 
-  category: number; // FK → Category.c_id
-  content: number;
+  category: bigint; // FK → Category.id
+  content?: number | null;
 
   description?: string | null;
 
@@ -48,7 +48,7 @@ export interface Item {
 // 📋 Lists
 // ----------------------------------
 export interface Lists {
-  li_id: number;
+  id: bigint;
   created_at: Timestamp;
   name: string;
   description?: string | null;
@@ -58,8 +58,8 @@ export interface Lists {
 // 🧾 ListItem (Composite PK)
 // ----------------------------------
 export interface ListItem {
-  liste: number; // FK → Lists.li_id
-  item: number;  // FK → Item.i_id
+  liste: bigint; // FK → Lists.id
+  item: bigint;  // FK → Item.id
 
   created_at: Timestamp;
   updated_at: Timestamp;
@@ -73,11 +73,10 @@ export interface ListItem {
 // ⭐ UserFavorites
 // ----------------------------------
 export interface UserFavorites {
-  f_id: number;
+  id: bigint;
   created_at: Timestamp;
-
   user: UUID;
-  item: number;
+  item: bigint; // FK → Item.id
 }
 
 // ----------------------------------
@@ -85,9 +84,8 @@ export interface UserFavorites {
 // ----------------------------------
 export interface UserLists {
   created_at: Timestamp;
-
   user: UUID;
-  list: number;
+  list: bigint;
 }
 
 // ----------------------------------
@@ -100,7 +98,7 @@ export interface UserSettings {
 }
 
 export interface Profile {
-  u_id: UUID;
+  id: UUID;
   username: string;
 
   settings?: UserSettings | null;

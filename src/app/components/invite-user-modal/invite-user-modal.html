@@ -1,0 +1,79 @@
+<div class="modal-content">
+  <div class="modal-header">
+    <h2 class="modal-title">Nutzer einladen</h2>
+    <button class="close-btn" (click)="close()" [disabled]="isSubmitting()">
+      <lucide-icon [img]="icons.X" [size]="24" [strokeWidth]="2"></lucide-icon>
+    </button>
+  </div>
+
+  <form class="modal-form" (ngSubmit)="submit()">
+    <div class="form-group users-section">
+      <div class="users-header">
+        <p class="users-title">Nutzer in dieser Liste</p>
+        <span class="users-count">{{ this.data()?.currentUsers?.length || 0 }}</span>
+      </div>
+
+      @if (this.data()?.currentUsers?.length) {
+        <ul class="current-users">
+          @for (user of this.data()?.currentUsers; track user.email) {
+            <li class="user-item">
+              <div class="user-avatar" aria-hidden="true">
+                {{ (user.username || user.email).charAt(0).toUpperCase() }}
+              </div>
+              <div class="user-meta">
+                <p class="user-name">{{ user.username || 'Unbekannt' }}</p>
+                <p class="user-email">{{ user.email }}</p>
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="users-empty">Noch keine Nutzer in dieser Liste.</p>
+      }
+    </div>
+    <div class="form-group">
+      <label for="inviteEmail">E-Mail des Nutzers *</label>
+      <div class="email-row">
+        <input
+          type="email"
+          id="inviteEmail"
+          class="form-input"
+          placeholder="name@beispiel.at"
+          [ngModel]="inviteEmail()"
+          (ngModelChange)="onEmailChange($event)"
+          name="inviteEmail"
+          required
+        />
+        <button
+          type="button"
+          class="check-btn"
+          (click)="resolveUsername()"
+          [disabled]="isResolving() || isSubmitting()"
+        >
+          {{ isResolving() ? 'Prüfen...' : 'Prüfen' }}
+        </button>
+      </div>
+    </div>
+
+    @if (hasChecked()) {
+      <div class="verification-box" [class.success]="resolvedUsername()" [class.error]="!!errorMessage()">
+        @if (resolvedUsername()) {
+          <p class="verification-label">Supabase-Bestätigung</p>
+          <p class="verification-value">Benutzername: {{ resolvedUsername() }}</p>
+        } @else if (errorMessage()) {
+          <p class="verification-error">{{ errorMessage() }}</p>
+        } @else {
+          <p class="verification-error">Kein Benutzername verfügbar.</p>
+        }
+      </div>
+    }
+
+    @if (errorMessage() && !hasChecked()) {
+      <p class="inline-error">{{ errorMessage() }}</p>
+    }
+
+    <button type="submit" class="submit-btn" [disabled]="!canSubmit">
+      {{ isSubmitting() ? 'Sende Einladung...' : 'Einladung senden' }}
+    </button>
+  </form>
+</div>

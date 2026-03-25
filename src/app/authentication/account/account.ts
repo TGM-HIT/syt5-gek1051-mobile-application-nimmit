@@ -48,7 +48,7 @@ export class Account implements OnInit {
     }
 
     const profile = this.profile();
-    if (!profile?.u_id) {
+    if (!profile?.id) {
       this.errorMessage.set('Keine gueltige User-ID gefunden.');
       return;
     }
@@ -58,7 +58,7 @@ export class Account implements OnInit {
 
     try {
       const { username, sync_interval } = this.editForm.getRawValue();
-      const updatedProfile = await this.supabaseService.updateProfile(profile.u_id, {
+      const updatedProfile = await this.supabaseService.updateProfile(profile.id, {
         username,
         sync_interval,
       });

@@ -5,9 +5,19 @@
       <h1 class="list-title">{{ listName() }}</h1>
       <p class="list-description">{{ listDescription() }}</p>
     </div>
-    <button class="edit-list-btn" (click)="editListInfo()">
-      <lucide-icon [img]="icons.Pencil" [size]="20" [strokeWidth]="2"></lucide-icon>
-    </button>
+    <div class="list-header-actions">
+      <button
+        class="edit-list-btn"
+        (click)="openInviteModal()"
+        [disabled]="!isOnline()"
+        [title]="isOnline() ? 'Nutzer einladen' : 'Nur online verfuegbar'"
+      >
+        <lucide-icon [img]="icons.UserPlus" [size]="20" [strokeWidth]="2"></lucide-icon>
+      </button>
+      <button class="edit-list-btn" (click)="editListInfo()">
+        <lucide-icon [img]="icons.Pencil" [size]="20" [strokeWidth]="2"></lucide-icon>
+      </button>
+    </div>
   </header>
 
   <!-- Suchfeld -->
@@ -20,7 +30,7 @@
         placeholder="Finde ein Produkt..."
         [ngModel]="searchQuery()"
         (ngModelChange)="searchQuery.set($event)"
-      />
+        />
     </div>
     <button class="add-item-btn" (click)="addNewItem()">
       <lucide-icon [img]="icons.Plus" [size]="24" [strokeWidth]="2"></lucide-icon>

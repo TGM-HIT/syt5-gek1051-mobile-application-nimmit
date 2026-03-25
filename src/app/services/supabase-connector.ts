@@ -82,7 +82,7 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
     const { data, error } = await this.client
       .from('profiles')
       .select('*')
-      .eq('u_id', userId)
+      .eq('id', userId)
       .maybeSingle<Profile>();
 
     if (error) {
@@ -112,7 +112,7 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
     }
 
     const profile: Profile = {
-      u_id: userId,
+      id: userId,
       username: username.trim(),
       settings: {
         theme: 'system',
@@ -149,8 +149,8 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
           sync_interval: payload.sync_interval,
         },
       })
-      .eq('u_id', userId)
-      .select('u_id, username, settings, updated_at')
+      .eq('id', userId)
+      .select('id, username, settings, updated_at')
       .single<Profile>();
 
     if (error) {
@@ -160,8 +160,120 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
     return data;
   }
 
+  async getUserCountForList(listId: bigint): Promise<number> {
+    const rpcResult = await this.client.rpc('get_user_count_for_list', { list_id: listId });
+    if (rpcResult.error) {
+      console.error('Error calling RPC get_user_count_for_list:', rpcResult.error);
+      throw rpcResult.error;
+    }
+    const count = rpcResult.data as number;
+    return count;
+  }
+
+  async getUsersForList(listId: bigint): Promise<{ username: string, email: string}[]> {
+    const rpcResult = await this.client.rpc('get_users_for_list', { list_id: listId });
+    if (rpcResult.error) {
+      console.error('Error calling RPC get_users_for_list:', rpcResult.error);
+      throw rpcResult.error;
+    }
+    const users = rpcResult.data as {username: string, email: string}[];
+    return users;
+  }
+
+  async resolveInviteeByEmail(email: string): Promise<{ userId: string | null; username: string | null }> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      return { userId: null, username: null };
+    }
+
+    const rpcResult = await this.client.rpc('resolve_invitee_by_email', {
+      p_email: normalizedEmail,
+    });
+
+    if (!rpcResult.error) {
+      return this.parseInviteePayload(rpcResult.data);
+    }
+
+    const missingFunction = rpcResult.error.message.toLowerCase().includes('function')
+      && rpcResult.error.message.toLowerCase().includes('does not exist');
+
+    if (!missingFunction) {
+      throw rpcResult.error;
+    }
+
+    const profileResult = await this.client
+      .from('profiles')
+      .select('id, username')
+      .eq('email', normalizedEmail)
+      .maybeSingle<{ id: string; username: string }>();
+
+    if (profileResult.error) {
+      throw new Error('Supabase-Userpruefung nicht verfuegbar. Erstelle die Funktion resolve_invitee_by_email(email).');
+    }
+
+    if (!profileResult.data) {
+      return { userId: null, username: null };
+    }
+
+    return {
+      userId: profileResult.data.id,
+      username: profileResult.data.username ?? null,
+    };
+  }
+
+  async inviteUserToListByEmail(listId: bigint, email: string): Promise<{ userId: string; username: string | null }> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      throw new Error('Bitte gib eine gueltige E-Mail-Adresse ein.');
+    }
+
+    const invitee = await this.resolveInviteeByEmail(normalizedEmail);
+    if (!invitee.userId) {
+      throw new Error('Kein Nutzer mit dieser E-Mail gefunden.');
+    }
+
+    const relationId = `${invitee.userId}|${listId}`;
+
+    const { error } = await this.client.from('UserLists').insert({
+      id: relationId,
+      created_at: new Date().toISOString(),
+      user: invitee.userId,
+      list: listId,
+    });
+
+    if (error && error.code !== '23505') {
+      throw error;
+    }
+
+    return {
+      userId: invitee.userId,
+      username: invitee.username,
+    };
+  }
+
   async logout() {
     await this.client.auth.signOut();
+  }
+
+  private parseInviteePayload(payload: unknown): { userId: string | null; username: string | null } {
+    if (!payload) {
+      return { userId: null, username: null };
+    }
+
+    if (Array.isArray(payload)) {
+      return this.parseInviteePayload(payload[0]);
+    }
+
+    if (typeof payload === 'object') {
+      const userId = Reflect.get(payload, 'user_id');
+      const username = Reflect.get(payload, 'username');
+      return {
+        userId: typeof userId === 'string' ? userId : null,
+        username: typeof username === 'string' ? username : null,
+      };
+    }
+
+    return { userId: null, username: null };
   }
 
   async fetchCredentials() {
@@ -176,9 +288,13 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
 
     console.debug('session expires at', session.expires_at);
 
+    if (!session.access_token) {
+      throw new Error('No access token found in session');
+    }
+
     return {
       endpoint: this.config.powersyncUrl,
-      token: session.access_token ?? ''
+      token: session.access_token
     } satisfies PowerSyncCredentials;
   }
 
@@ -195,13 +311,15 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
       // or edge functions to process the entire transaction in a single call.
       for (const op of transaction.crud) {
         lastOp = op;
+        console.warn('Uploading operation to Supabase:', op);
         const table = this.client.from(op.table);
+        console.log('Processing operation', op.op, 'on table', op.table, 'with data', op.opData, "with ClientId");
         let result: any;
         switch (op.op) {
           case UpdateType.PUT:
             { const record = { ...op.opData, id: op.id };
             result = await table.upsert(record);
-            break; }
+            break; } 
           case UpdateType.PATCH:
             result = await table.update(op.opData).eq('id', op.id);
             break;

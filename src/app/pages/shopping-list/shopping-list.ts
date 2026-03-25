@@ -1,9 +1,10 @@
 import { Component, OnDestroy, OnInit, computed, signal, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus } from 'lucide-angular';
-import { ActivatedRoute } from '@angular/router';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, UserPlus } from 'lucide-angular';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-item-modal/add-item-modal';
 import { EditListModal, EditListData, EditListResult } from '../../components/edit-list-modal/edit-list-modal';
+import { InviteUserModal, InviteUserData, InviteUserResult } from '../../components/invite-user-modal/invite-user-modal';
 import { ModalService } from '../../services/modal.service';
 import { ShoppingListDataService, ShoppingItemRow } from '../../services/shopping-list-data.service';
 import { SupabaseConnector } from '../../services/supabase-connector';
@@ -12,7 +13,7 @@ import { PowerSyncService } from '../../services/powersync';
 
 @Component({
   selector: 'app-shopping-list',
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, ReactiveFormsModule],
   templateUrl: './shopping-list.html',
   styleUrl: './shopping-list.scss',
 })
@@ -20,6 +21,7 @@ export class ShoppingList implements OnInit, OnDestroy {
   private readonly shoppingListData = inject(ShoppingListDataService);
   private readonly supabase = inject(SupabaseConnector);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly modalService = inject(ModalService);
   private readonly powerSync = inject(PowerSyncService);
   private readonly items = signal<ShoppingItemRow[]>([]);
@@ -27,9 +29,14 @@ export class ShoppingList implements OnInit, OnDestroy {
   readonly listDescription = signal('Tippe auf +, um Produkte hinzuzufuegen');
   private readonly listId = signal<bigint | null>(null);
   private isDisposed = false;
+  private deleted = false;
+  readonly isOnline = signal<boolean>(navigator.onLine);
+  private readonly handleOnlineStatusChange = () => {
+    this.isOnline.set(navigator.onLine);
+  };
 
   // Lucide Icons
-  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus };
+  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, UserPlus };
 
   // Verfügbare Kategorien
   readonly categories = [
@@ -128,6 +135,8 @@ export class ShoppingList implements OnInit, OnDestroy {
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   async ngOnInit() {
+    window.addEventListener('online', this.handleOnlineStatusChange);
+    window.addEventListener('offline', this.handleOnlineStatusChange);
 
     await this.resolveListId();
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -141,6 +150,8 @@ export class ShoppingList implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.isDisposed = true;
+    window.removeEventListener('online', this.handleOnlineStatusChange);
+    window.removeEventListener('offline', this.handleOnlineStatusChange);
   }
 
   private async resolveListId(): Promise<void> {
@@ -171,14 +182,17 @@ export class ShoppingList implements OnInit, OnDestroy {
     }
 
     const sql = `
-      SELECT id, li_id, name, description FROM "Lists" where li_id = ?`;
+      SELECT id, name, description FROM "Lists" where id = ?`;
 
     
     this.powerSync.watchWithCallback(sql, (result) => {
+      if (this.deleted) {
+        return;
+      }
       // eslint-disable-next-line no-underscore-dangle
       if (result.rows?._array) {
         // eslint-disable-next-line no-underscore-dangle
-        const list = result.rows._array[0] as { id: bigint, li_id: bigint, name: string, description: string };
+        const list = result.rows._array[0] as { id: bigint, name: string, description: string };
         this.listName.set(list.name || 'Meine Einkaufsliste');
         this.listDescription.set(list.description || 'Tippe auf +, um Produkte hinzuzufuegen');
       } else {
@@ -209,9 +223,9 @@ export class ShoppingList implements OnInit, OnDestroy {
         li.amount_unit AS unit,
         li.created_at AS createdAt,
         li.updated_at AS updatedAt
-        FROM "ListItems" li 
-        JOIN "Item" i ON i.i_id = li.item 
-        LEFT JOIN "Category" c ON c.c_id = i.category
+        FROM "ListItem" li 
+        JOIN "Item" i ON i.id = li.item 
+        LEFT JOIN "Category" c ON c.id = i.category
         WHERE li.liste = ? ORDER BY createdAt ASC`;
 
     this.powerSync.watchWithCallback(sql, (result) => {
@@ -372,7 +386,7 @@ export class ShoppingList implements OnInit, OnDestroy {
     const result = await this.modalService.open<AddItemData, AddItemResult>({
       component: AddItemModal,
       data: { prefillName }
-    });
+    }).finally(() => {this.searchQuery.set('');});
 
     const listId = this.listId();
     if (result && listId !== null) {
@@ -381,7 +395,7 @@ export class ShoppingList implements OnInit, OnDestroy {
         await this.shoppingListData.addItemToList(listId, result, null);
         return;
       }
-      await this.shoppingListData.addItemToList(listId, result, user.id ?? null);
+      await this.shoppingListData.addItemToList(listId, result, user.id);
     }
   }
 
@@ -428,8 +442,37 @@ export class ShoppingList implements OnInit, OnDestroy {
     });
 
     const listId = this.listId();
-    if (result && listId !== null) {
+    if (result?.action === 'save' && listId !== null && result.name !== undefined && result.description !== undefined) {
       await this.shoppingListData.updateListInfo(listId, result.name, result.description);
+      return;
     }
+
+    if (result?.action === 'delete' && listId !== null) {
+      this.deleted = true;
+      await this.router.navigate(['/lists']);
+      console.warn("List deleted", listId);
+      await this.shoppingListData.deleteList(listId);
+    }
+  }
+
+  async openInviteModal(): Promise<void> {
+    if (!this.isOnline()) {
+      return;
+    }
+
+    const listId = this.listId();
+    if (!listId) {
+      return;
+    }
+    const currentUsers = await this.supabase.getUsersForList(listId);
+    const inviterEmail = (await this.supabase.getSession())?.user.email ?? '';
+    await this.modalService.open<InviteUserData, InviteUserResult>({
+      component: InviteUserModal,
+      data: {
+        listId,
+        inviterEmail,
+        currentUsers
+      },
+    });
   }
 }
