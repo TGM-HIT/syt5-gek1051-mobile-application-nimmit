@@ -34,8 +34,8 @@
         (ngModelChange)="category.set($event)"
         name="category"
       >
-        @for (cat of categories; track cat) {
-          <option [value]="cat">{{ cat }}</option>
+        @for (cat of categories(); track cat) {
+          <option [value]="cat.name">{{ cat.name }}</option>
         }
       </select>
     </div>
