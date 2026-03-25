@@ -1,6 +1,6 @@
 import { Component, inject, signal, input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, X } from 'lucide-angular';
+import { LucideAngularModule, X, Trash2 } from 'lucide-angular';
 import { ModalService } from '../../services/modal.service';
 
 export interface EditListData {
@@ -9,8 +9,9 @@ export interface EditListData {
 }
 
 export interface EditListResult {
-  name: string;
-  description: string;
+  action: 'save' | 'delete';
+  name?: string;
+  description?: string;
 }
 
 @Component({
@@ -23,7 +24,7 @@ export class EditListModal implements OnInit {
   private readonly modalService = inject(ModalService);
   
   readonly data = input<EditListData>();
-  readonly icons = { X };
+  readonly icons = { X, Trash2 };
 
   readonly name = signal('');
   readonly description = signal('');
@@ -46,10 +47,20 @@ export class EditListModal implements OnInit {
     }
 
     const result: EditListResult = {
+      action: 'save',
       name: this.name().trim(),
       description: this.description().trim()
     };
 
     this.modalService.close(result);
+  }
+
+  deleteList(): void {
+    const confirmed = window.confirm('Moechtest du diese Liste wirklich loeschen?');
+    if (!confirmed) {
+      return;
+    }
+
+    this.modalService.close({ action: 'delete' });
   }
 }

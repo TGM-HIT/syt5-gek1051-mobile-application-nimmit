@@ -42,5 +42,10 @@
     <button type="submit" class="submit-btn" [disabled]="!name().trim()">
       Speichern
     </button>
+
+    <button type="button" class="delete-btn" (click)="deleteList()">
+      <lucide-icon [img]="icons.Trash2" [size]="20" [strokeWidth]="2"></lucide-icon>
+      Liste löschen
+    </button>
   </form>
 </div>
