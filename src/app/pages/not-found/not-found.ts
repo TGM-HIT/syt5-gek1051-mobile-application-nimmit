@@ -28,7 +28,7 @@ export class NotFound {
     }
 
     const id = this.route.snapshot.queryParamMap.get(key)?.trim();
-    return id ? id : null;
+    return id || null;
   });
 
   private formatType(rawType: string): string {
