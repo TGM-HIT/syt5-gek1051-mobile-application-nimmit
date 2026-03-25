@@ -2,7 +2,7 @@
 
 .bottom-navigation {
   position: fixed;
-  bottom: 0;
+  bottom: calc(var(--connection-status-height, 0px) + env(safe-area-inset-bottom, 0px));
   left: 0;
   right: 0;
   display: flex;

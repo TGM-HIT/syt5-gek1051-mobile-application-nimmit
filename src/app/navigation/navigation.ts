@@ -4,6 +4,8 @@ import { LucideAngularModule, List, Users, Settings, Plus } from 'lucide-angular
 import { ModalService, ShoppingListDataService } from '../services';
 import { AddItemModal, AddItemResult } from '../components/add-item-modal/add-item-modal';
 import { SupabaseConnector } from '../services/supabase-connector';
+import { AsyncPipe } from '@angular/common';
+import { DefaultList } from '../services/default-list';
 
 @Component({
   selector: 'app-navigation',
@@ -16,6 +18,7 @@ export class Navigation {
   private readonly shoppingListData = inject(ShoppingListDataService);
   private readonly supabase = inject(SupabaseConnector);
   private readonly router = inject(Router);
+  private readonly defaultList = inject(DefaultList);
 
   // Lucide Icons
   readonly icons = { List, Users, Settings, Plus };
@@ -29,7 +32,7 @@ export class Navigation {
       return;
     }
 
-    const listId = await this.resolveListId();
+    const listId = this.resolveListId();
     if (listId === null) {
       return;
     }
@@ -45,7 +48,7 @@ export class Navigation {
       }, session?.user.id ?? null);
   }
 
-  private async resolveListId(): Promise<bigint | null> {
+  protected resolveListId(): bigint | null {
     const tree = this.router.parseUrl(this.router.url);
     const rawListId = tree.queryParamMap.get('listId');
     const parsed = rawListId ? BigInt(rawListId) : BigInt(-1);
@@ -53,14 +56,6 @@ export class Navigation {
     if (parsed > -1) {
       return parsed;
     }
-
-    const session = await this.supabase.getSession();
-    const userId = session?.user.id;
-
-    if (!userId) {
-      return null;
-    }
-
-    return this.shoppingListData.getLatestListIdForUser(userId);
+    return this.defaultList.getDefaultList();
   }
 }
