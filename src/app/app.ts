@@ -1,4 +1,4 @@
-import { Component, inject, NgZone, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Navigation } from './navigation/navigation';
 import { ModalContainer } from './components/modal-container/modal-container';
@@ -6,6 +6,8 @@ import { ThemeService } from './services';
 import { fromEvent, map, merge } from 'rxjs';
 import { PowerSyncService } from './services/powersync';
 import { SupabaseConnector } from './services/supabase-connector';
+import { createBaseLogger, LogLevel } from '@powersync/web';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-root',
@@ -15,17 +17,28 @@ import { SupabaseConnector } from './services/supabase-connector';
 })
 export class App implements OnInit {
   protected readonly title = signal('nimmit');
+  protected readonly isOnline = signal<boolean>(navigator.onLine);
 
-  // ThemeService injizieren um es beim App-Start zu initialisieren
+  // Theme wird zentral ueber den ThemeService gesteuert
   private readonly themeService = inject(ThemeService);
+  private readonly powerSync = inject(PowerSyncService);
+  protected readonly isDarkMode = this.themeService.isDarkMode;
 
   constructor(
     private supabase: SupabaseConnector,
-    private readonly powerSync: PowerSyncService,
   ) {}
+
+  protected readonly isPowerSyncReady = toSignal(this.powerSync.ready$, {
+    initialValue: false,
+  });
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   async ngOnInit(): Promise<void> {
+    const logger = createBaseLogger();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    logger.useDefaults();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    logger.setLevel(LogLevel.DEBUG);
     this.powerSync.setupPowerSync(this.supabase);
 
     // Listen for online/offline events to update the app's connectivity status
@@ -34,7 +47,12 @@ export class App implements OnInit {
       fromEvent(window, 'offline').pipe(map(() => false))
     ).subscribe(isOnline => {
       console.log('Connectivity changed. Online:', isOnline);
-      // You can also update a signal here to reflect the connectivity status in the UI
+      this.isOnline.set(isOnline);
+      if (isOnline) {
+        this.powerSync.connectDb().catch(e => console.error('Error connecting to PowerSync:', e));
+      } else {
+        this.powerSync.disconnectDb().catch(e => console.error('Error disconnecting from PowerSync:', e));
+      }
     });
   }
 }
