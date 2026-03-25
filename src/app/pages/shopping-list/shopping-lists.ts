@@ -1,20 +1,20 @@
-import { describe } from 'vitest';
 import { Component, OnInit, signal } from '@angular/core';
 import { Lists } from '../../types';
 import { SupabaseConnector } from '../../services/supabase-connector';
-import { LISTS_TABLE, PowerSyncService, USER_ID_PLACEHOLDER } from '../../services/powersync';
+import { LISTS_TABLE, PowerSyncService, USER_ID_PLACEHOLDER, USER_LIST_ID_PLACEHOLDER } from '../../services/powersync';
 import { Router } from '@angular/router';
-import { LucideAngularModule, ListChecks, Plus, ArrowRight, Layers, ThermometerSnowflake } from 'lucide-angular';
+import { LucideAngularModule, ListChecks, Plus, ArrowRight, Layers, ThermometerSnowflake, Form } from 'lucide-angular';
 import { AsyncPipe } from '@angular/common';
 import { BehaviorSubject } from 'rxjs';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 
 type ListWithUserCount = Lists & {
-  other_users_count?: number | string | null;
+  other_users_count?: number | null;
 };
 
 @Component({
   selector: 'app-shopping-lists',
-  imports: [LucideAngularModule, AsyncPipe],
+  imports: [LucideAngularModule, AsyncPipe, ReactiveFormsModule],
   templateUrl: './shopping-lists.html',
   styleUrl: './shopping-lists.scss',
 })
@@ -23,6 +23,8 @@ export class ShoppingLists implements OnInit {
   userId: string | null = null;
   readonly icons = { ListChecks, Plus, ArrowRight, Layers };
 
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  protected control = new FormControl('', [Validators.required, Validators.minLength(1)]);
 
   constructor(
     private supabase: SupabaseConnector,
@@ -31,10 +33,12 @@ export class ShoppingLists implements OnInit {
   ) {
   }
 
-  ngOnInit(): void {
-    this.powerSync.ready$.subscribe(initialized => {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  async ngOnInit() {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    this.powerSync.ready$.subscribe(async initialized => {
       if (initialized) {
-        void this.initialize();
+        await this.initialize();
       }
     });
   }
@@ -45,53 +49,53 @@ export class ShoppingLists implements OnInit {
       this.userId = session.user.id;
     } else {
       this.userId = USER_ID_PLACEHOLDER;
-    }
+    };
     this.getLists();
   }
 
   getLists() {
-
-    const sql = `
-      SELECT l.li_id,
-             l.created_at,
-             l.name,
-             l.description
-      FROM "Lists" l LEFT JOIN "UserLists" ul ON l.li_id = ul.list
-      WHERE ul.user = ?
-      ORDER BY l.created_at DESC
-    `;
-    this.powerSync.watchWithCallback(sql, (result) => {
-      // eslint-disable-next-line no-underscore-dangle
-      if (result.rows?._array) {
-        // eslint-disable-next-line no-underscore-dangle
-        this.lists.set(result.rows._array as ListWithUserCount[]);
-      } else {
-        this.lists.set([]);
+    const sql = `SELECT * FROM "Lists"`;
+    const pendingLists = this.powerSync.query<Lists>(sql, [this.userId]).watch();
+    
+    const dispose = pendingLists.registerListener({
+      onData: async (data) => {
+        const rows = data as Lists[];
+        const listsWithUserCount: ListWithUserCount[] = await Promise.all(rows.map(async list => ({
+          ...list,
+          other_users_count: list.id ? await this.supabase.getUserCountForList(list.id)-1 : null
+        })));
+        this.lists.set(listsWithUserCount);
+        console.log('Data updated:', data);
+      },
+      onError: (error) => {
+        console.error('Query error:', error);
       }
-    }, [this.userId]);
+    });
+  
   }
 
   async addList(name: string, description: string = ''): Promise<void> {
     if (!name) return;
+    const parts = crypto.getRandomValues(new Uint32Array(2));
+    // eslint-disable-next-line no-bitwise
+    const randomBigInt: bigint = (BigInt(parts[0]) << 16n) | BigInt(parts[1]);
+    void randomBigInt;
 
-    const rowId = crypto.randomUUID();
-    const listMembershipRowId = crypto.randomUUID();
-
-    const listData = await this.powerSync.execute(
-      `INSERT INTO ${LISTS_TABLE} (id, li_id, created_at, name, description) VALUES (?, ABS(RANDOM()), datetime(), ?, ?) RETURNING li_id`,
-      [rowId, name, description]
+    await this.powerSync.db.execute(
+      `INSERT INTO "Lists" (id, created_at, name, description) VALUES (?, datetime(), ?, ?)`,
+      [String(randomBigInt), name, description]
     );
+    console.log('List created with ID:', randomBigInt);
 
-    const ulistData = await this.powerSync.execute(
-      `INSERT INTO "UserLists" (id, created_at, user, list) VALUES (?, datetime(), ?, ?) RETURNING list, user`,
-      // eslint-disable-next-line no-underscore-dangle
-      [listMembershipRowId, this.userId, listData.rows?._array[0].li_id]
+    await this.powerSync.execute(
+      `INSERT INTO "UserLists" (id, created_at, user, list) VALUES (?, datetime(), ?, ?)`,
+      [{user: this.userId, list: randomBigInt} as USER_LIST_ID_PLACEHOLDER, this.userId, String(randomBigInt)]
     );
   }
 
   async createList(input: HTMLInputElement): Promise<void> {
     const name = input.value.trim();
-    if (!name) return;
+    if (!name) this.control.markAsTouched();
 
     await this.addList(name);
     input.value = '';
@@ -99,12 +103,12 @@ export class ShoppingLists implements OnInit {
 
   openList(list: Lists): void {
     void this.router.navigate(['/list'], {
-      queryParams: { listId: list.li_id }
+      queryParams: { listId: list.id }
     });
   }
 
-  getOtherUsersCount(list: ListWithUserCount): number {
-    const value = Number(list.other_users_count ?? 0);
-    return Number.isFinite(value) ? value : 0;
+  async getOtherUsersCount(listId: bigint): Promise<number> {
+    const value = await this.supabase.getUserCountForList(listId);
+    return value;
   }
 }

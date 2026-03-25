@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { ShoppingListService } from './shopping-list.service';
-import { ShoppingItem } from '../models';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { ShoppingListDataService } from './shopping-list-data.service';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -19,15 +18,15 @@ Object.defineProperty(globalThis, 'localStorage', {
   writable: true,
 });
 
-describe('ShoppingListService', () => {
-  let service: ShoppingListService;
+describe('ShoppingListDataService', () => {
+  let service: ShoppingListDataService;
 
   beforeEach(() => {
     localStorageMock.clear();
     vi.clearAllMocks();
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({});
-    service = TestBed.inject(ShoppingListService);
+    service = TestBed.inject(ShoppingListDataService);
   });
 
   it('should be created', () => {
@@ -36,7 +35,7 @@ describe('ShoppingListService', () => {
 
   describe('initial state', () => {
     it('should have empty items list initially', () => {
-      expect(service.items()).toEqual([]);
+      expect(service.watchItems()).toEqual([]);
     });
 
     it('should have default list name', () => {

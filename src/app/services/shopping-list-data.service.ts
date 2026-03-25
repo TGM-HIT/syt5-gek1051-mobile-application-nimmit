@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { PowerSyncService, USER_ID_PLACEHOLDER } from './powersync';
+import { Category } from '../types';
 
 export interface ListInfo {
   name: string;
@@ -54,9 +55,9 @@ export class ShoppingListDataService {
   async getLatestListIdForUser(userId: string | null): Promise<bigint | null> {
 
     const sql = `
-      SELECT l.li_id
+      SELECT l.id
       FROM "UserLists" ul
-      JOIN "Lists" l ON l.li_id = ul.list
+      JOIN "Lists" l ON l.id = ul.list
       WHERE ul."user" = ?
       ORDER BY l.created_at DESC
       LIMIT 1
@@ -66,8 +67,8 @@ export class ShoppingListDataService {
       userId = USER_ID_PLACEHOLDER;
     }
     const result = await this.powerSync.execute(sql, [userId]);
-    const rows = this.toRows<{ li_id: bigint }>(result.rows);
-    return rows[0]?.li_id ?? null;
+    const rows = this.toRows<{ id: bigint }>(result.rows);
+    return rows[0]?.id ?? null;
   }
 
   async *watchListInfo(listId: number): AsyncIterable<ListInfo> {
@@ -75,7 +76,7 @@ export class ShoppingListDataService {
     const sql = `
       SELECT name, COALESCE(description, '') AS description
       FROM "Lists"
-      WHERE li_id = ?
+      WHERE id = ?
       LIMIT 1
     `;
 
@@ -88,7 +89,7 @@ export class ShoppingListDataService {
     }
   }
 
-  async *watchItems(listId: number): AsyncIterable<ShoppingItemRow[]> {
+  async *watchItems(listId: bigint): AsyncIterable<ShoppingItemRow[]> {
     const sql = `
       SELECT
         li.id,
@@ -102,9 +103,9 @@ export class ShoppingListDataService {
         li.amount_unit AS unit,
         li.created_at AS createdAt,
         li.updated_at AS updatedAt
-      FROM "ListItems" li
-      JOIN "Item" i ON i.i_id = li.item
-      LEFT JOIN "Category" c ON c.c_id = i.category
+      FROM "ListItem" li
+      JOIN "Item" i ON i.id = li.item
+      LEFT JOIN "Category" c ON c.id = i.category
       WHERE li.liste = ?
       ORDER BY li.created_at ASC
     `;
@@ -115,11 +116,24 @@ export class ShoppingListDataService {
     }
   }
 
-  async getGlobalItemFromItem(itemId: number): Promise<{ name: string, category: string } | null> {
+  async listExists(listId: bigint): Promise<boolean> {
     const sql = `
-      SELECT name, COALESCE((SELECT name FROM "Category" WHERE c_id = i.category), 'Sonstiges') AS category
+      SELECT 1 as "exists"
+      FROM "Lists" l
+      INNER JOIN "UserLists" ul ON ul.list = l.id
+      WHERE l.id = ? AND 
+      ul."user" = ?
+      LIMIT 1
+    `;
+    const result = await this.powerSync.get<{exists: number}>(sql, [listId, USER_ID_PLACEHOLDER]);
+    return result.exists === 1;
+  }
+
+  async getGlobalItemFromItem(itemId: bigint): Promise<{ name: string, category: string } | null> {
+    const sql = `
+      SELECT name, COALESCE((SELECT name FROM "Category" WHERE id = i.category), 'Sonstiges') AS category
       FROM "Item" i
-      WHERE i.i_id = ? AND i.global = 1
+      WHERE i.id = ? AND i.global = 1
       LIMIT 1
     `;
 
@@ -130,16 +144,16 @@ export class ShoppingListDataService {
 
   async addItemToList(listId: bigint, payload: UpsertListItemInput, userId: string | null): Promise<void> {
     const newItemId = await this.createItem(payload, userId);
+    const compKey = `${listId}|${newItemId}`
 
-    const resp = await this.powerSync.execute(
+    await this.powerSync.execute(
       `
-      INSERT INTO "ListItems"
+      INSERT INTO "ListItem"
         (id, liste, item, created_at, updated_at, curr_amount, target_amount, amount_unit)
       VALUES
-        (uuid(), ?, ?, datetime(), datetime(), 0, ?, ?)
-        RETURNING *
+        (?, ?, ?, datetime(), datetime(), 0, ?, ?)
       `,
-      [listId, newItemId, payload.quantity, payload.unit]
+      [compKey, listId, newItemId, payload.quantity, payload.unit]
     );
   }
 
@@ -153,14 +167,14 @@ export class ShoppingListDataService {
           category = ?,
           content = ?,
           description = ?
-      WHERE i_id = ?
+      WHERE id = ?
       `,
       [payload.name, categoryId, payload.size ?? null, payload.info ?? null, itemId]
     );
 
     await this.execute(
       `
-      UPDATE "ListItems"
+      UPDATE "ListItem"
       SET target_amount = ?,
           amount_unit = ?,
           curr_amount = CASE
@@ -179,16 +193,23 @@ export class ShoppingListDataService {
       `
       UPDATE "Lists"
       SET name = ?, description = ?
-      WHERE li_id = ?
+      WHERE id = ?
       `,
       [name, description || null, listId]
     );
   }
 
+  async deleteList(listId: bigint): Promise<void> {
+    // Remove child rows first to avoid FK violations when constraints are present.
+    await this.execute(`DELETE FROM "ListItem" WHERE liste = ?`, [listId]);
+    await this.execute(`DELETE FROM "UserLists" WHERE list = ?`, [listId]);
+    await this.execute(`DELETE FROM "Lists" WHERE id = ?`, [listId]);
+  }
+
   async setPurchasedQuantity(listItemId: string, quantity: number): Promise<void> {
     await this.execute(
       `
-      UPDATE "ListItems"
+      UPDATE "ListItem"
       SET curr_amount = ?,
           updated_at = datetime()
       WHERE id = ?
@@ -198,7 +219,7 @@ export class ShoppingListDataService {
   }
 
   async deleteListItem(listItemId: string): Promise<void> {
-    await this.execute(`DELETE FROM "ListItems" WHERE id = ?`, [listItemId]);
+    await this.execute(`DELETE FROM "ListItem" WHERE id = ?`, [listItemId]);
   }
 
   private async execute(sql: string, parameters: unknown[] = []): Promise<void> {
@@ -220,34 +241,23 @@ export class ShoppingListDataService {
     return [];
   }
 
+  public async getCategories(): Promise<Category[]> {
+    const sql = `SELECT id, name, created_at FROM "Category" ORDER BY name ASC`;
+    const result = await this.powerSync.db.getAll<Category>(sql);
+    return result
+  }
+
   private async getOrCreateCategoryId(categoryName: string): Promise<number> {
-
-    const selectResult = await this.powerSync.db.execute(
-      `SELECT c_id FROM "Category" WHERE name = ? LIMIT 1`,
+    const selectResult = await this.powerSync.get<{id: number}>(
+      `SELECT id FROM "Category" WHERE name = ? LIMIT 1`,
       [categoryName]
     );
 
-    const existingRows = this.toRows<{ c_id: number }>(selectResult.rows);
-    if (existingRows[0]?.c_id) {
-      return existingRows[0].c_id;
+    if (selectResult.id) {
+      return selectResult.id;
     }
 
-    await this.execute(
-      `INSERT INTO "Category" (id, c_id, created_at, name) VALUES (uuid(), ABS(RANDOM()), datetime(), ?)`,
-      [categoryName]
-    );
-
-    const createdResult = await this.powerSync.db.execute(
-      `SELECT c_id FROM "Category" WHERE name = ? ORDER BY c_id DESC LIMIT 1`,
-      [categoryName]
-    );
-
-    const createdRows = this.toRows<{ c_id: number }>(createdResult.rows);
-    if (!createdRows[0]?.c_id) {
-      throw new Error('Kategorie konnte nicht erstellt werden.');
-    }
-
-    return createdRows[0].c_id;
+    throw new Error('Kategorie konnte nicht gefunden werden.');
   }
 
   private async createItem(payload: UpsertListItemInput, userId: string | null): Promise<number> {
@@ -257,21 +267,22 @@ export class ShoppingListDataService {
       // eslint-disable-next-line no-param-reassign
       userId = USER_ID_PLACEHOLDER;
     }
+    console.warn("Creating item with category ID:", categoryId, "for user:", userId, "with payload:", payload);
     const resp = await this.powerSync.execute(
       `
       INSERT INTO "Item"
-        (id, i_id, created_at, name, category, content, description, global, user)
+        (id, created_at, name, category, content, description, global, user)
       VALUES
-        (uuid(), ABS(RANDOM()), datetime(), ?, ?, ?, ?, 0, ?) RETURNING i_id
+        (cast(ABS(RANDOM()) as text), datetime(), ?, ?, ?, ?, 0, ?) RETURNING id
       `,
       [payload.name, categoryId, payload.size ?? null, payload.info ?? null, userId]
     );
 
-    const rows = this.toRows<{ i_id: number }>(resp.rows);
-    if (!rows[0]?.i_id) {
+    const rows = this.toRows<{ id: number }>(resp.rows);
+    if (!rows[0]?.id) {
       throw new Error('Item konnte nicht erstellt werden.');
     }
 
-    return rows[0].i_id;
+    return rows[0].id;
   }
 }

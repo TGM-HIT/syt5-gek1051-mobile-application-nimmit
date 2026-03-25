@@ -18,16 +18,20 @@
 			class="create-list-input"
 			placeholder="Neue Liste erstellen..."
 			maxlength="80"
+			[formControl]="control"
 		/>
 		<button type="submit" class="create-list-button">
 			<lucide-icon [img]="icons.Plus" [size]="18" [strokeWidth]="2.5"></lucide-icon>
-			<span>Hinzufuegen</span>
+			<span>Hinzufügen</span>
 		</button>
 	</form>
+	@if (control.invalid && control.touched) {
+		<small class="error">Bitte gib einen Namen an.</small>
+	}
 
-	@if ((this.powerSync.ready$ | async) && lists().length > 0) {
+	@if ((this.powerSync.ready$ | async) && this.lists().length > 0) {
 		<div class="lists-grid">
-			@for (list of lists(); track list.li_id) {
+			@for (list of this.lists(); track list.id) {
 				<article class="list-card" (click)="openList(list)">
 					<div class="list-card-main">
 						<div class="list-icon" aria-hidden="true">
@@ -35,8 +39,8 @@
 						</div>
 						<div class="list-text">
 							<h2 class="list-name">{{ list.name }}</h2>
-							@if (getOtherUsersCount(list) > 0) {
-								<p class="list-collaboration">{{ getOtherUsersCount(list) }} weitere {{ getOtherUsersCount(list) === 1 ? 'Person' : 'Personen' }}</p>
+							@if (list.other_users_count != null && list.other_users_count > 0) {
+								<p class="list-collaboration">{{list.other_users_count}} weitere {{ list.other_users_count === 1 ? 'Person' : 'Personen' }}</p>
 							} @else {
 								<p class="list-collaboration solo">Nur du in dieser Liste</p>
 							}
