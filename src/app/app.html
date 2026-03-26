@@ -16,6 +16,8 @@
       </div>
     </div>
   </section>
+} @if (isPowerSyncError()) {
+  <app-app-error></app-app-error>
 } @else {
   <main class="app-content">
     <router-outlet></router-outlet>

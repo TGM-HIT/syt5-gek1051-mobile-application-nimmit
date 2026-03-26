@@ -61,6 +61,10 @@ export class EditListModal implements OnInit {
   }
 
   deleteList(): void {
+    const confirmed = window.confirm(`Are you sure you want to ${this.getAloneInList() ? "delete" : "leave"} this list? This action cannot be undone.`);
+    if (!confirmed) {
+      return;
+    }
     this.modalService.close({ action: 'delete' });
   }
 }

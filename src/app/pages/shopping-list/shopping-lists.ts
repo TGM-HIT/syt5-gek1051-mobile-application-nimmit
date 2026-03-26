@@ -5,7 +5,7 @@ import { LISTS_TABLE, PowerSyncService, USER_ID_PLACEHOLDER, USER_LIST_ID_PLACEH
 import { Router } from '@angular/router';
 import { LucideAngularModule, ListChecks, Plus, ArrowRight, Layers, ThermometerSnowflake, Form } from 'lucide-angular';
 import { AsyncPipe } from '@angular/common';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, take } from 'rxjs';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 
 type ListWithUserCount = Lists & {
@@ -40,6 +40,7 @@ export class ShoppingLists implements OnInit {
       if (initialized) {
         await this.initialize();
       }
+      take(1);
     });
   }
 
@@ -50,7 +51,7 @@ export class ShoppingLists implements OnInit {
 
   getLists() {
     const sql = `SELECT * FROM "Lists"`;
-    const pendingLists = this.powerSync.query<Lists>(sql, [this.userId]).watch();
+    const pendingLists = this.powerSync.query<Lists>(sql).watch();
     
     const dispose = pendingLists.registerListener({
       onData: async (data) => {

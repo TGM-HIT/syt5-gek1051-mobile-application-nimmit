@@ -8,10 +8,11 @@ import { PowerSyncService } from './services/powersync';
 import { SupabaseConnector } from './services/supabase-connector';
 import { createBaseLogger, LogLevel } from '@powersync/web';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { AppError } from './pages/app-error/app-error';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Navigation, ModalContainer],
+  imports: [RouterOutlet, Navigation, ModalContainer, AppError],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -31,6 +32,10 @@ export class App implements OnInit {
   protected readonly isPowerSyncReady = toSignal(this.powerSync.ready$, {
     initialValue: false,
   });
+
+  isPowerSyncError() {
+    return this.powerSync.error();
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   async ngOnInit(): Promise<void> {

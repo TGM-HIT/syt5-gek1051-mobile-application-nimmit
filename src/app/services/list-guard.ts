@@ -23,8 +23,14 @@ export class ListGuard {
     }
 
     await this.powerSync.waitForPowerSyncReady();
-    
-    if (!await this.shoppingListService.listExists(BigInt(listId))) {
+    let listIdBig: bigint;
+    try {
+      listIdBig = BigInt(listId);
+    } catch (e) {
+      return this.router.createUrlTree([`/not-found?liste=${listId}`]);
+    }
+
+    if (!await this.shoppingListService.listExists(listIdBig)) {
       return this.router.createUrlTree([`/not-found?liste=${listId}`]);
     }
     return true;

@@ -96,6 +96,7 @@ export class PowerSyncService {
   currentUserId!: string;
   private isReady$ = new BehaviorSubject<boolean>(false);
   public ready$ = this.isReady$.asObservable();
+  public readonly error = signal<boolean>(false);
 
   private dbConnected = false;
   private subscribed = false;
@@ -200,7 +201,7 @@ export class PowerSyncService {
         UPDATE ${table} set ${updateColumn} = ?
         Where ${updateColumn} = ?
       `;
-      this.db.execute(sql, [newId, oldId]);
+      await this.db.execute(sql, [newId, oldId]);
     }
   }
 
@@ -283,7 +284,9 @@ export class PowerSyncService {
         this.isReady$.next(true);
       }
     } catch (e) {
-      console.log(e);
+      console.error('Error during PowerSync setup:', e); 
+      this.isReady$.next(true); 
+      this.error.set(true);
     }
   };
 }
