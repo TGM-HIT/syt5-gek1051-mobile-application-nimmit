@@ -30,14 +30,15 @@ jobs:
       - name: Run lint (generate report)
         run: |
           mkdir -p reports
-          npm run lint -- --format json --output-file reports/eslint-report.json
+          set -o pipefail
+          npm run lint 2>&1 | tee reports/eslint-report.log
 
       - name: Upload lint report artifact
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: lint-report
-          path: reports/eslint-report.json
+          path: reports/eslint-report.log
 
   component-test:
     name: Component Tests
