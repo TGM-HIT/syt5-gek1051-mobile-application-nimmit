@@ -44,7 +44,7 @@ export class ThemeService {
   readonly theme = signal<Theme>(this.getInitialTheme());
 
   /** Ob aktuell Dark Mode aktiv ist (auch bei 'system' Theme) */
-  readonly isDarkMode = signal<boolean>(this.checkIsDarkMode());
+  readonly isDarkMode = signal(this.checkIsDarkMode());
 
   private mediaQuery: MediaQueryList | null = null;
 
