@@ -12,7 +12,7 @@
     <!-- Produktname -->
     <div class="form-group">
       <label for="name">Produktname *</label>
-      <div class="name-input-wrapper" style="position: relative;">
+      <div class="size-unit-control" style="position: relative;">
         <input type="text" id="name" class="form-input" placeholder="z.B. Milch, Brot, Äpfel..." [ngModel]="name()"
           (ngModelChange)="onNameChange($event)" (focus)="showAutocomplete.set(true)" (blur)="hideAutocomplete()"
           name="name" autocomplete="off" required />

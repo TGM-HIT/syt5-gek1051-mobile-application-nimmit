@@ -23,8 +23,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: none;
   background-color: var(--color-elevated);
   border-radius: var(--radius-default);
@@ -169,6 +169,7 @@
 // Size/Unit Control
 .size-unit-control {
   display: flex;
+  flex-shrink: 0;
   gap: var(--spacing-2);
 }
 
@@ -206,21 +207,13 @@
   }
 }
 
-.name-input-wrapper {
-  display: flex;
-  gap: var(--spacing-2);
-  align-items: stretch;
-
-  .form-input {
-    flex: 1;
-  }
-}
-
 .favourite-btn {
-  aspect-ratio: 1/1;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 44px; 
+  flex-shrink: 0;
+  padding: 0;
   border: 1px solid var(--color-border);
   background-color: var(--color-elevated);
   border-radius: var(--radius-default);
@@ -298,7 +291,7 @@
   align-items: center;
   gap: var(--spacing-2);
   white-space: nowrap;
-  padding: var(--spacing-2) var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-default);
@@ -314,7 +307,7 @@
   div {
     background-color: transparent;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-default);
+    border-radius: var(--radius-full);
     padding: var(--spacing-1) var(--spacing-3);
     font-size: var(--font-size-xs);
     color: var(--color-text-secondary);
