@@ -433,11 +433,14 @@ export class ShoppingList implements OnInit, OnDestroy {
 
   // Listennamen und Beschreibung bearbeiten
   async editListInfo(): Promise<void> {
+    const aloneInList = await this.supabase.getUserCountForList(this.listId() ?? BigInt(-1)) === 1;
+
     const result = await this.modalService.open<EditListData, EditListResult>({
       component: EditListModal,
       data: {
         name: this.listName(),
-        description: this.listDescription()
+        description: this.listDescription(),
+        aloneInList
       }
     });
 

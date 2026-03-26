@@ -6,6 +6,7 @@ import { ModalService } from '../../services/modal.service';
 export interface EditListData {
   name: string;
   description: string;
+  aloneInList: boolean;
 }
 
 export interface EditListResult {
@@ -24,7 +25,7 @@ export class EditListModal implements OnInit {
   private readonly modalService = inject(ModalService);
   
   readonly data = input<EditListData>();
-  readonly icons = { X, Trash2 };
+  readonly icons = { X, Trash2, UserX: X }; 
 
   readonly name = signal('');
   readonly description = signal('');
@@ -35,6 +36,10 @@ export class EditListModal implements OnInit {
       this.name.set(inputData.name);
       this.description.set(inputData.description);
     }
+  }
+
+  getAloneInList(): boolean {
+    return this.data()?.aloneInList ?? false;
   }
 
   close(): void {
@@ -56,11 +61,6 @@ export class EditListModal implements OnInit {
   }
 
   deleteList(): void {
-    const confirmed = window.confirm('Moechtest du diese Liste wirklich loeschen?');
-    if (!confirmed) {
-      return;
-    }
-
     this.modalService.close({ action: 'delete' });
   }
 }

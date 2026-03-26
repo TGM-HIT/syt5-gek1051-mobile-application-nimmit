@@ -44,8 +44,14 @@
     </button>
 
     <button type="button" class="delete-btn" (click)="deleteList()">
-      <lucide-icon [img]="icons.Trash2" [size]="20" [strokeWidth]="2"></lucide-icon>
+      @if(this.getAloneInList()) {
+        <lucide-icon [img]="icons.Trash2" [size]="20" [strokeWidth]="2"></lucide-icon>
       Liste löschen
+      }
+       @else {
+        <lucide-icon [img]="icons.UserX" [size]="20" [strokeWidth]="2"></lucide-icon>
+      Liste verlassen
+      }
     </button>
   </form>
 </div>
