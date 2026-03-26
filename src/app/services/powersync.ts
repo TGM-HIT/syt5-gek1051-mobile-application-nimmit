@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { AbstractPowerSyncDatabase, column, createBaseLogger, LogLevel, PowerSyncDatabase, Query, QueryResult, Schema, SyncStream, SyncStreamSubscription, Table, WASQLiteOpenFactory, WASQLiteVFS } from '@powersync/web';
+import { AbstractPowerSyncDatabase, Column, column, createBaseLogger, LogLevel, PowerSyncDatabase, Query, QueryResult, Schema, SyncStream, SyncStreamSubscription, Table, WASQLiteOpenFactory, WASQLiteVFS } from '@powersync/web';
 import { SupabaseConnector } from './supabase-connector';
 import { BehaviorSubject, filter, firstValueFrom, take } from 'rxjs';
 
@@ -192,11 +192,35 @@ export class PowerSyncService {
     this.subscribed = false;
   }
 
+  async migrateUserIid(oldId: string, newId: string) {
+    const criticalTables = ["Item", "Favorites", "UserLists"];
+    for (const table of criticalTables) {
+      const updateColumn = "user";
+      const sql = `
+        UPDATE ${table} set ${updateColumn} = ?
+        Where ${updateColumn} = ?
+      `;
+      this.db.execute(sql, [newId, oldId]);
+    }
+  }
+
   async connectDb() {
     if (this.dbConnected) return;
     if (!this.connector) {
-      console.warn('Attempted to connect PowerSync database without a connector - aborting connection.');
+      console.warn('Attempted to connect Supabase database without a connector - aborting connection.');
       return;
+    }
+    const session = await this.connector.getSession();
+    if (!session) {
+      console.warn('Attempted to connect Supabase database without a session - aborting connection.');
+      return;
+    }
+    if (this.currentUserId !== session.user.id) {
+      if (this.currentUserId === null) {
+        this.currentUserId = this.getOrCreateUserId();
+      } else {
+        this.migrateUserIid(this.currentUserId, session.user.id)
+      }
     }
     await this.db.connect(this.connector);
     await this.subscibeAllSyncStreams();

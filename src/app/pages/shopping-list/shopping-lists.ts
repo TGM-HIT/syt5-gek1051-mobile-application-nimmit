@@ -44,12 +44,7 @@ export class ShoppingLists implements OnInit {
   }
 
   private async initialize(): Promise<void> {
-    const session = await this.supabase.getSession();
-    if (session) {
-      this.userId = session.user.id;
-    } else {
-      this.userId = USER_ID_PLACEHOLDER;
-    };
+    this.userId = USER_ID_PLACEHOLDER;
     this.getLists();
   }
 
