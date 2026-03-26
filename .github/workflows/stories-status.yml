@@ -41,7 +41,7 @@ jobs:
         run: node scripts/update-stories-status.mjs
 
       - name: Create Pull Request for Story Status
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "chore: sync story status [skip ci]"
           title: "chore: sync story status"

@@ -29,11 +29,12 @@ export class Register implements OnDestroy {
     confirmPassword: ['', [Validators.required]],
   });
 
-  readonly passwordsMatch = computed(
-    () =>
+  passwordsMatch(): boolean {
+    return (
       this.registerForm.controls.password.value ===
-      this.registerForm.controls.confirmPassword.value,
-  );
+      this.registerForm.controls.confirmPassword.value
+    );
+  }
 
   async onSubmit(): Promise<void> {
     this.clearRedirectTimers();

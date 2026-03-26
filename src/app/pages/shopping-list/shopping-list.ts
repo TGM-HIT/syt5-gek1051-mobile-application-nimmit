@@ -59,7 +59,7 @@ export class ShoppingList implements OnInit, OnDestroy {
 
   // Swipe State
   readonly swipingItemId = signal<string | null>(null);
-  readonly swipeOffset = signal<number>(0);
+  readonly swipeOffset = signal(0);
   private touchStartX = 0;
   private touchStartY = 0;
   private isSwiping = false;
