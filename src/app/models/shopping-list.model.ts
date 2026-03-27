@@ -14,6 +14,7 @@ export interface ShoppingItem {
 export interface FavouriteItem {
   id: string;
   name: string;
+  category: string;
   unit: Unit;
   size?: number;
 }

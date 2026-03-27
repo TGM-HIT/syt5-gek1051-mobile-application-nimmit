@@ -240,7 +240,6 @@
   display: flex;
   align-items: center;
   padding: var(--spacing-1) var(--spacing-3);
-  background: transparent;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   font-size: var(--font-size-sm);
@@ -428,11 +427,11 @@
   justify-content: space-between;
   width: 100%;
   padding: var(--spacing-4);
-  background: transparent;
   border: none;
   cursor: pointer;
   text-align: left;
   gap: var(--spacing-3);
+  background-color: var(--color-border-light);
 }
 
 .category-icon-wrapper {

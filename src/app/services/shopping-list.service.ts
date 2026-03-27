@@ -232,7 +232,7 @@ export class ShoppingListService {
   /**
    * Toggles a favourite item. If it exists, removes it. If it doesn't, adds it.
    */
-  toggleFavourite(name: string, unit: Unit, size?: number): void {
+  toggleFavourite(name: string, category: string, unit: Unit, size?: number): void {
     const trimmedName = name.trim();
     if (!trimmedName) return;
 
@@ -241,14 +241,15 @@ export class ShoppingListService {
     if (existingId) {
       this.removeFavourite(existingId);
     } else {
-      this.addFavourite(trimmedName, unit, size);
+      this.addFavourite(trimmedName, category, unit, size);
     }
   }
 
-  addFavourite(name: string, unit: Unit, size?: number): void {
+  addFavourite(name: string, category: string, unit: Unit, size?: number): void {
     const newFav: FavouriteItem = {
       id: crypto.randomUUID(),
       name,
+      category,
       unit,
       size
     };
