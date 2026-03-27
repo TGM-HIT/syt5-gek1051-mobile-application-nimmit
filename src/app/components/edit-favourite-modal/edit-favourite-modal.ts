@@ -80,7 +80,7 @@ export class EditFavouriteModal implements OnInit {
 
   setSize(val: string): void {
     const num = parseFloat(val);
-    this.size.set(isNaN(num) ? undefined : num);
+    this.size.set(Number.isNaN(num) ? undefined : num);
   }
 
   setUnit(val: string): void {

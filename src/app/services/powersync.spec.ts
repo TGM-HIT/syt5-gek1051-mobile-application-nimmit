@@ -27,10 +27,10 @@ describe('Powersync', () => {
 
   beforeEach(() => {
     globalThis.Worker = class {
-      addEventListener() {}
-      removeEventListener() {}
-      postMessage() {}
-      terminate() {}
+      addEventListener() { /* mock */ }
+      removeEventListener() { /* mock */ }
+      postMessage() { /* mock */ }
+      terminate() { /* mock */ }
     } as any;
     TestBed.configureTestingModule({});
     service = TestBed.inject(PowerSyncService);

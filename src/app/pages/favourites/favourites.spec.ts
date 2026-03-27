@@ -8,8 +8,8 @@ import { signal } from '@angular/core';
 describe('Favourites', () => {
   let component: Favourites;
   let fixture: ComponentFixture<Favourites>;
-  let mockShoppingListService: any;
-  let mockModalService: any;
+  let mockShoppingListService: { favourites: any, removeFavourite: ReturnType<typeof vi.fn>, updateFavourite: ReturnType<typeof vi.fn> };
+  let mockModalService: { open: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     mockShoppingListService = {

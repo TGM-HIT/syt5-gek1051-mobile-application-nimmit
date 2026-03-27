@@ -11,19 +11,19 @@ describe('ListGuard', () => {
   beforeEach(() => {
     
     // Mock for localStorage
-    const localStorageMock = (function () {
-      let store: { [key: string]: string } = {};
+    const localStorageMock = (() => {
+      let store: Record<string, string> = {};
       return {
-        getItem: function (key: string) {
+        getItem(key: string) {
           return store[key] || null;
         },
-        setItem: function (key: string, value: string) {
-          store[key] = value.toString();
+        setItem(key: string, value: string) {
+          store[key] = value;
         },
-        removeItem: function (key: string) {
+        removeItem(key: string) {
           delete store[key];
         },
-        clear: function () {
+        clear() {
           store = {};
         }
       };
@@ -41,11 +41,11 @@ describe('ListGuard', () => {
         },
         {
           provide: PowerSyncService,
-          useValue: { status$: { subscribe: () => {} } }
+          useValue: { status$: { subscribe: () => { /* mock */ } } }
         },
         {
           provide: Router,
-          useValue: { createUrlTree: () => {} }
+          useValue: { createUrlTree: () => { /* mock */ } }
         }
       ]
     });

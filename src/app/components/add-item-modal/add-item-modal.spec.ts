@@ -11,10 +11,10 @@ describe('AddItemModal', () => {
   let component: AddItemModal;
   let fixture: ComponentFixture<AddItemModal>;
   let mockModalService: { dismiss: Mock, close: Mock };
-  let mockShoppingListService: { favourites: any, isCurrentFavourite: Mock, toggleFavourite: Mock };
+  let mockShoppingListService: { favourites: import('@angular/core').WritableSignal<any[]>, isCurrentFavourite: Mock, toggleFavourite: Mock };
 
   beforeEach(async () => {
-Object.defineProperty(globalThis, 'localStorage', {value: {getItem: ()=>null, setItem: ()=>{}, removeItem: ()=>null, clear: ()=>{}}});
+Object.defineProperty(globalThis, 'localStorage', {value: {getItem: ()=>null, setItem: ()=>{/*mock*/}, removeItem: ()=>null, clear: ()=>{/*mock*/}}});
     mockModalService = {
       dismiss: vi.fn(),
       close: vi.fn()
@@ -27,7 +27,7 @@ Object.defineProperty(globalThis, 'localStorage', {value: {getItem: ()=>null, se
     };
 
     await TestBed.configureTestingModule({
-      imports: [AddItemModal], providers: [ { provide: ModalService, useValue: mockModalService }, { provide: ShoppingListService, useValue: mockShoppingListService }, { provide: ShoppingListDataService, useValue: { getFavourites: () => [], getCategories: async () => ['Getränke', 'Obst & Gemüse', 'Sonstiges'] } }, { provide: PowerSyncService, useValue: { status$: { subscribe: () => {} } } } ]
+      imports: [AddItemModal], providers: [ { provide: ModalService, useValue: mockModalService }, { provide: ShoppingListService, useValue: mockShoppingListService }, { provide: ShoppingListDataService, useValue: { getFavourites: () => [], getCategories: async () => ['Getränke', 'Obst & Gemüse', 'Sonstiges'] } }, { provide: PowerSyncService, useValue: { status$: { subscribe: () => { /*mock*/ } } } } ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(AddItemModal);
@@ -249,14 +249,14 @@ Object.defineProperty(globalThis, 'localStorage', {value: {getItem: ()=>null, se
   });
 
   describe('Favourites and Autocomplete', () => {
-    const mock_favoriten = [
+    const mockFavoriten = [
       { id: '1', name: 'Milch', unit: 'L', size: 1 },
       { id: '2', name: 'Brot', unit: 'Einheit' },
       { id: '3', name: 'Milka', unit: 'g', size: 100 }
     ];
 
     beforeEach(() => {
-      mockShoppingListService.favourites.set(mock_favoriten);
+      mockShoppingListService.favourites.set(mockFavoriten);
     });
 
     it('should filter favourites correctly', () => {

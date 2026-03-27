@@ -16,13 +16,13 @@ describe('Navigation', () => {
 
   beforeEach(async () => {
     // Mock for localStorage
-    const localStorageMock = (function () {
-      let store: { [key: string]: string } = {};
+    const localStorageMock = (() => {
+      let store: Record<string, string> = {};
       return {
-        getItem: function (key: string) { return store[key] || null; },
-        setItem: function (key: string, value: string) { store[key] = value.toString(); },
-        removeItem: function (key: string) { delete store[key]; },
-        clear: function () { store = {}; }
+        getItem(key: string) { return store[key] || null; },
+        setItem(key: string, value: string) { store[key] = value; },
+        removeItem(key: string) { delete store[key]; },
+        clear() { store = {}; }
       };
     })();
 
@@ -41,8 +41,8 @@ describe('Navigation', () => {
       providers: [
         { provide: ModalService, useValue: mockModalService },
         { provide: ShoppingListDataService, useValue: mockShoppingListService },
-        { provide: DefaultList, useValue: { listId$: { subscribe: () => {} }, getDefaultList: () => 1n } },
-        { provide: SupabaseConnector, useValue: { session$: { subscribe: () => {} }, profile$: { subscribe: () => {} } } }
+        { provide: DefaultList, useValue: { listId$: { subscribe: () => { /* mock */ } }, getDefaultList: () => 1n } },
+        { provide: SupabaseConnector, useValue: { session$: { subscribe: () => { /* mock */ } }, profile$: { subscribe: () => { /* mock */ } } } }
       ]
     }).compileComponents();
 
