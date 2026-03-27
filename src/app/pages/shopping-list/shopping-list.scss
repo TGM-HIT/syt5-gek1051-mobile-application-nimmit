@@ -403,7 +403,20 @@
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--color-text);
+  margin: 0 0 var(--spacing-1) 0;
+}
+
+.item-price {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--color-accent-600);
   margin: 0 0 var(--spacing-2) 0;
+}
+
+.item-name-price-container{
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-2);
 }
 
 .item-meta {

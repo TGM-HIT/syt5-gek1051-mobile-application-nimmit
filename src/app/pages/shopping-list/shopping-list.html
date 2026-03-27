@@ -129,7 +129,10 @@
           >
             <button class="item-header" (click)="toggleExpand(item.id)">
               <div class="item-info">
-                <h3 class="item-name">{{ item.name }}</h3>
+                <div class="item-name-price-container">
+                  <h3 class="item-name">{{ item.name }}</h3>
+                  <div class="item-price">5.50€</div>
+                </div>
                 <div class="item-meta">
                   <span class="category-badge">{{ item.category }}</span>
                   @if (item.size && item.unit) {

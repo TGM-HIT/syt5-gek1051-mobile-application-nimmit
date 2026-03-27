@@ -19,6 +19,8 @@ export type Unit =
   | 'Dose'
   | 'Packung';
 
+export type Currency = 'Euro' | 'CHF' |'USD';
+
 export interface ShoppingItemRow {
   id: string;
   itemId: number;
