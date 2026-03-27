@@ -1,5 +1,5 @@
 <nav class="bottom-navigation">
-  <a routerLink="/list" routerLinkActive="active" class="nav-item">
+  <a routerLink="/lists" routerLinkActive="active" class="nav-item">
     <lucide-icon [img]="icons.List" [size]="24" [strokeWidth]="2"></lucide-icon>
   </a>
 
@@ -14,8 +14,9 @@
   <a routerLink="/settings" routerLinkActive="active" class="nav-item">
     <lucide-icon [img]="icons.Settings" [size]="24" [strokeWidth]="2"></lucide-icon>
   </a>
-
-  <button class="nav-item add-button" (click)="addNewItem()">
-    <lucide-icon [img]="icons.Plus" [size]="28" [strokeWidth]="2.5"></lucide-icon>
-  </button>
+  @if (this.resolveListId() !== null) {
+    <button class="nav-item add-button" (click)="addNewItem()">
+      <lucide-icon [img]="icons.Plus" [size]="28" [strokeWidth]="2.5"></lucide-icon>
+    </button>
+  }
 </nav>

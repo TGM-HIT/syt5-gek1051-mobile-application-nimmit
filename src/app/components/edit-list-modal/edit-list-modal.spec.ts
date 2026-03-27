@@ -92,6 +92,7 @@ describe('EditListModal', () => {
       component.submit();
       
       expect(mockModalService.close).toHaveBeenCalledWith({
+        action: 'save',
         name: 'Neue Liste',
         description: 'Neue Beschreibung'
       } as EditListResult);
@@ -104,6 +105,7 @@ describe('EditListModal', () => {
       component.submit();
       
       expect(mockModalService.close).toHaveBeenCalledWith(expect.objectContaining({
+        action: 'save',
         name: 'Trimmed Name'
       }));
     });
@@ -115,6 +117,7 @@ describe('EditListModal', () => {
       component.submit();
       
       expect(mockModalService.close).toHaveBeenCalledWith(expect.objectContaining({
+        action: 'save',
         description: 'Trimmed Description'
       }));
     });
@@ -126,9 +129,32 @@ describe('EditListModal', () => {
       component.submit();
       
       expect(mockModalService.close).toHaveBeenCalledWith({
+        action: 'save',
         name: 'Name',
         description: ''
       });
+    });
+  });
+
+  describe('deleteList()', () => {
+    it('should close modal with delete action when confirmed', () => {
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+      component.deleteList();
+
+      expect(confirmSpy).toHaveBeenCalled();
+      expect(mockModalService.close).toHaveBeenCalledWith({ action: 'delete' });
+      confirmSpy.mockRestore();
+    });
+
+    it('should not close modal when delete is canceled', () => {
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+      component.deleteList();
+
+      expect(confirmSpy).toHaveBeenCalled();
+      expect(mockModalService.close).not.toHaveBeenCalledWith({ action: 'delete' });
+      confirmSpy.mockRestore();
     });
   });
 

@@ -2,11 +2,16 @@ import { Component, inject, signal, input, OnInit, computed } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, X, Plus, Minus, Star } from 'lucide-angular';
 import { ModalService } from '../../services/modal.service';
+import { ShoppingItemRow, ShoppingListDataService, Unit } from '../../services/shopping-list-data.service';
+import { Category } from '../../types';
+import { PowerSyncService } from '../../services/powersync';
 import { ShoppingListService } from '../../services/shopping-list.service';
-import { ShoppingItem, Unit, FavouriteItem } from '../../models';
+import { FavouriteItem } from '../../models';
+
+type EditableShoppingItem = Pick<ShoppingItemRow, 'id' | 'name' | 'category' | 'totalQuantity' | 'info' | 'size' | 'unit'>;
 
 export interface AddItemData {
-  editItem?: ShoppingItem;
+  editItem?: EditableShoppingItem;
   prefillName?: string;
   prefillUnit?: Unit;
   prefillSize?: number;
@@ -30,8 +35,9 @@ export interface AddItemResult {
 })
 export class AddItemModal implements OnInit {
   private readonly modalService = inject(ModalService);
-  private readonly shoppingListService = inject(ShoppingListService);
 
+  private readonly shoppingListDataService = inject(ShoppingListDataService);
+  private readonly shoppingListService = inject(ShoppingListService);
   // Input data from modal service
   readonly data = input<AddItemData>();
 
@@ -49,7 +55,7 @@ export class AddItemModal implements OnInit {
     if (!query) {
       return favs;
     }
-    return favs.filter(fav => fav.name.toLowerCase().includes(query));
+    return favs.filter((fav: FavouriteItem) => fav.name.toLowerCase().includes(query));
   });
 
   // Form State
@@ -79,17 +85,7 @@ export class AddItemModal implements OnInit {
   readonly submitButtonText = computed(() => this.isEditMode() ? 'Speichern' : 'Hinzufügen');
 
   // Predefined categories
-  readonly categories = [
-    'Getränke',
-    'Obst & Gemüse',
-    'Milchprodukte',
-    'Fleisch & Fisch',
-    'Backwaren',
-    'Tiefkühl',
-    'Süßigkeiten',
-    'Haushalt',
-    'Sonstiges'
-  ];
+  readonly categories = signal<Category[]>([{id: BigInt(9), name: 'Sonstiges', created_at: new Date().toISOString()}]);
 
   // Verfügbare Units
   readonly units: Unit[] = [
@@ -105,8 +101,10 @@ export class AddItemModal implements OnInit {
     'Packung'
   ];
 
-  ngOnInit(): void {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  async ngOnInit(): Promise<void> {
     const inputData = this.data();
+    this.categories.set(await this.shoppingListDataService.getCategories()); 
     if (inputData?.editItem) {
       const item = inputData.editItem;
       this.isEditMode.set(true);

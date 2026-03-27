@@ -61,8 +61,8 @@
       <label for="category">Kategorie</label>
       <select id="category" class="form-select" [ngModel]="category()" (ngModelChange)="category.set($event)"
         name="category">
-        @for (cat of categories; track cat) {
-        <option [value]="cat">{{ cat }}</option>
+        @for (cat of categories(); track cat.id) {
+        <option [value]="cat.name">{{ cat.name }}</option>
         }
       </select>
     </div>

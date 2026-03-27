@@ -1,10 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Navigation } from './navigation';
 import { ModalService } from '../services/modal.service';
-import { ShoppingListService } from '../services/shopping-list.service';
 import { RouterModule } from '@angular/router';
 import { AddItemModal, AddItemResult } from '../components/add-item-modal/add-item-modal';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { ShoppingListDataService } from '../services';
 
 describe('Navigation', () => {
   let component: Navigation;
@@ -23,7 +23,7 @@ describe('Navigation', () => {
       ],
       providers: [
         { provide: ModalService, useValue: mockModalService },
-        { provide: ShoppingListService, useValue: mockShoppingListService }
+        { provide: ShoppingListDataService, useValue: mockShoppingListService }
       ]
     }).compileComponents();
     

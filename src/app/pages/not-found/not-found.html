@@ -1,0 +1,26 @@
+<section class="not-found-page">
+	<header class="not-found-header">
+		<h1>Seite nicht gefunden</h1>
+		<p>Die aufgerufene Ressource ist nicht verfuegbar.</p>
+	</header>
+
+	<article class="not-found-card">
+		<h2>Nicht gefunden</h2>
+
+		@if (missingType()) {
+			<p class="not-found-message">
+				Die angegebene <strong>{{ missingType() }}</strong>
+				@if (missingId()) {
+					<span> mit der id = <strong>{{ missingId() }}</strong></span>
+				}
+				konnte nicht gefunden werden.
+			</p>
+		} @else {
+			<p class="not-found-message">Der angeforderte Inhalt konnte nicht gefunden werden.</p>
+		}
+
+		<div class="actions">
+			<a class="action-btn secondary" routerLink="/lists">Zu meinen Listen</a>
+		</div>
+	</article>
+</section>

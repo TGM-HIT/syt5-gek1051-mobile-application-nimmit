@@ -66,7 +66,7 @@ export class Favourites {
     const query = this.searchQuery().toLowerCase().trim();
     const favs = this.favourites();
     if (!query) return favs;
-    return favs.filter(fav => fav.name.toLowerCase().includes(query));
+    return favs.filter((fav: FavouriteItem) => fav.name.toLowerCase().includes(query));
   });
 
   readonly hasNoResults = computed(() => {
