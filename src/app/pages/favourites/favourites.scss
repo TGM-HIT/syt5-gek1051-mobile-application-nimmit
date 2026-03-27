@@ -161,9 +161,26 @@
   justify-content: space-between;
   width: 100%;
   padding: var(--spacing-4);
-  background: transparent;
   border: none;
   text-align: left;
+  gap: var(--spacing-3);
+}
+
+.category-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+
+  lucide-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .item-info {
@@ -182,6 +199,17 @@
   align-items: center;
   gap: var(--spacing-3);
   min-height: 20px;
+}
+
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-0) var(--spacing-2);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-background);
+  background-color: var(--color-accent-600);
+  border-radius: var(--radius-xl);
 }
 
 .size-badge {
@@ -206,7 +234,6 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: transparent;
   border: none;
   border-radius: var(--radius-default);
   cursor: pointer;

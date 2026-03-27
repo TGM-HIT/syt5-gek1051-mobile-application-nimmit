@@ -6,12 +6,14 @@ import { Unit } from '../../models/shopping-list.model';
 
 export interface EditFavouriteData {
   name: string;
+  category: string;
   unit: Unit;
   size?: number;
 }
 
 export interface EditFavouriteResult {
   name: string;
+  category: string;
   unit: Unit;
   size?: number;
 }
@@ -29,9 +31,24 @@ export class EditFavouriteModal implements OnInit {
   readonly icons = { X };
 
   readonly name = signal('');
+  readonly category = signal<string>('Sonstiges');
   readonly unit = signal<Unit>('Einheit');
   readonly size = signal<number | undefined>(undefined);
   
+  readonly categories = [
+    'Obst & Gemüse',
+    'Backwaren',
+    'Milchprodukte',
+    'Fleisch & Fisch',
+    'Getränke',
+    'Snacks',
+    'Tiefkühl',
+    'Konserven',
+    'Drogerie',
+    'Tierbedarf',
+    'Sonstiges'
+  ];
+
   readonly units: Unit[] = [
     'Einheit',
     'g',
@@ -49,9 +66,16 @@ export class EditFavouriteModal implements OnInit {
     const inputData = this.data();
     if (inputData) {
       this.name.set(inputData.name);
+      if (inputData.category) {
+        this.category.set(inputData.category);
+      }
       this.unit.set(inputData.unit);
       this.size.set(inputData.size);
     }
+  }
+
+  setCategory(val: string): void {
+    this.category.set(val);
   }
 
   setSize(val: string): void {
@@ -74,6 +98,7 @@ export class EditFavouriteModal implements OnInit {
 
     const result: EditFavouriteResult = {
       name: this.name().trim(),
+      category: this.category(),
       unit: this.unit(),
       size: this.size()
     };

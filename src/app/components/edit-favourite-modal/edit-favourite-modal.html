@@ -24,6 +24,22 @@
       />
     </div>
 
+    <!-- Kategorie -->
+    <div class="form-group">
+      <label for="favCategory">Kategorie</label>
+      <select
+        id="favCategory"
+        class="form-input"
+        [ngModel]="category()"
+        (ngModelChange)="setCategory($event)"
+        name="favCategory"
+      >
+        @for (cat of categories; track cat) {
+          <option [value]="cat">{{ cat }}</option>
+        }
+      </select>
+    </div>
+
     <!-- Menge und Einheit -->
     <div class="form-row form-row-2">
       <div class="form-group">

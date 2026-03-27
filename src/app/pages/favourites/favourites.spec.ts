@@ -58,15 +58,15 @@ describe('Favourites', () => {
   });
 
   it('should call removeFavourite when deleteFavourite is called', () => {
-    component.deleteFavourite({ id: '1', name: 'Apfel', unit: 'kg', size: 1 });
+    component.deleteFavourite({ id: '1', name: 'Apfel', category: 'Obst & Gemüse', unit: 'kg', size: 1 });
     expect(mockShoppingListService.removeFavourite).toHaveBeenCalledWith('1');
   });
 
   it('should open modal and update favourite on editFavourite', async () => {
-    const editData = { name: 'Birne', unit: 'kg', size: 2 };
+    const editData = { name: 'Birne', category: 'Obst & Gemüse', unit: 'kg', size: 2 };
     mockModalService.open.mockResolvedValue(editData);
 
-    await component.editFavourite({ id: '1', name: 'Apfel', unit: 'kg', size: 1 });
+    await component.editFavourite({ id: '1', name: 'Apfel', category: 'Obst & Gemüse', unit: 'kg', size: 1 });
 
     expect(mockModalService.open).toHaveBeenCalled();
     expect(mockShoppingListService.updateFavourite).toHaveBeenCalledWith('1', editData);

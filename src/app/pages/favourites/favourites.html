@@ -40,6 +40,9 @@
         [style.transform]="getSwipeTransform(item.id)" (touchstart)="onTouchStart($event, item.id)"
         (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd(item)">
         <div class="item-header">
+          <div class="category-icon-wrapper" [style.backgroundColor]="getCategoryColor(item.category)">
+            <lucide-icon [img]="getCategoryIcon(item.category)" [size]="20" [strokeWidth]="2" color="white"></lucide-icon>
+          </div>
           <div class="item-info">
             <h3 class="item-name">{{ item.name }}</h3>
             <div class="item-meta">

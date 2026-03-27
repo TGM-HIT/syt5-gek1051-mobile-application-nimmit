@@ -37,12 +37,14 @@ describe('EditFavouriteModal', () => {
     // Provide inputs before initial change detection
     componentRef.setInput('data', {
       name: 'TestItem',
+      category: 'Obst & Gemüse',
       unit: 'kg',
       size: 5
     });
     fixture.detectChanges();
 
     expect(component.name()).toBe('TestItem');
+    expect(component.category()).toBe('Obst & Gemüse');
     expect(component.unit()).toBe('kg');
     expect(component.size()).toBe(5);
   });
@@ -72,6 +74,7 @@ describe('EditFavouriteModal', () => {
   it('should call close with data on submit', () => {
     fixture.detectChanges();
     component.name.set('ValidName');
+    component.category.set('Obst & Gemüse');
     component.unit.set('L');
     component.size.set(2);
     
@@ -79,6 +82,7 @@ describe('EditFavouriteModal', () => {
     
     expect(mockModalService.close).toHaveBeenCalledWith({
       name: 'ValidName',
+      category: 'Obst & Gemüse',
       unit: 'L',
       size: 2
     });

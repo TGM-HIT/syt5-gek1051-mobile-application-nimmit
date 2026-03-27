@@ -164,7 +164,7 @@ export class AddItemModal implements OnInit {
 
   toggleFavourite(): void {
     if (this.isNameEmpty()) return;
-    this.shoppingListService.toggleFavourite(this.name(), this.unit(), this.size());
+    this.shoppingListService.toggleFavourite(this.name(), this.category(), this.unit(), this.size());
   }
 
   getFavouriteDetails(fav: FavouriteItem): string {
