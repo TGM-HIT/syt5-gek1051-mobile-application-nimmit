@@ -4,6 +4,8 @@ import { ModalService } from '../../services/modal.service';
 import { ShoppingListService } from '../../services/shopping-list.service';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { signal } from '@angular/core';
+import { ShoppingListDataService } from '../../services/shopping-list-data.service';
+import { PowerSyncService } from '../../services/powersync';
 
 describe('AddItemModal', () => {
   let component: AddItemModal;
@@ -12,6 +14,7 @@ describe('AddItemModal', () => {
   let mockShoppingListService: { favourites: any, isCurrentFavourite: Mock, toggleFavourite: Mock };
 
   beforeEach(async () => {
+Object.defineProperty(globalThis, 'localStorage', {value: {getItem: ()=>null, setItem: ()=>{}, removeItem: ()=>null, clear: ()=>{}}});
     mockModalService = {
       dismiss: vi.fn(),
       close: vi.fn()
@@ -24,11 +27,7 @@ describe('AddItemModal', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [AddItemModal],
-      providers: [
-        { provide: ModalService, useValue: mockModalService },
-        { provide: ShoppingListService, useValue: mockShoppingListService }
-      ]
+      imports: [AddItemModal], providers: [ { provide: ModalService, useValue: mockModalService }, { provide: ShoppingListService, useValue: mockShoppingListService }, { provide: ShoppingListDataService, useValue: { getFavourites: () => [], getCategories: async () => ['Getränke', 'Obst & Gemüse', 'Sonstiges'] } }, { provide: PowerSyncService, useValue: { status$: { subscribe: () => {} } } } ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(AddItemModal);
@@ -70,10 +69,10 @@ describe('AddItemModal', () => {
     });
 
     it('should have predefined categories', () => {
-      expect(component.categories.length).toBeGreaterThan(0);
-      expect(component.categories).toContain('Getränke');
-      expect(component.categories).toContain('Obst & Gemüse');
-      expect(component.categories).toContain('Sonstiges');
+      expect(component.categories().length).toBeGreaterThan(0);
+      expect(component.categories()).toContain('Getränke');
+      expect(component.categories()).toContain('Obst & Gemüse');
+      expect(component.categories()).toContain('Sonstiges');
     });
 
     it('should have predefined units', () => {
@@ -85,13 +84,13 @@ describe('AddItemModal', () => {
   });
 
   describe('edit mode', () => {
-    it('should populate form from editItem data', () => {
+    it('should populate form from editItem data', async () => {
       // Create new fixture with edit data
       const editFixture = TestBed.createComponent(AddItemModal);
       const editComponent = editFixture.componentInstance;
 
       // Manually set the input and call ngOnInit
-      (editComponent as any).data = () => ({
+      editFixture.componentRef.setInput('data', {
         editItem: {
           id: 'test-id',
           name: 'Milch',
@@ -106,9 +105,10 @@ describe('AddItemModal', () => {
         }
       } as AddItemData);
 
-      editComponent.ngOnInit();
+      await editComponent.ngOnInit();
       editFixture.detectChanges();
 
+      editFixture.detectChanges();
       expect(editComponent.isEditMode()).toBe(true);
       expect(editComponent.name()).toBe('Milch');
       expect(editComponent.category()).toBe('Milchprodukte');
@@ -287,3 +287,11 @@ describe('AddItemModal', () => {
     });
   });
 });
+
+
+
+
+
+
+
+

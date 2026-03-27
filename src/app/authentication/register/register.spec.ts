@@ -3,21 +3,21 @@ import { provideRouter } from '@angular/router';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 
 import { Register } from './register';
-import { SupabaseService } from '../../services/supabase';
+import { SupabaseConnector } from '../../services/supabase-connector';
 
 describe('Register', () => {
   let component: Register;
   let fixture: ComponentFixture<Register>;
-  let mockSupabaseService: { register: Mock };
+  let mockSupabaseConnector: { register: Mock };
 
   beforeEach(async () => {
-    mockSupabaseService = { register: vi.fn() };
+    mockSupabaseConnector = { register: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [Register],
       providers: [
         provideRouter([]),
-        { provide: SupabaseService, useValue: mockSupabaseService }
+        { provide: SupabaseConnector, useValue: mockSupabaseConnector }
       ]
     }).compileComponents();
 
@@ -131,7 +131,7 @@ describe('Register', () => {
   describe('onSubmit()', () => {
     it('should not call register when form is invalid', async () => {
       await component.onSubmit();
-      expect(mockSupabaseService.register).not.toHaveBeenCalled();
+      expect(mockSupabaseConnector.register).not.toHaveBeenCalled();
     });
 
     it('should mark all controls as touched when form is invalid', async () => {
@@ -150,7 +150,7 @@ describe('Register', () => {
 
       await component.onSubmit();
 
-      expect(mockSupabaseService.register).not.toHaveBeenCalled();
+      expect(mockSupabaseConnector.register).not.toHaveBeenCalled();
     });
 
     it('should set submitError when passwords do not match', async () => {
@@ -165,7 +165,7 @@ describe('Register', () => {
     });
 
     it('should call register with email, username and password', async () => {
-      mockSupabaseService.register.mockResolvedValue(undefined);
+      mockSupabaseConnector.register.mockResolvedValue(undefined);
       component.registerForm.controls.email.setValue('test@example.com');
       component.registerForm.controls.username.setValue('user123');
       component.registerForm.controls.password.setValue('validpassword');
@@ -173,11 +173,11 @@ describe('Register', () => {
 
       await component.onSubmit();
 
-      expect(mockSupabaseService.register).toHaveBeenCalledWith('test@example.com', 'user123', 'validpassword');
+      expect(mockSupabaseConnector.register).toHaveBeenCalledWith('test@example.com', 'user123', 'validpassword');
     });
 
     it('should set registrationSucceeded to true on success', async () => {
-      mockSupabaseService.register.mockResolvedValue(undefined);
+      mockSupabaseConnector.register.mockResolvedValue(undefined);
       component.registerForm.controls.email.setValue('test@example.com');
       component.registerForm.controls.username.setValue('user123');
       component.registerForm.controls.password.setValue('validpassword');
@@ -189,7 +189,7 @@ describe('Register', () => {
     });
 
     it('should reset form on success', async () => {
-      mockSupabaseService.register.mockResolvedValue(undefined);
+      mockSupabaseConnector.register.mockResolvedValue(undefined);
       component.registerForm.controls.email.setValue('test@example.com');
       component.registerForm.controls.username.setValue('user123');
       component.registerForm.controls.password.setValue('validpassword');
@@ -204,7 +204,7 @@ describe('Register', () => {
     });
 
     it('should set submitError on failure', async () => {
-      mockSupabaseService.register.mockRejectedValue(new Error('Email already in use'));
+      mockSupabaseConnector.register.mockRejectedValue(new Error('Email already in use'));
       component.registerForm.controls.email.setValue('test@example.com');
       component.registerForm.controls.username.setValue('user123');
       component.registerForm.controls.password.setValue('validpassword');
@@ -216,7 +216,7 @@ describe('Register', () => {
     });
 
     it('should set fallback error message when error is not an Error instance', async () => {
-      mockSupabaseService.register.mockRejectedValue('unknown error');
+      mockSupabaseConnector.register.mockRejectedValue('unknown error');
       component.registerForm.controls.email.setValue('test@example.com');
       component.registerForm.controls.username.setValue('user123');
       component.registerForm.controls.password.setValue('validpassword');
@@ -229,7 +229,7 @@ describe('Register', () => {
 
     it('should clear previous error before submitting', async () => {
       component.submitError.set('Old error');
-      mockSupabaseService.register.mockResolvedValue(undefined);
+      mockSupabaseConnector.register.mockResolvedValue(undefined);
       component.registerForm.controls.email.setValue('test@example.com');
       component.registerForm.controls.username.setValue('user123');
       component.registerForm.controls.password.setValue('validpassword');
@@ -241,7 +241,7 @@ describe('Register', () => {
     });
 
     it('should set isSubmitting to false after success', async () => {
-      mockSupabaseService.register.mockResolvedValue(undefined);
+      mockSupabaseConnector.register.mockResolvedValue(undefined);
       component.registerForm.controls.email.setValue('test@example.com');
       component.registerForm.controls.username.setValue('user123');
       component.registerForm.controls.password.setValue('validpassword');
@@ -253,7 +253,7 @@ describe('Register', () => {
     });
 
     it('should set isSubmitting to false after failure', async () => {
-      mockSupabaseService.register.mockRejectedValue(new Error('fail'));
+      mockSupabaseConnector.register.mockRejectedValue(new Error('fail'));
       component.registerForm.controls.email.setValue('test@example.com');
       component.registerForm.controls.username.setValue('user123');
       component.registerForm.controls.password.setValue('validpassword');

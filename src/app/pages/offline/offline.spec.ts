@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { provideRouter } from '@angular/router';
 import { Offline } from './offline';
 
 describe('Offline', () => {
@@ -8,7 +8,8 @@ describe('Offline', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Offline]
+      imports: [Offline],
+      providers: [provideRouter([])]
     })
     .compileComponents();
 
