@@ -10,6 +10,7 @@ import { ShoppingListDataService, ShoppingItemRow } from '../../services/shoppin
 import { SupabaseConnector } from '../../services/supabase-connector';
 import { FilterType } from '../../types';
 import { PowerSyncService } from '../../services/powersync';
+import Fuse from 'fuse.js';
 
 @Component({
   selector: 'app-shopping-list',
@@ -92,8 +93,16 @@ export class ShoppingList implements OnInit, OnDestroy {
     const activeFilter = this.activeFilter();
     const search = this.searchQuery().trim().toLowerCase();
     const selectedCategories = this.selectedCategories();
+    const items = this.items();
 
-    return this.items().filter((item) => {
+    let result = search
+        ? new Fuse (items, {
+            keys: ['name', 'category', 'info'],
+            threshold: 0.4,
+          }).search(search).map(r => r.item)
+        : items;
+
+    result = result.filter((item) => {
       if (activeFilter === 'purchased' && !this.isPurchased(item)) {
         return false;
       }
@@ -105,15 +114,10 @@ export class ShoppingList implements OnInit, OnDestroy {
         return false;
       }
 
-      if (!search) {
-        return true;
-      }
-      return (
-        item.name.toLowerCase().includes(search)
-        || item.category.toLowerCase().includes(search)
-        || (item.info?.toLowerCase().includes(search) ?? false)
-      );
+      return true;
     });
+
+    return result;
   });
 
   // Computed: Keine Ergebnisse gefunden
