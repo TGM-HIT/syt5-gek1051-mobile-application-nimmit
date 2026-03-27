@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { AbstractPowerSyncDatabase, Column, column, createBaseLogger, LogLevel, PowerSyncDatabase, Query, QueryResult, Schema, SyncStream, SyncStreamSubscription, Table, WASQLiteOpenFactory, WASQLiteVFS } from '@powersync/web';
 import { SupabaseConnector } from './supabase-connector';
 import { BehaviorSubject, filter, firstValueFrom, take } from 'rxjs';
+import { Session } from '@supabase/supabase-js';
 
 export const LISTS_TABLE = 'Lists';
 export const CATEGORY_TABLE = 'Category';
@@ -205,16 +206,19 @@ export class PowerSyncService {
     }
   }
 
-  async connectDb() {
+  async connectDb(session: Session | null) {
     if (this.dbConnected) return;
     if (!this.connector) {
       console.warn('Attempted to connect Supabase database without a connector - aborting connection.');
       return;
     }
-    const session = await this.connector.getSession();
     if (!session) {
-      console.warn('Attempted to connect Supabase database without a session - aborting connection.');
-      return;
+      // eslint-disable-next-line no-param-reassign
+      session = await this.connector.getSession();
+      if (!session) {
+        console.warn('No active session found for PowerSync database connection - aborting connection.');
+        return;
+      }
     }
     if (this.currentUserId !== session.user.id) {
       if (this.currentUserId === null) {
@@ -251,10 +255,20 @@ export class PowerSyncService {
       return;
     }
 
-    this.connector.client.auth.onAuthStateChange((event, session) => {
+    this.connector.client.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN") {
         if (!this.dbConnected) {
-          this.connectDb();
+          if (session) {
+            this.isReady$.next(false);
+            await this.connectDb(session);
+            this.isReady$.next(true);
+          } else {            
+            console.warn('Received SIGNED_IN event without a session - cannot connect to database.');
+          }
+        }
+      } else if (event === "SIGNED_OUT") {
+        if (this.dbConnected) {
+          await this.disconnectDb();
         }
       }
     });
@@ -274,7 +288,7 @@ export class PowerSyncService {
         }
         this.currentUserId = session.user.id;
         if (navigator.onLine) {
-          await this.connectDb();
+          await this.connectDb(session);
         }
         console.log('PowerSync setup complete with user ID:', this.currentUserId);
         this.isReady$.next(true);
