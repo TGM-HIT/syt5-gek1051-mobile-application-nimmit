@@ -1,6 +1,6 @@
 import { Component, computed, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, Star } from 'lucide-angular';
+import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, Star, Coffee, Apple, Milk, Drumstick, Croissant, Snowflake, Candy, Brush, Package } from 'lucide-angular';
 import { ShoppingItem, FilterType, FavouriteItem } from '../../models';
 import { ShoppingListService, ModalService } from '../../services';
 import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-item-modal/add-item-modal';
@@ -17,7 +17,7 @@ export class ShoppingList {
   private readonly modalService = inject(ModalService);
 
   // Lucide Icons
-  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, Star };
+  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, Star, Coffee, Apple, Milk, Drumstick, Croissant, Snowflake, Candy, Brush, Package };
 
   // Liste Daten aus Service
   readonly listName = this.shoppingListService.listName;
@@ -50,6 +50,37 @@ export class ShoppingList {
   private touchStartY = 0;
   private isSwiping = false;
   private readonly SWIPE_THRESHOLD = 70;
+
+  // Category visual mapping
+  getCategoryIcon(category: string): any {
+    switch (category) {
+      case 'Getränke': return this.icons.Coffee;
+      case 'Obst & Gemüse': return this.icons.Apple;
+      case 'Milchprodukte': return this.icons.Milk;
+      case 'Fleisch & Fisch': return this.icons.Drumstick;
+      case 'Backwaren': return this.icons.Croissant;
+      case 'Tiefkühl': return this.icons.Snowflake;
+      case 'Süßigkeiten': return this.icons.Candy;
+      case 'Haushalt': return this.icons.Brush;
+      case 'Sonstiges': return this.icons.Package;
+      default: return this.icons.Package;
+    }
+  }
+
+  getCategoryColor(category: string): string {
+    switch (category) {
+      case 'Getränke': return '#3498db'; // blue
+      case 'Obst & Gemüse': return '#2ecc71'; // green
+      case 'Milchprodukte': return '#f1c40f'; // yellow
+      case 'Fleisch & Fisch': return '#e74c3c'; // red
+      case 'Backwaren': return '#e67e22'; // orange
+      case 'Tiefkühl': return '#00cec9'; // cyan
+      case 'Süßigkeiten': return '#9b59b6'; // purple
+      case 'Haushalt': return '#95a5a6'; // gray
+      case 'Sonstiges': return '#34495e'; // dark gray
+      default: return '#34495e';
+    }
+  }
 
   // Items aus Service
   readonly items = this.shoppingListService.items;
