@@ -30,14 +30,15 @@ jobs:
       - name: Run lint (generate report)
         run: |
           mkdir -p reports
-          npm run lint -- --format json --output-file reports/eslint-report.json
+          set -o pipefail
+          npm run lint 2>&1 | tee reports/eslint-report.log
 
       - name: Upload lint report artifact
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: lint-report
-          path: reports/eslint-report.json
+          path: reports/eslint-report.log
 
   component-test:
     name: Component Tests
@@ -88,7 +89,7 @@ jobs:
         run: npm install
 
       - name: Cypress run
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@v7
         with:
           install: false
           build: npm run build
@@ -98,14 +99,14 @@ jobs:
           wait-on-timeout: 120
 
       - name: Upload Cypress Screenshots (on failure)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: cypress-screenshots
           path: cypress/screenshots
 
       - name: Upload Cypress Videos (on failure)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: cypress-videos
