@@ -353,4 +353,69 @@ describe('ShoppingListService', () => {
       expect(service.progressPercentage()).toBe(100);
     });
   });
+
+  describe('Favourites', () => {
+    it('should have empty favourites initially', () => {
+      expect(service.favourites()).toEqual([]);
+    });
+
+    it('should add a favourite', () => {
+      service.addFavourite('Apfel', 'kg', 1);
+      
+      expect(service.favourites().length).toBe(1);
+      expect(service.favourites()[0].name).toBe('Apfel');
+      expect(service.favourites()[0].unit).toBe('kg');
+      expect(service.favourites()[0].size).toBe(1);
+    });
+
+    it('should remove a favourite by id', () => {
+      service.addFavourite('Milch', 'L', 1);
+      const favId = service.favourites()[0].id;
+      
+      service.removeFavourite(favId);
+      
+      expect(service.favourites().length).toBe(0);
+    });
+
+    it('should find a favourite id', () => {
+      service.addFavourite('Brot', 'Einheit');
+      const id = service.findFavouriteId('Brot', 'Einheit');
+      expect(id).toBeDefined();
+      expect(typeof id).toBe('string');
+      // Case insensitivity test
+      const id2 = service.findFavouriteId('  brot  ', 'Einheit');
+      expect(id2).toBe(id);
+    });
+
+    it('should check if it is a current favourite', () => {
+      service.addFavourite('Brot', 'Einheit');
+      expect(service.isCurrentFavourite('Brot', 'Einheit')).toBe(true);
+      expect(service.isCurrentFavourite('Apfel', 'kg')).toBe(false);
+    });
+
+    it('should toggle a favourite (add it)', () => {
+      service.toggleFavourite('Brot', 'Einheit');
+      expect(service.favourites().length).toBe(1);
+      expect(service.favourites()[0].name).toBe('Brot');
+    });
+
+    it('should toggle a favourite (remove it)', () => {
+      service.toggleFavourite('Brot', 'Einheit');
+      expect(service.favourites().length).toBe(1);
+      service.toggleFavourite('Brot', 'Einheit');
+      expect(service.favourites().length).toBe(0);
+    });
+
+    it('should update a favourite', () => {
+      service.addFavourite('Apfel', 'kg', 1);
+      const favId = service.favourites()[0].id;
+      
+      service.updateFavourite(favId, { name: 'Birne', unit: 'Einheit', size: undefined });
+      
+      expect(service.favourites().length).toBe(1);
+      expect(service.favourites()[0].name).toBe('Birne');
+      expect(service.favourites()[0].unit).toBe('Einheit');
+      expect(service.favourites()[0].size).toBeUndefined();
+    });
+  });
 });
