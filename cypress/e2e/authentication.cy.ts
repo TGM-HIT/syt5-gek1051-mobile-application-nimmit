@@ -32,9 +32,16 @@ describe('Authentication', () => {
   // Note: Actual login to Supabase could be simulated if we had test credentials
   // but for E2E basics we ensure the UI behaves properly.
   it('should allow user to type in credentials and attempt login', () => {
+    cy.intercept('POST', '**/auth/v1/token?grant_type=password', {
+      statusCode: 400,
+      body: { error: 'invalid_credentials', error_description: 'Invalid login credentials' }
+    }).as('loginRequest');
+
     cy.get('input#email').type('test@example.com');
     cy.get('input#password').type('wrong_password');
     cy.get('button[type="submit"]').click();
+
+    cy.wait('@loginRequest');
 
     // Just check the feedback or if the button was clicked
     // The exact error depends on Supabase response
