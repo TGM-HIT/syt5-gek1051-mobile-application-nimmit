@@ -15,6 +15,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/groups/groups').then((m) => m.Groups),
   },
   {
+    path: 'favourites',
+    loadComponent: () => import('./pages/favourites/favourites').then((m) => m.Favourites),
+  },
+  {
     path: 'settings',
     loadComponent: () => import('./pages/settings/settings').then((m) => m.Settings),
   },

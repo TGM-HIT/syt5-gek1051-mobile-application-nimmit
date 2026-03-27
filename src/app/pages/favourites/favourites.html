@@ -1,0 +1,75 @@
+<div class="favourites-page">
+  <!-- Header -->
+  <header class="list-header">
+    <div class="list-header-content">
+      <h1 class="list-title">Favoriten</h1>
+      <p class="list-description">Deine gespeicherten Produkte</p>
+    </div>
+  </header>
+
+  <!-- Suchfeld -->
+  <div class="search-container">
+    <div class="search-input-wrapper">
+      <lucide-icon class="search-icon" [img]="icons.Search" [size]="20" [strokeWidth]="2"></lucide-icon>
+      <input type="text" class="search-input" placeholder="Finde einen Favoriten..." [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchQueryChange($event)" autocomplete="off" />
+    </div>
+  </div>
+
+  <!-- Items Liste -->
+  <div class="items-container">
+    <!-- Keine Ergebnisse gefunden -->
+    @if (hasNoResults()) {
+    <div class="no-results">
+      <p>Kein Favorit gefunden</p>
+    </div>
+    }
+
+    <!-- Favourites -->
+    @for (item of filteredFavourites(); track item.id) {
+    <div class="swipe-container">
+      <!-- Swipe Background Actions -->
+      <div class="swipe-actions">
+        <div class="swipe-action left" [class.active]="isSwipingRight(item.id)">
+          <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
+        </div>
+      </div>
+
+      <!-- Swipeable Card -->
+      <div class="item-card" [class.swiping]="swipingItemId() === item.id"
+        [style.transform]="getSwipeTransform(item.id)" (touchstart)="onTouchStart($event, item.id)"
+        (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd(item)">
+        <div class="item-header">
+          <div class="item-info">
+            <h3 class="item-name">{{ item.name }}</h3>
+            <div class="item-meta">
+              @if (item.size && item.unit !== 'Einheit') {
+                <span class="size-badge">{{ item.size }} {{ item.unit }}</span>
+              } @else if (item.size) {
+                <span class="size-badge">{{ item.size }}</span>
+              } @else if (item.unit !== 'Einheit') {
+                <span class="size-badge">{{ item.unit }}</span>
+              }
+            </div>
+          </div>
+          <div class="action-buttons">
+            <button class="icon-btn edit-btn" (click)="editFavourite(item)">
+              <lucide-icon [img]="icons.Pencil" [size]="20" [strokeWidth]="2"></lucide-icon>
+            </button>
+            <button class="icon-btn delete-btn" (click)="deleteFavourite(item)">
+              <lucide-icon [img]="icons.Trash2" [size]="20" [strokeWidth]="2"></lucide-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+    
+    @if (favourites().length === 0 && !hasNoResults()) {
+      <div class="no-results">
+        <p>Du hast noch keine Favoriten gespeichert.</p>
+        <p>Tipp: In der Einkaufsliste kannst du Produkte mit dem Stern als Favoriten markieren.</p>
+      </div>
+    }
+  </div>
+</div>

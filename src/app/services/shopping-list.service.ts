@@ -259,6 +259,12 @@ export class ShoppingListService {
     this._favourites.update(favs => favs.filter(f => f.id !== id));
   }
 
+  updateFavourite(id: string, updates: Partial<FavouriteItem>): void {
+    this._favourites.update(favs =>
+      favs.map(fav => (fav.id === id ? { ...fav, ...updates } : fav))
+    );
+  }
+
   /**
    * Helper to find if a specific combination of name/unit/size is already a favourite
    */

@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { LucideAngularModule, List, Users, Settings, Plus } from 'lucide-angular';
+import { LucideAngularModule, List, Users, Star, Settings, Plus } from 'lucide-angular';
 import { ModalService, ShoppingListService } from '../services';
 import { AddItemModal, AddItemResult } from '../components/add-item-modal/add-item-modal';
 
@@ -15,7 +15,7 @@ export class Navigation {
   private readonly shoppingListService = inject(ShoppingListService);
 
   // Lucide Icons
-  readonly icons = { List, Users, Settings, Plus };
+  readonly icons = { List, Users, Star, Settings, Plus };
 
   async addNewItem(): Promise<void> {
     const result = await this.modalService.open<undefined, AddItemResult>({
