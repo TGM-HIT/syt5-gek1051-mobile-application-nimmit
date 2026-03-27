@@ -24,13 +24,25 @@
   <div class="search-container">
     <div class="search-input-wrapper">
       <lucide-icon class="search-icon" [img]="icons.Search" [size]="20" [strokeWidth]="2"></lucide-icon>
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Finde ein Produkt..."
-        [ngModel]="searchQuery()"
-        (ngModelChange)="searchQuery.set($event)"
-        />
+      <input type="text" class="search-input" placeholder="Finde ein Produkt..." [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchQueryChange($event)" (focus)="showAutocomplete.set(true)" (blur)="hideAutocomplete()"
+        autocomplete="off" />
+
+      @if (shouldShowAutocomplete()) {
+      <div class="autocomplete-dropdown">
+        @for (fav of filteredFavourites(); track fav.id) {
+        <button type="button" class="autocomplete-item" (mousedown)="$event.preventDefault(); addFavouriteItem(fav)">
+          <lucide-icon [img]="icons.Star" [size]="16" [strokeWidth]="2" class="filled"></lucide-icon>
+          <span class="item-name">{{ fav.name }}</span>
+          @if (hasFavouriteDetails(fav)) {
+          <span class="item-details">
+            {{ getFavouriteDetails(fav) }}
+          </span>
+          }
+        </button>
+        }
+      </div>
+      }
     </div>
     <button class="add-item-btn" (click)="addNewItem()">
       <lucide-icon [img]="icons.Plus" [size]="24" [strokeWidth]="2"></lucide-icon>
@@ -40,42 +52,26 @@
   <!-- Filter Tabs -->
   <div class="filter-tabs-container" [class.has-category-selection]="hasCategoryFilter()">
     <div class="filter-tabs-scroll">
-      <button
-        class="filter-tab"
-        [class.active]="activeFilter() === 'all'"
-        (click)="setFilter('all')"
-      >
+      <button class="filter-tab" [class.active]="activeFilter() === 'all'" (click)="setFilter('all')">
         Alle
         <span class="badge">{{ allCount() }}</span>
       </button>
       <span class="tab-divider"></span>
-      <button
-        class="filter-tab"
-        [class.active]="activeFilter() === 'notPurchased'"
-        (click)="setFilter('notPurchased')"
-      >
+      <button class="filter-tab" [class.active]="activeFilter() === 'notPurchased'" (click)="setFilter('notPurchased')">
         Nicht Gekauft
         <span class="badge">{{ notPurchasedCount() }}</span>
       </button>
-      <button
-        class="filter-tab"
-        [class.active]="activeFilter() === 'purchased'"
-        (click)="setFilter('purchased')"
-      >
+      <button class="filter-tab" [class.active]="activeFilter() === 'purchased'" (click)="setFilter('purchased')">
         Eingekauft
         <span class="badge">{{ purchasedCount() }}</span>
       </button>
       <span class="tab-divider"></span>
       @for (category of sortedCategories(); track category) {
-        <button
-          class="category-tab"
-          [class.active]="isCategorySelected(category)"
-          [class.disabled]="!isCategoryInList(category)"
-          [disabled]="!isCategoryInList(category)"
-          (click)="toggleCategory(category)"
-        >
-          {{ category }}
-        </button>
+      <button class="category-tab" [class.active]="isCategorySelected(category)"
+        [class.disabled]="!isCategoryInList(category)" [disabled]="!isCategoryInList(category)"
+        (click)="toggleCategory(category)">
+        {{ category }}
+      </button>
       }
     </div>
   </div>
@@ -83,10 +79,10 @@
   <!-- Progress Bar -->
   <div class="progress-bar">
     @if(allCount() > 0) {
-        <div class="progress-purchased" [style.width.%]="progressPercentage()"></div>
-        <div class="progress-remaining" [style.width.%]="100 - progressPercentage()"></div>
+    <div class="progress-purchased" [style.width.%]="progressPercentage()"></div>
+    <div class="progress-remaining" [style.width.%]="100 - progressPercentage()"></div>
     } @else {
-        <div class="progress-empty" style="width: 100%;"></div>
+    <div class="progress-empty" style="width: 100%;"></div>
     }
   </div>
 
@@ -94,160 +90,157 @@
   <div class="items-container">
     <!-- Keine Ergebnisse gefunden -->
     @if (hasNoResults()) {
-      <div class="no-results">
-        <p>Kein Produkt gefunden</p>
-        <button class="add-not-found-btn" (click)="addNewItem(searchQuery())">
-          <lucide-icon [img]="icons.Plus" [size]="20" [strokeWidth]="2"></lucide-icon>
-          <span>"{{ searchQuery() }}" hinzufügen</span>
-        </button>
-      </div>
+    <div class="no-results">
+      <p>Kein Produkt gefunden</p>
+      <button class="add-not-found-btn" (click)="addNewItem(searchQuery())">
+        <lucide-icon [img]="icons.Plus" [size]="20" [strokeWidth]="2"></lucide-icon>
+        <span>"{{ searchQuery() }}" hinzufügen</span>
+      </button>
+    </div>
     }
 
     <!-- Nicht gekaufte Items -->
     @for (item of filteredItems(); track item.id) {
-      @if (!isPurchased(item)) {
-        <div class="swipe-container">
-          <!-- Swipe Background Actions -->
-          <div class="swipe-actions">
-            <div class="swipe-action left" [class.active]="isSwipingRight(item.id)">
-              <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
-            </div>
-            <div class="swipe-action right" [class.active]="isSwipingLeft(item.id)">
-              <lucide-icon [img]="icons.Check" [size]="24" [strokeWidth]="2"></lucide-icon>
+    @if (!isPurchased(item)) {
+    <div class="swipe-container">
+      <!-- Swipe Background Actions -->
+      <div class="swipe-actions">
+        <div class="swipe-action left" [class.active]="isSwipingRight(item.id)">
+          <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
+        </div>
+        <div class="swipe-action right" [class.active]="isSwipingLeft(item.id)">
+          <lucide-icon [img]="icons.Check" [size]="24" [strokeWidth]="2"></lucide-icon>
+        </div>
+      </div>
+
+      <!-- Swipeable Card -->
+      <div class="item-card" [class.expanded]="isExpanded(item.id)" [class.swiping]="swipingItemId() === item.id"
+        [style.transform]="getSwipeTransform(item.id)" (touchstart)="onTouchStart($event, item.id)"
+        (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd(item)">
+        <button class="item-header" (click)="toggleExpand(item.id)">
+          <div class="category-icon-wrapper" [style.backgroundColor]="getCategoryColor(item.category)">
+            <lucide-icon [img]="getCategoryIcon(item.category)" [size]="20" [strokeWidth]="2" color="white"></lucide-icon>
+          </div>
+          <div class="item-info">
+            <h3 class="item-name">{{ item.name }}</h3>
+            <div class="item-meta">
+              <span class="category-badge">{{ item.category }}</span>
+              @if (item.size && item.unit) {
+              <span class="size-badge">{{ item.size }} {{ item.unit }}</span>
+              }
+              <span class="item-status">{{ getStatusText(item) }}</span>
             </div>
           </div>
-          
-          <!-- Swipeable Card -->
-          <div 
-            class="item-card" 
-            [class.expanded]="isExpanded(item.id)"
-            [class.swiping]="swipingItemId() === item.id"
-            [style.transform]="getSwipeTransform(item.id)"
-            (touchstart)="onTouchStart($event, item.id)"
-            (touchmove)="onTouchMove($event)"
-            (touchend)="onTouchEnd(item)"
-          >
-            <button class="item-header" (click)="toggleExpand(item.id)">
-              <div class="item-info">
-                <h3 class="item-name">{{ item.name }}</h3>
-                <div class="item-meta">
-                  <span class="category-badge">{{ item.category }}</span>
-                  @if (item.size && item.unit) {
-                    <span class="size-badge">{{ item.size }} {{ item.unit }}</span>
-                  }
-                  <span class="item-status">{{ getStatusText(item) }}</span>
-                </div>
-              </div>
-              <lucide-icon class="expand-icon" [class.rotated]="isExpanded(item.id)" [img]="icons.ChevronDown" [size]="24" [strokeWidth]="2"></lucide-icon>
+          <lucide-icon class="expand-icon" [class.rotated]="isExpanded(item.id)" [img]="icons.ChevronDown" [size]="24"
+            [strokeWidth]="2"></lucide-icon>
+        </button>
+
+        <!-- Expandierter Inhalt -->
+        @if (isExpanded(item.id)) {
+        <div class="item-expanded">
+          @if (item.info) {
+          <div class="item-info-section">
+            <h4>Informationen</h4>
+            <p>{{ item.info }}</p>
+          </div>
+          }
+
+          <div class="item-actions">
+            <button class="action-btn delete" (click)="deleteItem(item)">
+              <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
             </button>
-
-            <!-- Expandierter Inhalt -->
-            @if (isExpanded(item.id)) {
-              <div class="item-expanded">
-                @if (item.info) {
-                  <div class="item-info-section">
-                    <h4>Informationen</h4>
-                    <p>{{ item.info }}</p>
-                  </div>
-                }
-
-                <div class="item-actions">
-                  <button class="action-btn delete" (click)="deleteItem(item)">
-                    <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
-                  </button>
-                  <button class="action-btn edit" (click)="editItem(item)">
-                    <lucide-icon [img]="icons.Pencil" [size]="24" [strokeWidth]="2"></lucide-icon>
-                  </button>
-                  @if (item.totalQuantity > 1) {
-                    <div class="quantity-controls">
-                      <button class="quantity-btn" [disabled]="item.purchasedQuantity === 0" (click)="decrementQuantity(item)">
-                        <lucide-icon [img]="icons.Minus" [size]="18" [strokeWidth]="2"></lucide-icon>
-                      </button>
-                      <span class="quantity-display">{{ item.purchasedQuantity }}/{{ item.totalQuantity }}</span>
-                      <button class="quantity-btn" [disabled]="item.purchasedQuantity >= item.totalQuantity" (click)="incrementQuantity(item)">
-                        <lucide-icon [img]="icons.Plus" [size]="18" [strokeWidth]="2"></lucide-icon>
-                      </button>
-                    </div>
-                  }
-                  <button class="action-btn confirm" (click)="markAsPurchased(item)">
-                    <lucide-icon [img]="icons.Check" [size]="24" [strokeWidth]="2.5"></lucide-icon>
-                  </button>
-                </div>
-              </div>
+            <button class="action-btn edit" (click)="editItem(item)">
+              <lucide-icon [img]="icons.Pencil" [size]="24" [strokeWidth]="2"></lucide-icon>
+            </button>
+            @if (item.totalQuantity > 1) {
+            <div class="quantity-controls">
+              <button class="quantity-btn" [disabled]="item.purchasedQuantity === 0" (click)="decrementQuantity(item)">
+                <lucide-icon [img]="icons.Minus" [size]="18" [strokeWidth]="2"></lucide-icon>
+              </button>
+              <span class="quantity-display">{{ item.purchasedQuantity }}/{{ item.totalQuantity }}</span>
+              <button class="quantity-btn" [disabled]="item.purchasedQuantity >= item.totalQuantity"
+                (click)="incrementQuantity(item)">
+                <lucide-icon [img]="icons.Plus" [size]="18" [strokeWidth]="2"></lucide-icon>
+              </button>
+            </div>
             }
+            <button class="action-btn confirm" (click)="markAsPurchased(item)">
+              <lucide-icon [img]="icons.Check" [size]="24" [strokeWidth]="2.5"></lucide-icon>
+            </button>
           </div>
         </div>
-      }
+        }
+      </div>
+    </div>
+    }
     }
 
     <!-- Separator für eingekaufte Items -->
     @if (purchasedCount() > 0 && activeFilter() !== 'notPurchased') {
-      <div class="section-divider">
-        <span>Eingekauft</span>
-      </div>
+    <div class="section-divider">
+      <span>Eingekauft</span>
+    </div>
     }
 
     <!-- Eingekaufte Items -->
     @for (item of filteredItems(); track item.id) {
-      @if (isPurchased(item)) {
-        <div class="swipe-container">
-          <!-- Swipe Background Actions -->
-          <div class="swipe-actions">
-            <div class="swipe-action left delete" [class.active]="isSwipingRight(item.id)">
-              <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
-            </div>
-            <div class="swipe-action right undo" [class.active]="isSwipingLeft(item.id)">
-              <lucide-icon [img]="icons.Undo2" [size]="24" [strokeWidth]="2"></lucide-icon>
+    @if (isPurchased(item)) {
+    <div class="swipe-container">
+      <!-- Swipe Background Actions -->
+      <div class="swipe-actions">
+        <div class="swipe-action left delete" [class.active]="isSwipingRight(item.id)">
+          <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
+        </div>
+        <div class="swipe-action right undo" [class.active]="isSwipingLeft(item.id)">
+          <lucide-icon [img]="icons.Undo2" [size]="24" [strokeWidth]="2"></lucide-icon>
+        </div>
+      </div>
+
+      <!-- Swipeable Card -->
+      <div class="item-card purchased" [class.expanded]="isExpanded(item.id)"
+        [class.swiping]="swipingItemId() === item.id" [style.transform]="getSwipeTransform(item.id)"
+        (touchstart)="onTouchStart($event, item.id)" (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd(item)">
+        <button class="item-header" (click)="toggleExpand(item.id)">
+          <div class="category-icon-wrapper" [style.backgroundColor]="getCategoryColor(item.category)" [class.purchased-icon]="true">
+            <lucide-icon [img]="getCategoryIcon(item.category)" [size]="20" [strokeWidth]="2" color="white"></lucide-icon>
+          </div>
+          <div class="item-info">
+            <h3 class="item-name">{{ item.name }}</h3>
+            <div class="item-meta">
+              <span class="category-badge">{{ item.category }}</span>
+              @if (item.size && item.unit) {
+              <span class="size-badge">{{ item.size }} {{ item.unit }}</span>
+              }
+              <span class="item-status">{{ getStatusText(item) }}</span>
             </div>
           </div>
-          
-          <!-- Swipeable Card -->
-          <div 
-            class="item-card purchased" 
-            [class.expanded]="isExpanded(item.id)"
-            [class.swiping]="swipingItemId() === item.id"
-            [style.transform]="getSwipeTransform(item.id)"
-            (touchstart)="onTouchStart($event, item.id)"
-            (touchmove)="onTouchMove($event)"
-            (touchend)="onTouchEnd(item)"
-          >
-            <button class="item-header" (click)="toggleExpand(item.id)">
-              <div class="item-info">
-                <h3 class="item-name">{{ item.name }}</h3>
-                <div class="item-meta">
-                  <span class="category-badge">{{ item.category }}</span>
-                  @if (item.size && item.unit) {
-                    <span class="size-badge">{{ item.size }} {{ item.unit }}</span>
-                  }
-                  <span class="item-status">{{ getStatusText(item) }}</span>
-                </div>
-              </div>
-              <lucide-icon class="expand-icon" [class.rotated]="isExpanded(item.id)" [img]="icons.ChevronDown" [size]="24" [strokeWidth]="2"></lucide-icon>
+          <lucide-icon class="expand-icon" [class.rotated]="isExpanded(item.id)" [img]="icons.ChevronDown" [size]="24"
+            [strokeWidth]="2"></lucide-icon>
+        </button>
+
+        <!-- Expandierter Inhalt für gekaufte Items -->
+        @if (isExpanded(item.id)) {
+        <div class="item-expanded">
+          @if (item.info) {
+          <div class="item-info-section">
+            <h4>Informationen</h4>
+            <p>{{ item.info }}</p>
+          </div>
+          }
+
+          <div class="item-actions">
+            <button class="action-btn delete" (click)="deleteItem(item)">
+              <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
             </button>
-
-            <!-- Expandierter Inhalt für gekaufte Items -->
-            @if (isExpanded(item.id)) {
-              <div class="item-expanded">
-                @if (item.info) {
-                  <div class="item-info-section">
-                    <h4>Informationen</h4>
-                    <p>{{ item.info }}</p>
-                  </div>
-                }
-
-                <div class="item-actions">
-                  <button class="action-btn delete" (click)="deleteItem(item)">
-                    <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
-                  </button>
-                  <button class="action-btn undo" (click)="markAsNotPurchased(item)">
-                    <lucide-icon [img]="icons.Undo2" [size]="24" [strokeWidth]="2"></lucide-icon>
-                  </button>
-                </div>
-              </div>
-            }
+            <button class="action-btn undo" (click)="markAsNotPurchased(item)">
+              <lucide-icon [img]="icons.Undo2" [size]="24" [strokeWidth]="2"></lucide-icon>
+            </button>
           </div>
         </div>
-      }
+        }
+      </div>
+    </div>
+    }
     }
   </div>
 </div>

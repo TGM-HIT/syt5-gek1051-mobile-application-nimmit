@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { LucideAngularModule, List, Users, Settings, Plus } from 'lucide-angular';
+import { LucideAngularModule, List, Users, Settings, Plus, Star } from 'lucide-angular';
 import { ModalService, ShoppingListDataService } from '../services';
 import { AddItemModal, AddItemResult } from '../components/add-item-modal/add-item-modal';
 import { SupabaseConnector } from '../services/supabase-connector';
@@ -21,7 +21,7 @@ export class Navigation {
   private readonly defaultList = inject(DefaultList);
 
   // Lucide Icons
-  readonly icons = { List, Users, Settings, Plus };
+  readonly icons = { List, Users, Star, Settings, Plus };
 
   async addNewItem(): Promise<void> {
     const result = await this.modalService.open<undefined, AddItemResult>({
