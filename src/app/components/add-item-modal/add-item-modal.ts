@@ -2,11 +2,11 @@ import { Component, inject, signal, input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, X, Plus, Minus } from 'lucide-angular';
 import { ModalService } from '../../services/modal.service';
-import { ShoppingItemRow, ShoppingListDataService, Unit } from '../../services/shopping-list-data.service';
+import { Currency, ShoppingItemRow, ShoppingListDataService, Unit } from '../../services/shopping-list-data.service';
 import { Category } from '../../types';
 import { PowerSyncService } from '../../services/powersync';
 
-type EditableShoppingItem = Pick<ShoppingItemRow, 'id' | 'name' | 'category' | 'totalQuantity' | 'info' | 'size' | 'unit'>;
+type EditableShoppingItem = Pick<ShoppingItemRow, 'id' | 'name' | 'category' | 'totalQuantity' | 'info' | 'size' | 'unit' | 'price' | 'currency'>;
 
 export interface AddItemData {
   editItem?: EditableShoppingItem;
@@ -21,6 +21,8 @@ export interface AddItemResult {
   info?: string;
   size?: number;
   unit: Unit;
+  price?: number;
+  currency: Currency;
 }
 
 @Component({
@@ -65,6 +67,13 @@ export class AddItemModal implements OnInit {
     'Kiste',
     'Dose',
     'Packung'
+  ];
+
+  //Verfuegbare Waehrungen
+  readonly currencies: Currency[] = [
+    'Euro',
+    'CHF',
+    'USD'
   ];
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises

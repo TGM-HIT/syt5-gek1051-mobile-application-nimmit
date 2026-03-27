@@ -33,6 +33,8 @@ export interface ShoppingItemRow {
   unit?: Unit;
   createdAt: string;
   updatedAt: string;
+  price?: number;
+  currency?: Currency;
 }
 
 export interface UpsertListItemInput {
