@@ -201,18 +201,8 @@
   min-height: 20px;
 }
 
-.category-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--spacing-0) var(--spacing-2);
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  color: var(--color-background);
-  background-color: var(--color-accent-600);
-  border-radius: var(--radius-xl);
-}
-
 .size-badge {
+  display: inline-flex;
   display: inline-flex;
   align-items: center;
   padding: var(--spacing-0) var(--spacing-2);
