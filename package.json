@@ -6,6 +6,7 @@
     "start": "ng serve",
     "build": "ng build",
     "build:pages": "ng build --configuration production --base-href /syt5-gek1051-mobile-application-nimmit/",
+    "powersync:setup": "npx powersync-web copy-assets -o src/assets",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:component": "ng test --watch=false",
