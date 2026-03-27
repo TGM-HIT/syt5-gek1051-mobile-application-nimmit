@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, signal, inject } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, UserPlus } from 'lucide-angular';
+import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, UserPlus, Star, Coffee, Apple, Milk, Drumstick, Croissant, Snowflake, Candy, Brush, Package  } from 'lucide-angular';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-item-modal/add-item-modal';
 import { EditListModal, EditListData, EditListResult } from '../../components/edit-list-modal/edit-list-modal';
@@ -11,6 +11,8 @@ import { SupabaseConnector } from '../../services/supabase-connector';
 import { FilterType } from '../../types';
 import { PowerSyncService } from '../../services/powersync';
 import Fuse from 'fuse.js';
+import { FavouriteItem } from '../../models';
+import { ShoppingListService } from '../../services/shopping-list.service';
 
 @Component({
   selector: 'app-shopping-list',
@@ -20,6 +22,7 @@ import Fuse from 'fuse.js';
 })
 export class ShoppingList implements OnInit, OnDestroy {
   private readonly shoppingListData = inject(ShoppingListDataService);
+  private readonly shoppingListService = inject(ShoppingListService);
   private readonly supabase = inject(SupabaseConnector);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -37,7 +40,7 @@ export class ShoppingList implements OnInit, OnDestroy {
   };
 
   // Lucide Icons
-  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, UserPlus };
+  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, UserPlus, Star, Coffee, Apple, Milk, Drumstick, Croissant, Snowflake, Candy, Brush, Package };
 
   // Verfügbare Kategorien
   readonly categories = [
@@ -54,6 +57,7 @@ export class ShoppingList implements OnInit, OnDestroy {
 
   // Such- und Filter-State (lokal)
   readonly searchQuery = signal('');
+  readonly showAutocomplete = signal(false);
   readonly activeFilter = signal<FilterType>('all');
   readonly expandedItemId = signal<string | null>(null);
   readonly selectedCategories = signal<string[]>([]);
@@ -65,6 +69,37 @@ export class ShoppingList implements OnInit, OnDestroy {
   private touchStartY = 0;
   private isSwiping = false;
   private readonly SWIPE_THRESHOLD = 70;
+
+  // Category visual mapping
+  getCategoryIcon(category: string): any {
+    switch (category) {
+      case 'Getränke': return this.icons.Coffee;
+      case 'Obst & Gemüse': return this.icons.Apple;
+      case 'Milchprodukte': return this.icons.Milk;
+      case 'Fleisch & Fisch': return this.icons.Drumstick;
+      case 'Backwaren': return this.icons.Croissant;
+      case 'Tiefkühl': return this.icons.Snowflake;
+      case 'Süßigkeiten': return this.icons.Candy;
+      case 'Haushalt': return this.icons.Brush;
+      case 'Sonstiges': return this.icons.Package;
+      default: return this.icons.Package;
+    }
+  }
+
+  getCategoryColor(category: string): string {
+    switch (category) {
+      case 'Getränke': return '#3498db'; // blue
+      case 'Obst & Gemüse': return '#2ecc71'; // green
+      case 'Milchprodukte': return '#f1c40f'; // yellow
+      case 'Fleisch & Fisch': return '#e74c3c'; // red
+      case 'Backwaren': return '#e67e22'; // orange
+      case 'Tiefkühl': return '#00cec9'; // cyan
+      case 'Süßigkeiten': return '#9b59b6'; // purple
+      case 'Haushalt': return '#95a5a6'; // gray
+      case 'Sonstiges': return '#34495e'; // dark gray
+      default: return '#34495e';
+    }
+  }
 
   // Computed: Kategorien die in der Liste existieren
   readonly categoriesInList = computed(() => {
@@ -124,6 +159,64 @@ export class ShoppingList implements OnInit, OnDestroy {
   readonly hasNoResults = computed(() => {
     return this.searchQuery().trim().length > 0 && this.filteredItems().length === 0;
   });
+
+  // Autocomplete und Favourites
+  readonly favourites = this.shoppingListService.favourites;
+  readonly isQueryEmpty = computed(() => !this.searchQuery().trim());
+
+  readonly filteredFavourites = computed(() => {
+    const query = this.searchQuery().toLowerCase().trim();
+    const favs = this.favourites();
+    if (!query) return [];
+    return favs.filter((fav: FavouriteItem) => fav.name.toLowerCase().includes(query));
+  });
+
+  readonly shouldShowAutocomplete = computed(() =>
+    this.showAutocomplete() && !this.isQueryEmpty() && this.filteredFavourites().length > 0
+  );
+
+  onSearchQueryChange(newQuery: string): void {
+    this.searchQuery.set(newQuery);
+    this.showAutocomplete.set(true);
+  }
+
+  hideAutocomplete(): void {
+    this.showAutocomplete.set(false);
+  }
+
+  getFavouriteDetails(fav: FavouriteItem): string {
+    const sizeStr = fav.size ? `${fav.size} ` : '';
+    const unitStr = fav.unit !== 'Einheit' ? fav.unit : '';
+    return `${sizeStr}${unitStr}`;
+  }
+
+  hasFavouriteDetails(fav: FavouriteItem): boolean {
+    return !!(fav.size || fav.unit !== 'Einheit');
+  }
+
+  async addFavouriteItem(fav: FavouriteItem): Promise<void> {
+    this.showAutocomplete.set(false);
+    this.searchQuery.set('');
+
+    const result = await this.modalService.open<AddItemData, AddItemResult>({
+      component: AddItemModal,
+      data: {
+        prefillName: fav.name,
+        prefillUnit: fav.unit,
+        prefillSize: fav.size
+      }
+    });
+
+    const listId = this.listId();
+    if (result && listId !== null) {
+      const user = await this.supabase.getCurrentUser();
+      if (!user) {
+        await this.shoppingListData.addItemToList(listId, result, null);
+        return;
+      }
+      await this.shoppingListData.addItemToList(listId, result, user.id);
+    }
+  }
 
   // Computed: Counts für Tabs aus Service
   readonly allCount = computed(() => this.items().length);
@@ -314,7 +407,7 @@ export class ShoppingList implements OnInit, OnDestroy {
 
   onTouchEnd(item: ShoppingItemRow): void {
     const offset = this.swipeOffset();
-    
+
     if (Math.abs(offset) >= this.SWIPE_THRESHOLD) {
       if (this.isPurchased(item)) {
         // Für gekaufte Items: links = undo, rechts = delete
@@ -336,7 +429,7 @@ export class ShoppingList implements OnInit, OnDestroy {
         }
       }
     }
-    
+
     this.resetSwipe();
   }
 

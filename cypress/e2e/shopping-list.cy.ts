@@ -1,5 +1,7 @@
 describe('Shopping List', () => {
   beforeEach(() => {
+    cy.bypassSync();
+    cy.login();
     cy.visit('/list');
   });
 

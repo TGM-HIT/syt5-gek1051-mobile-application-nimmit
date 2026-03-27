@@ -1,7 +1,7 @@
 <div class="modal-content">
   <!-- Header -->
   <div class="modal-header">
-    <h2 class="modal-title">{{ isEditMode() ? 'Produkt bearbeiten' : 'Produkt hinzufügen' }}</h2>
+    <h2 class="modal-title">{{ modalTitle() }}</h2>
     <button class="close-btn" (click)="close()">
       <lucide-icon [img]="icons.X" [size]="24" [strokeWidth]="2"></lucide-icon>
     </button>
@@ -12,30 +12,57 @@
     <!-- Produktname -->
     <div class="form-group">
       <label for="name">Produktname *</label>
-      <input
-        type="text"
-        id="name"
-        class="form-input"
-        placeholder="z.B. Milch, Brot, Äpfel..."
-        [ngModel]="name()"
-        (ngModelChange)="name.set($event)"
-        name="name"
-        required
-      />
+      <div class="size-unit-control" style="position: relative;">
+        <input type="text" id="name" class="form-input" placeholder="z.B. Milch, Brot, Äpfel..." [ngModel]="name()"
+          (ngModelChange)="onNameChange($event)" (focus)="showAutocomplete.set(true)" (blur)="hideAutocomplete()"
+          name="name" autocomplete="off" required />
+        <button type="button" class="favourite-btn" [class.active]="isCurrentFavourite()" (click)="toggleFavourite()"
+          [disabled]="isNameEmpty()" title="Als Favorit speichern">
+          <lucide-icon [img]="icons.Star" [size]="24" [strokeWidth]="2"
+            [class.filled]="isCurrentFavourite()"></lucide-icon>
+        </button>
+
+        @if (shouldShowAutocomplete()) {
+        <div class="autocomplete-dropdown">
+          @for (fav of filteredFavourites(); track fav.id) {
+          <button type="button" class="autocomplete-item" (mousedown)="$event.preventDefault(); selectFavourite(fav)">
+            <lucide-icon [img]="icons.Star" [size]="16" [strokeWidth]="2" class="filled"></lucide-icon>
+            <span class="item-name">{{ fav.name }}</span>
+            @if (hasFavouriteDetails(fav)) {
+            <span class="item-details">
+              {{ getFavouriteDetails(fav) }}
+            </span>
+            }
+          </button>
+          }
+        </div>
+        }
+      </div>
+
+      @if (shouldShowFavouritesList()) {
+      <div class="favourites-list">
+        @for (fav of favourites(); track fav.id) {
+        <button type="button" class="favourite-chip" (click)="selectFavourite(fav)">
+          <lucide-icon [img]="icons.Star" [size]="12" [strokeWidth]="1"></lucide-icon>
+          <span>{{ fav.name }}</span>
+          @if (hasFavouriteDetails(fav)) {
+          <div>
+            {{ getFavouriteDetails(fav) }}
+          </div>
+          }
+        </button>
+        }
+      </div>
+      }
     </div>
 
     <!-- Kategorie -->
     <div class="form-group">
       <label for="category">Kategorie</label>
-      <select
-        id="category"
-        class="form-select"
-        [ngModel]="category()"
-        (ngModelChange)="category.set($event)"
-        name="category"
-      >
-        @for (cat of categories(); track cat) {
-          <option [value]="cat.name">{{ cat.name }}</option>
+      <select id="category" class="form-select" [ngModel]="category()" (ngModelChange)="category.set($event)"
+        name="category">
+        @for (cat of categories(); track cat.id) {
+        <option [value]="cat.name">{{ cat.name }}</option>
         }
       </select>
     </div>
@@ -58,23 +85,11 @@
     <div class="form-group">
       <label>Größe (optional)</label>
       <div class="size-unit-control">
-        <input
-          type="number"
-          class="form-input size-input"
-          placeholder="z.B. 500"
-          [ngModel]="size()"
-          (ngModelChange)="size.set($event)"
-          name="size"
-          min="0"
-        />
-        <select
-          class="form-select unit-select"
-          [ngModel]="unit()"
-          (ngModelChange)="unit.set($event)"
-          name="unit"
-        >
+        <input type="number" class="form-input size-input" placeholder="z.B. 500" [ngModel]="size()"
+          (ngModelChange)="size.set($event)" name="size" min="0" />
+        <select class="form-select unit-select" [ngModel]="unit()" (ngModelChange)="unit.set($event)" name="unit">
           @for (u of units; track u) {
-            <option [value]="u">{{ u }}</option>
+          <option [value]="u">{{ u }}</option>
           }
         </select>
       </div>
@@ -83,20 +98,13 @@
     <!-- Info/Beschreibung -->
     <div class="form-group">
       <label for="info">Beschreibung (optional)</label>
-      <textarea
-        id="info"
-        class="form-textarea"
-        placeholder="z.B. Bitte das grüne kaufen..."
-        [ngModel]="info()"
-        (ngModelChange)="info.set($event)"
-        name="info"
-        rows="3"
-      ></textarea>
+      <textarea id="info" class="form-textarea" placeholder="z.B. Bitte das grüne kaufen..." [ngModel]="info()"
+        (ngModelChange)="info.set($event)" name="info" rows="3"></textarea>
     </div>
 
     <!-- Submit Button -->
-    <button type="submit" class="submit-btn" [disabled]="!name().trim()">
-      {{ isEditMode() ? 'Speichern' : 'Hinzufügen' }}
+    <button type="submit" class="submit-btn" [disabled]="isNameEmpty()">
+      {{ submitButtonText() }}
     </button>
   </form>
 </div>

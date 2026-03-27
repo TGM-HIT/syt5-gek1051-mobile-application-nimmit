@@ -1,5 +1,7 @@
 describe('Navigation', () => {
   beforeEach(() => {
+    cy.bypassSync();
+    cy.login();
     // Navigating to the home page redirects or opens the default page (shopping list)
     cy.visit('/');
   });
