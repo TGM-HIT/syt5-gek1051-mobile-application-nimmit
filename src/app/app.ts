@@ -54,7 +54,7 @@ export class App implements OnInit {
       console.log('Connectivity changed. Online:', isOnline);
       this.isOnline.set(isOnline);
       if (isOnline) {
-        this.powerSync.connectDb().catch(e => console.error('Error connecting to PowerSync:', e));
+        this.powerSync.connectDb(null).catch(e => console.error('Error connecting to PowerSync:', e));
       } else {
         this.powerSync.disconnectDb().catch(e => console.error('Error disconnecting from PowerSync:', e));
       }
