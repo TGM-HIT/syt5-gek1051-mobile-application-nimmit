@@ -22,7 +22,7 @@ export interface AddItemResult {
   size?: number;
   unit: Unit;
   price?: number;
-  currency: Currency;
+  currency?: Currency;
 }
 
 @Component({
@@ -34,10 +34,10 @@ export interface AddItemResult {
 export class AddItemModal implements OnInit {
   private readonly modalService = inject(ModalService);
   private readonly shoppingListDataService = inject(ShoppingListDataService);
-  
+
   // Input data from modal service
   readonly data = input<AddItemData>();
-  
+
   readonly icons = { X, Plus, Minus };
 
   // Form State
@@ -47,13 +47,15 @@ export class AddItemModal implements OnInit {
   readonly info = signal('');
   readonly size = signal<number | undefined>(undefined);
   readonly unit = signal<Unit>('Einheit');
-  
+  readonly currency = signal<Currency>('Euro');
+  readonly price = signal<number | undefined>(undefined);
+
   // Edit mode
   readonly isEditMode = signal(false);
   private editItemId: string | undefined;
 
   // Predefined categories
-  readonly categories = signal<Category[]>([{id: BigInt(9), name: 'Sonstiges', created_at: new Date().toISOString()}]);
+  readonly categories = signal<Category[]>([{ id: BigInt(9), name: 'Sonstiges', created_at: new Date().toISOString() }]);
 
   // Verfügbare Units
   readonly units: Unit[] = [
@@ -79,7 +81,7 @@ export class AddItemModal implements OnInit {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   async ngOnInit(): Promise<void> {
     const inputData = this.data();
-    this.categories.set(await this.shoppingListDataService.getCategories()); 
+    this.categories.set(await this.shoppingListDataService.getCategories());
     if (inputData?.editItem) {
       const item = inputData.editItem;
       this.isEditMode.set(true);
@@ -121,7 +123,8 @@ export class AddItemModal implements OnInit {
       quantity: this.quantity(),
       info: this.info().trim() || undefined,
       size: this.size() || undefined,
-      unit: this.unit()
+      unit: this.unit(),
+      currency: this.currency()
     };
 
     this.modalService.close(result);
