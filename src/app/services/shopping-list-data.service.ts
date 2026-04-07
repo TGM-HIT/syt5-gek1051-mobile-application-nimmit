@@ -19,7 +19,7 @@ export type Unit =
   | 'Dose'
   | 'Packung';
 
-export type Currency = 'Euro' | 'CHF' |'USD';
+export type Currency = 'Euro' | 'CHF' | 'USD';
 
 export interface ShoppingItemRow {
   id: string;
@@ -44,6 +44,8 @@ export interface UpsertListItemInput {
   info?: string;
   size?: number;
   unit: Unit;
+  price?: number;
+  currency?: Currency;
 }
 
 interface WatchResult<T> {
@@ -105,6 +107,8 @@ export class ShoppingListDataService {
         i.description AS info,
         i.content AS size,
         li.amount_unit AS unit,
+        li.price AS price,
+        li.currency AS currency,
         li.created_at AS createdAt,
         li.updated_at AS updatedAt
       FROM "ListItem" li
@@ -129,7 +133,7 @@ export class ShoppingListDataService {
       ul."user" = ?
       LIMIT 1
     `;
-    const result = await this.powerSync.get<{exists: number}>(sql, [listId, USER_ID_PLACEHOLDER]);
+    const result = await this.powerSync.get<{ exists: number }>(sql, [listId, USER_ID_PLACEHOLDER]);
     return result.exists === 1;
   }
 
@@ -153,11 +157,11 @@ export class ShoppingListDataService {
     await this.powerSync.execute(
       `
       INSERT INTO "ListItem"
-        (id, liste, item, created_at, updated_at, curr_amount, target_amount, amount_unit)
+        (id, liste, item, created_at, updated_at, curr_amount, target_amount, amount_unit, price, currency)
       VALUES
-        (?, ?, ?, datetime(), datetime(), 0, ?, ?)
+        (?, ?, ?, datetime(), datetime(), 0, ?, ?, ?, ?)
       `,
-      [compKey, listId, newItemId, payload.quantity, payload.unit]
+      [compKey, listId, newItemId, payload.quantity, payload.unit, payload.price ?? null, payload.currency ?? null]
     );
   }
 
@@ -181,6 +185,8 @@ export class ShoppingListDataService {
       UPDATE "ListItem"
       SET target_amount = ?,
           amount_unit = ?,
+          price = ?,
+          currency = ?,
           curr_amount = CASE
             WHEN curr_amount > ? THEN ?
             ELSE curr_amount
@@ -188,7 +194,7 @@ export class ShoppingListDataService {
           updated_at = datetime()
       WHERE id = ?
       `,
-      [payload.quantity, payload.unit, payload.quantity, payload.quantity, listItemId]
+      [payload.quantity, payload.unit, payload.price ?? null, payload.currency ?? null, payload.quantity, payload.quantity, listItemId]
     );
   }
 
@@ -252,7 +258,7 @@ export class ShoppingListDataService {
   }
 
   private async getOrCreateCategoryId(categoryName: string): Promise<number> {
-    const selectResult = await this.powerSync.get<{id: number}>(
+    const selectResult = await this.powerSync.get<{ id: number }>(
       `SELECT id FROM "Category" WHERE name = ? LIMIT 1`,
       [categoryName]
     );
