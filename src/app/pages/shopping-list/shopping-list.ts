@@ -221,6 +221,8 @@ export class ShoppingList implements OnInit, OnDestroy {
         i.description AS info,
         i.content AS size,
         li.amount_unit AS unit,
+        li.price AS price,
+        li.currency AS currency,
         li.created_at AS createdAt,
         li.updated_at AS updatedAt
         FROM "ListItem" li 

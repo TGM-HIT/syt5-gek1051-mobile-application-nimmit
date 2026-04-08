@@ -68,7 +68,9 @@ const ListItem = new Table(
     updated_at: column.text,
     curr_amount: column.integer,
     target_amount: column.integer,
-    amount_unit: column.text
+    amount_unit: column.text,
+    price: column.real,
+    currency: column.text
   },
   { indexes: { liste_item_idx: ["liste", "item"] } }
 );

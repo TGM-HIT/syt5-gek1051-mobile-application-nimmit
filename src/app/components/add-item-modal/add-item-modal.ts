@@ -92,6 +92,8 @@ export class AddItemModal implements OnInit {
       this.info.set(item.info || '');
       this.size.set(item.size);
       this.unit.set(item.unit || 'Einheit');
+      this.currency.set(item.currency || 'Euro');
+      this.price.set(item.price || undefined);
     } else if (inputData?.prefillName) {
       this.name.set(inputData.prefillName);
     }
@@ -124,7 +126,8 @@ export class AddItemModal implements OnInit {
       info: this.info().trim() || undefined,
       size: this.size() || undefined,
       unit: this.unit(),
-      currency: this.currency()
+      currency: this.currency(),
+      price: this.price() || undefined
     };
 
     this.modalService.close(result);

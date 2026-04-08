@@ -45,23 +45,12 @@
     <div class="form-group">
       <label>Preis</label>
       <div class="size-unit-control">
-        <input
-          type="number"
-          class="form-input size-input"
-          placeholder="z.B. 10.50€ oder $12.50"
-          [ngModel]="size()"
-          (ngModelChange)="size.set($event)"
-          name="size"
-          min="0"
-        />
-        <select
-          class="form-select unit-select"
-          [ngModel]="unit()"
-          (ngModelChange)="unit.set($event)"
-          name="unit"
-        >
-          @for (u of units; track u) {
-            <option [value]="u">{{ u }}</option>
+        <input type="number" class="form-input size-input" placeholder="z.B. 10.50€ oder $12.50" [ngModel]="price()"
+          (ngModelChange)="price.set($event)" name="price" min="0" />
+        <select class="form-select unit-select" [ngModel]="currency()" (ngModelChange)="currency.set($event)"
+          name="currency">
+          @for (u of currencies; track u) {
+          <option [value]="u">{{ u }}</option>
           }
         </select>
       </div>
