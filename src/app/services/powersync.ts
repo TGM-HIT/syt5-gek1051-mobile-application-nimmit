@@ -107,9 +107,10 @@ export class PowerSyncService {
 
 
   constructor() {
+    const isCypressRun = typeof window !== 'undefined' && !!(window as any).Cypress;
     const factory = new WASQLiteOpenFactory({
       dbFilename: 'app_v6.db',
-      vfs: WASQLiteVFS.OPFSCoopSyncVFS,
+      vfs: isCypressRun ? WASQLiteVFS.IDBBatchAtomicVFS : WASQLiteVFS.OPFSCoopSyncVFS,
       // Specify the path to the worker script
       worker: '@powersync/worker/WASQLiteDB.umd.js'
     });
