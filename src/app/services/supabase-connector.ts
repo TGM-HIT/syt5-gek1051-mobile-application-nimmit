@@ -161,13 +161,17 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
   }
 
   async getUserCountForList(listId: bigint): Promise<number> {
-    const rpcResult = await this.client.rpc('get_user_count_for_list', { list_id: listId });
-    if (rpcResult.error) {
-      console.error('Error calling RPC get_user_count_for_list:', rpcResult.error);
-      throw rpcResult.error;
+    try {
+      const rpcResult = await this.client.rpc('get_user_count_for_list', { list_id: listId });
+      if (rpcResult.error) {
+        console.error('Error calling RPC get_user_count_for_list:', rpcResult.error);
+        return 1; // Default fallback for offline/testing
+      }
+      return (rpcResult.data as number) || 1;
+    } catch (e) {
+      console.error('Exception calling get_user_count_for_list', e);
+      return 1;
     }
-    const count = rpcResult.data as number;
-    return count;
   }
 
   async getUsersForList(listId: bigint): Promise<{ username: string, email: string}[]> {

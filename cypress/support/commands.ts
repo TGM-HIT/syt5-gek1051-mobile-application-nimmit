@@ -64,8 +64,8 @@ Cypress.Commands.add('login', () => {
 
 Cypress.Commands.add('bypassSync', () => {
     // Intercept Supabase network requests to simulate an offline state or prevent real DB mutation during UI tests
-    cy.intercept('GET', '**/rest/v1/*', { statusCode: 200, body: [] }).as('mockSupabaseGet');
-    cy.intercept('POST', '**/rest/v1/*', { statusCode: 201, body: {} }).as('mockSupabasePost');
-    cy.intercept('PATCH', '**/rest/v1/*', { statusCode: 200, body: {} }).as('mockSupabasePatch');
-    cy.intercept('DELETE', '**/rest/v1/*', { statusCode: 200, body: {} }).as('mockSupabaseDelete');
+    cy.intercept('GET', '**/rest/v1/**', { statusCode: 200, body: [] }).as('mockSupabaseGet');
+    cy.intercept('POST', '**/rest/v1/**', { statusCode: 200, body: 0 }).as('mockSupabasePost');
+    cy.intercept('PATCH', '**/rest/v1/**', { statusCode: 200, body: {} }).as('mockSupabasePatch');
+    cy.intercept('DELETE', '**/rest/v1/**', { statusCode: 200, body: {} }).as('mockSupabaseDelete');
 });

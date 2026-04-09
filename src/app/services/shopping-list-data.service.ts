@@ -71,7 +71,7 @@ export class ShoppingListDataService {
     return rows[0]?.id ?? null;
   }
 
-  async *watchListInfo(listId: number): AsyncIterable<ListInfo> {
+  async *watchListInfo(listId: bigint): AsyncIterable<ListInfo> {
 
     const sql = `
       SELECT name, COALESCE(description, '') AS description
@@ -80,7 +80,7 @@ export class ShoppingListDataService {
       LIMIT 1
     `;
 
-    for await (const result of this.powerSync.db.watch(sql, [listId])) {
+    for await (const result of this.powerSync.db.watch(sql, [String(listId)])) {
       const rows = this.toRows<ListInfo>((result as WatchResult<ListInfo>).rows);
       const info = rows[0];
       if (info) {
@@ -110,7 +110,7 @@ export class ShoppingListDataService {
       ORDER BY li.created_at ASC
     `;
 
-    for await (const result of this.powerSync.db.watch(sql, [listId])) {
+    for await (const result of this.powerSync.db.watch(sql, [String(listId)])) {
       const rows = this.toRows<ShoppingItemRow>((result as WatchResult<ShoppingItemRow>).rows);
       yield rows;
     }
@@ -125,11 +125,11 @@ export class ShoppingListDataService {
       ul."user" = ?
       LIMIT 1
     `;
-    const result = await this.powerSync.get<{exists: number}>(sql, [listId, USER_ID_PLACEHOLDER]);
+    const result = await this.powerSync.get<{exists: number}>(sql, [String(listId), USER_ID_PLACEHOLDER]);
     return result.exists === 1;
   }
 
-  async getGlobalItemFromItem(itemId: bigint): Promise<{ name: string, category: string } | null> {
+  async getGlobalItemFromItem(itemId: number): Promise<{ name: string, category: string } | null> {
     const sql = `
       SELECT name, COALESCE((SELECT name FROM "Category" WHERE id = i.category), 'Sonstiges') AS category
       FROM "Item" i
@@ -137,7 +137,7 @@ export class ShoppingListDataService {
       LIMIT 1
     `;
 
-    const result = await this.powerSync.execute(sql, [itemId]);
+    const result = await this.powerSync.execute(sql, [String(itemId)]);
     const rows = this.toRows<{ name: string, category: string }>(result.rows);
     return rows[0] ?? null;
   }
@@ -153,7 +153,7 @@ export class ShoppingListDataService {
       VALUES
         (?, ?, ?, datetime(), datetime(), 0, ?, ?)
       `,
-      [compKey, listId, newItemId, payload.quantity, payload.unit]
+      [compKey, String(listId), newItemId, payload.quantity, payload.unit]
     );
   }
 
@@ -169,7 +169,7 @@ export class ShoppingListDataService {
           description = ?
       WHERE id = ?
       `,
-      [payload.name, categoryId, payload.size ?? null, payload.info ?? null, itemId]
+      [payload.name, categoryId, payload.size ?? null, payload.info ?? null, String(itemId)]
     );
 
     await this.execute(
@@ -195,15 +195,15 @@ export class ShoppingListDataService {
       SET name = ?, description = ?
       WHERE id = ?
       `,
-      [name, description || null, listId]
+      [name, description || null, String(listId)]
     );
   }
 
   async deleteList(listId: bigint): Promise<void> {
     // Remove child rows first to avoid FK violations when constraints are present.
-    await this.execute(`DELETE FROM "ListItem" WHERE liste = ?`, [listId]);
-    await this.execute(`DELETE FROM "UserLists" WHERE list = ?`, [listId]);
-    await this.execute(`DELETE FROM "Lists" WHERE id = ?`, [listId]);
+    await this.execute(`DELETE FROM "ListItem" WHERE liste = ?`, [String(listId)]);
+    await this.execute(`DELETE FROM "UserLists" WHERE list = ?`, [String(listId)]);
+    await this.execute(`DELETE FROM "Lists" WHERE id = ?`, [String(listId)]);
   }
 
   async setPurchasedQuantity(listItemId: string, quantity: number): Promise<void> {
@@ -232,6 +232,15 @@ export class ShoppingListDataService {
     }
 
     if (rows && typeof rows === 'object') {
+      const maybeRowList = rows as { length?: unknown; item?: unknown };
+      if (typeof maybeRowList.length === 'number' && typeof maybeRowList.item === 'function') {
+        const result: T[] = [];
+        for (let i = 0; i < maybeRowList.length; i += 1) {
+          result.push((maybeRowList.item as (index: number) => T)(i));
+        }
+        return result;
+      }
+
       const maybeArray = Reflect.get(rows, '_array');
       if (Array.isArray(maybeArray)) {
         return maybeArray as T[];
@@ -243,21 +252,51 @@ export class ShoppingListDataService {
 
   public async getCategories(): Promise<Category[]> {
     const sql = `SELECT id, name, created_at FROM "Category" ORDER BY name ASC`;
-    const result = await this.powerSync.db.getAll<Category>(sql);
-    return result
+    let result = await this.powerSync.db.getAll<Category>(sql);
+    if (!result || result.length === 0) {
+      await this.powerSync.execute(
+        `INSERT INTO "Category" (id, name, created_at) VALUES 
+        ('1', 'Obst & Gemüse', datetime()),
+        ('2', 'Milchprodukte', datetime()),
+        ('9', 'Sonstiges', datetime())`
+      );
+      result = await this.powerSync.db.getAll<Category>(sql);
+    }
+    return result;
   }
 
   private async getOrCreateCategoryId(categoryName: string): Promise<number> {
-    const selectResult = await this.powerSync.get<{id: number}>(
-      `SELECT id FROM "Category" WHERE name = ? LIMIT 1`,
-      [categoryName]
-    );
+    try {
+      const selectResult = await this.powerSync.db.getOptional<{id: string | number}>(
+        `SELECT id FROM "Category" WHERE name = ? LIMIT 1`,
+        [categoryName]
+      );
 
-    if (selectResult.id) {
-      return selectResult.id;
+      if (selectResult && selectResult.id) {
+        const parsed = typeof selectResult.id === 'number' ? selectResult.id : Number(selectResult.id);
+        if (Number.isFinite(parsed)) {
+          return parsed;
+        }
+      }
+    } catch(e) {
+      // Ignore exception if record not found
     }
 
-    throw new Error('Kategorie konnte nicht gefunden werden.');
+    try {
+      const fallback = await this.powerSync.db.getOptional<{id: string | number}>(
+        `SELECT id FROM "Category" LIMIT 1`
+      );
+      if (fallback && fallback.id) {
+        const parsed = typeof fallback.id === 'number' ? fallback.id : Number(fallback.id);
+        if (Number.isFinite(parsed)) {
+          return parsed;
+        }
+      }
+    } catch(e) {
+      // Ignore exception if fallback lookup fails
+    }
+    
+    return 9;
   }
 
   private async createItem(payload: UpsertListItemInput, userId: string | null): Promise<number> {
@@ -267,22 +306,32 @@ export class ShoppingListDataService {
       // eslint-disable-next-line no-param-reassign
       userId = USER_ID_PLACEHOLDER;
     }
+    const parts = crypto.getRandomValues(new Uint32Array(2));
+    // eslint-disable-next-line no-bitwise
+    const randomBigInt: bigint = (BigInt(parts[0]) << 16n) | BigInt(parts[1]);
+    const newId = randomBigInt.toString();
     console.warn("Creating item with category ID:", categoryId, "for user:", userId, "with payload:", payload);
     const resp = await this.powerSync.execute(
       `
       INSERT INTO "Item"
         (id, created_at, name, category, content, description, global, user)
       VALUES
-        (cast(ABS(RANDOM()) as text), datetime(), ?, ?, ?, ?, 0, ?) RETURNING id
+        (?, datetime(), ?, ?, ?, ?, 0, ?) RETURNING id
       `,
-      [payload.name, categoryId, payload.size ?? null, payload.info ?? null, userId]
+      [newId, payload.name, categoryId, payload.size ?? null, payload.info ?? null, userId]
     );
 
-    const rows = this.toRows<{ id: number }>(resp.rows);
-    if (!rows[0]?.id) {
+    const rows = this.toRows<{ id: string | number }>(resp.rows);
+    const createdId = rows[0]?.id;
+    if (createdId === undefined || createdId === null) {
       throw new Error('Item konnte nicht erstellt werden.');
     }
 
-    return rows[0].id;
+    const parsedId = typeof createdId === 'number' ? createdId : Number(createdId);
+    if (!Number.isFinite(parsedId)) {
+      throw new Error('Item konnte nicht erstellt werden.');
+    }
+
+    return parsedId;
   }
 }

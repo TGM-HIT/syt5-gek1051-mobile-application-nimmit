@@ -18,7 +18,7 @@ describe('Navigation', () => {
 
   it('should navigate back to Shopping List page', () => {
     cy.visit('/settings');
-    cy.get('nav.bottom-navigation a[routerLink="/list"]').click();
-    cy.url().should('include', '/list');
+    cy.get('nav.bottom-navigation a[routerLink="/lists"]').click();
+    cy.url().should('include', '/lists');
   });
 });

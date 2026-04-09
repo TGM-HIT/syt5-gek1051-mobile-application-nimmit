@@ -108,7 +108,7 @@ export class PowerSyncService {
 
   constructor() {
     const factory = new WASQLiteOpenFactory({
-      dbFilename: 'app.db',
+      dbFilename: 'app_v6.db',
       vfs: WASQLiteVFS.OPFSCoopSyncVFS,
       // Specify the path to the worker script
       worker: '@powersync/worker/WASQLiteDB.umd.js'
@@ -123,6 +123,10 @@ export class PowerSyncService {
         worker: '@powersync/worker/SharedSyncImplementation.umd.js'
       }
     });
+
+    if (typeof window !== 'undefined') {
+        (window as any).powerSync = this.db;
+    }
 
     this.currentUserId = this.getOrCreateUserId();
   }
@@ -227,10 +231,14 @@ export class PowerSyncService {
         this.migrateUserIid(this.currentUserId, session.user.id)
       }
     }
+
     await this.db.connect(this.connector);
     await this.subscibeAllSyncStreams();
-    await this.db.waitForFirstSync();
     this.dbConnected = true;
+
+    void this.db.waitForFirstSync().catch((error) => {
+      console.error('PowerSync first sync failed:', error);
+    });
   }
 
   async disconnectDb() {

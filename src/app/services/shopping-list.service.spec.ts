@@ -60,7 +60,7 @@ describe('ShoppingListDataService', () => {
       expect(exists).toBe(true);
       expect(mockPowerSync.get).toHaveBeenCalledWith(
         expect.stringContaining('SELECT 1 as "exists"'),
-        [10n, USER_ID_PLACEHOLDER]
+        ['10', USER_ID_PLACEHOLDER]
       );
     });
 
@@ -77,7 +77,7 @@ describe('ShoppingListDataService', () => {
       await service.updateListInfo(10n, 'New Name', 'New Desc');
       expect(mockPowerSync.execute).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE "Lists"'),
-        ['New Name', 'New Desc', 10n]
+        ['New Name', 'New Desc', '10']
       );
     });
   });
@@ -87,9 +87,9 @@ describe('ShoppingListDataService', () => {
       mockPowerSync.execute.mockResolvedValue({});
       await service.deleteList(5n);
       expect(mockPowerSync.execute).toHaveBeenCalledTimes(3);
-      expect(mockPowerSync.execute).toHaveBeenNthCalledWith(1, expect.stringContaining('DELETE FROM "ListItem"'), [5n]);
-      expect(mockPowerSync.execute).toHaveBeenNthCalledWith(2, expect.stringContaining('DELETE FROM "UserLists"'), [5n]);
-      expect(mockPowerSync.execute).toHaveBeenNthCalledWith(3, expect.stringContaining('DELETE FROM "Lists"'), [5n]);
+      expect(mockPowerSync.execute).toHaveBeenNthCalledWith(1, expect.stringContaining('DELETE FROM "ListItem"'), ['5']);
+      expect(mockPowerSync.execute).toHaveBeenNthCalledWith(2, expect.stringContaining('DELETE FROM "UserLists"'), ['5']);
+      expect(mockPowerSync.execute).toHaveBeenNthCalledWith(3, expect.stringContaining('DELETE FROM "Lists"'), ['5']);
     });
   });
 

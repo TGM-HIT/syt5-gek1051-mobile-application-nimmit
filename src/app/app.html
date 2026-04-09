@@ -1,4 +1,6 @@
-@if (!isPowerSyncReady()) {
+@if (isPowerSyncError()) {
+  <app-app-error></app-app-error>
+} @else if (!isPowerSyncReady()) {
   <section class="startup-screen" aria-live="polite" role="status" [attr.data-mode]="isDarkMode() ? 'dark' : 'light'">
     <div class="startup-glow" aria-hidden="true"></div>
 
@@ -16,16 +18,10 @@
       </div>
     </div>
   </section>
-} @if (isPowerSyncError()) {
-  <app-app-error></app-app-error>
 } @else {
   <main class="app-content">
     <router-outlet></router-outlet>
   </main>
-  <div class="connection-status" [class.online]="isOnline()" [class.offline]="!isOnline()">
-    <span class="status-icon" aria-hidden="true"></span>
-    <em class="status-text">{{ isOnline() ? 'online' : 'offline' }}</em>
-  </div>
   <app-navigation></app-navigation>
   <app-modal-container></app-modal-container>
 }

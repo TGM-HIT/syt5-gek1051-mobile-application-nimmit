@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, computed, signal, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, signal, inject, ChangeDetectorRef } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, UserPlus, Star, Coffee, Apple, Milk, Drumstick, Croissant, Snowflake, Candy, Brush, Package  } from 'lucide-angular';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -27,6 +27,7 @@ export class ShoppingList implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly modalService = inject(ModalService);
   private readonly powerSync = inject(PowerSyncService);
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly items = signal<ShoppingItemRow[]>([]);
   readonly listName = signal('Meine Einkaufsliste');
   readonly listDescription = signal('Tippe auf +, um Produkte hinzuzufuegen');
@@ -35,7 +36,11 @@ export class ShoppingList implements OnInit, OnDestroy {
   private deleted = false;
   readonly isOnline = signal<boolean>(navigator.onLine);
   private readonly handleOnlineStatusChange = () => {
+    if (this.isDisposed) {
+      return;
+    }
     this.isOnline.set(navigator.onLine);
+    this.cdr.detectChanges();
   };
 
   // Lucide Icons
@@ -279,21 +284,22 @@ export class ShoppingList implements OnInit, OnDestroy {
 
     
     this.powerSync.watchWithCallback(sql, (result) => {
-      if (this.deleted) {
+      if (this.isDisposed || this.deleted) {
         return;
       }
-      // eslint-disable-next-line no-underscore-dangle
-      if (result.rows?._array) {
-        // eslint-disable-next-line no-underscore-dangle
-        const list = result.rows._array[0] as { id: bigint, name: string, description: string };
+      const rows = this.toRows<{ id: bigint; name: string; description: string | null }>(result.rows);
+      const list = rows[0];
+      if (list) {
         this.listName.set(list.name || 'Meine Einkaufsliste');
         this.listDescription.set(list.description || 'Tippe auf +, um Produkte hinzuzufuegen');
-      } else {
+        this.cdr.detectChanges();
+        return;
+      }
 
       this.listName.set('Meine Einkaufsliste');
       this.listDescription.set('Tippe auf +, um Produkte hinzuzufuegen');
-      }
-    }, [listId]);
+      this.cdr.detectChanges();
+    }, [String(listId)]);
   }
 
   private watchItems(): void {
@@ -322,14 +328,37 @@ export class ShoppingList implements OnInit, OnDestroy {
         WHERE li.liste = ? ORDER BY createdAt ASC`;
 
     this.powerSync.watchWithCallback(sql, (result) => {
-      // eslint-disable-next-line no-underscore-dangle
-      if (result.rows?._array) {
-        // eslint-disable-next-line no-underscore-dangle
-        this.items.set(result.rows._array as ShoppingItemRow[]);
-      } else {
-        this.items.set([]);
+      if (this.isDisposed || this.deleted) {
+        return;
       }
-    }, [this.listId()]);
+      const rows = this.toRows<ShoppingItemRow>(result.rows);
+      this.items.set(rows);
+      this.cdr.detectChanges();
+    }, [String(this.listId())]);
+  }
+
+  private toRows<T>(rows: unknown): T[] {
+    if (Array.isArray(rows)) {
+      return rows as T[];
+    }
+
+    if (rows && typeof rows === 'object') {
+      const maybeRowList = rows as { length?: unknown; item?: unknown };
+      if (typeof maybeRowList.length === 'number' && typeof maybeRowList.item === 'function') {
+        const result: T[] = [];
+        for (let i = 0; i < maybeRowList.length; i += 1) {
+          result.push((maybeRowList.item as (index: number) => T)(i));
+        }
+        return result;
+      }
+
+      const maybeArray = Reflect.get(rows, '_array');
+      if (Array.isArray(maybeArray)) {
+        return maybeArray as T[];
+      }
+    }
+
+    return [];
   }
 
 

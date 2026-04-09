@@ -2,7 +2,7 @@ describe('Shopping List', () => {
   beforeEach(() => {
     cy.bypassSync();
     cy.login();
-    cy.visit('/list');
+    cy.visit('/list?listId=1234567890');
   });
 
   it('should display the shopping list page', () => {

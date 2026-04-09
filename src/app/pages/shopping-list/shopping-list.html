@@ -2,7 +2,18 @@
   <!-- Header -->
   <header class="list-header">
     <div class="list-header-content">
-      <h1 class="list-title">{{ listName() }}</h1>
+      <div class="list-title-row">
+        <h1 class="list-title">{{ listName() }}</h1>
+        <span
+          class="connection-badge"
+          [class.online]="isOnline()"
+          [class.offline]="!isOnline()"
+          aria-label="Verbindungsstatus"
+        >
+          <span class="status-icon" aria-hidden="true"></span>
+          <span class="status-text">{{ isOnline() ? 'online' : 'offline' }}</span>
+        </span>
+      </div>
       <p class="list-description">{{ listDescription() }}</p>
     </div>
     <div class="list-header-actions">
