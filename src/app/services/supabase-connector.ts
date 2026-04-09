@@ -320,16 +320,28 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
         console.log('Processing operation', op.op, 'on table', op.table, 'with data', op.opData, "with ClientId");
         let result: any;
         switch (op.op) {
-          case UpdateType.PUT:
-            { const record = { ...op.opData, id: op.id };
+          case UpdateType.PUT: {
+            if (!op.opData) {
+              throw new Error(`PUT operation missing data for table '${op.table}' and id '${op.id}'.`);
+            }
+
+            const record = { ...op.opData, id: op.id };
             result = await table.upsert(record);
-            break; } 
-          case UpdateType.PATCH:
+            break;
+          }
+          case UpdateType.PATCH: {
+            if (!op.opData) {
+              console.warn('Skipping PATCH operation with no data:', op);
+              continue;
+            }
+
             result = await table.update(op.opData).eq('id', op.id);
             break;
-          case UpdateType.DELETE:
+          }
+          case UpdateType.DELETE: {
             result = await table.delete().eq('id', op.id);
             break;
+          }
         }
 
         if (result.error) {
