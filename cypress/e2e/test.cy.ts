@@ -1,8 +1,8 @@
 describe('Test', () => {
   it('debug', () => {
     cy.bypassSync();
-    cy.login();
-    cy.visit('/list?listId=1234567890');
+    cy.visitWithAuth('/list?listId=1234567890');
+    cy.waitForAppReady();
     
     // Catch JS errors to see if there is a unhandled rejection
     cy.on('uncaught:exception', (err, runnable) => {

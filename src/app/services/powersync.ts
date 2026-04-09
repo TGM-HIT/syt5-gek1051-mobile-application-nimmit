@@ -99,6 +99,8 @@ export class PowerSyncService {
   public ready$ = this.isReady$.asObservable();
   public readonly error = signal<boolean>(false);
 
+  private readonly isCypressRun = typeof window !== 'undefined' && !!(window as any).Cypress;
+
   private dbConnected = false;
   private subscribed = false;
   private syncStreamNames = ['watch_lists', 'watch_categories', "watch_items"];
@@ -107,10 +109,9 @@ export class PowerSyncService {
 
 
   constructor() {
-    const isCypressRun = typeof window !== 'undefined' && !!(window as any).Cypress;
     const factory = new WASQLiteOpenFactory({
       dbFilename: 'app_v6.db',
-      vfs: isCypressRun ? WASQLiteVFS.IDBBatchAtomicVFS : WASQLiteVFS.OPFSCoopSyncVFS,
+      vfs: this.isCypressRun ? WASQLiteVFS.IDBBatchAtomicVFS : WASQLiteVFS.OPFSCoopSyncVFS,
       // Specify the path to the worker script
       worker: '@powersync/worker/WASQLiteDB.umd.js'
     });
@@ -296,6 +297,13 @@ export class PowerSyncService {
           return;
         }
         this.currentUserId = session.user.id;
+
+        // Cypress E2E runs use a mocked Supabase session. Avoid connecting to the real
+        // PowerSync backend, as it would require a valid access token and can hang/flap in CI.
+        if (this.isCypressRun) {
+          this.isReady$.next(true);
+          return;
+        }
         if (navigator.onLine) {
           await this.connectDb(session);
         }

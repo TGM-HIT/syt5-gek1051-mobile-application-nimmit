@@ -1,9 +1,9 @@
 describe('Navigation', () => {
   beforeEach(() => {
     cy.bypassSync();
-    cy.login();
-    // Navigating to the home page redirects or opens the default page (shopping list)
-    cy.visit('/');
+    // Visit with a mocked Supabase session so route guards allow navigation
+    cy.visitWithAuth('/');
+    cy.waitForAppReady();
   });
 
   it('should navigate to Groups page', () => {

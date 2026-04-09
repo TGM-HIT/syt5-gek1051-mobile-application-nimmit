@@ -1,6 +1,7 @@
 describe('Authentication', () => {
   beforeEach(() => {
     cy.visit('/login');
+    cy.waitForAppReady();
   });
 
   it('should display login page', () => {

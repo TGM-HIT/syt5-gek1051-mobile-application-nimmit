@@ -1,8 +1,8 @@
 describe('Shopping List', () => {
   beforeEach(() => {
     cy.bypassSync();
-    cy.login();
-    cy.visit('/list?listId=1234567890');
+    cy.visitWithAuth('/list?listId=1234567890');
+    cy.waitForAppReady();
   });
 
   it('should display the shopping list page', () => {
