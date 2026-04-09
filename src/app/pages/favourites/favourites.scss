@@ -3,7 +3,7 @@
 .favourites-page {
   min-height: 100vh;
   padding: var(--spacing-4);
-  padding-bottom: 100px; // Platz für Navigation
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); // Platz für Navigation
   background-color: var(--color-background);
 }
 
