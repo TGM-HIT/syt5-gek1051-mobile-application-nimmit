@@ -109,9 +109,11 @@ export class PowerSyncService {
 
 
   constructor() {
+    const cypressFlags = this.isCypressRun ? { enableMultiTabs: false } : undefined;
     const factory = new WASQLiteOpenFactory({
       dbFilename: 'app_v6.db',
       vfs: this.isCypressRun ? WASQLiteVFS.IDBBatchAtomicVFS : WASQLiteVFS.OPFSCoopSyncVFS,
+      ...(cypressFlags ? { flags: cypressFlags } : {}),
       // Specify the path to the worker script
       worker: '@powersync/worker/WASQLiteDB.umd.js'
     });
@@ -119,6 +121,7 @@ export class PowerSyncService {
     this.db = new PowerSyncDatabase({
       schema: publicSchema,
       database: factory,
+      ...(cypressFlags ? { flags: cypressFlags } : {}),
 
       sync: {
         // Specify the path to the worker script
