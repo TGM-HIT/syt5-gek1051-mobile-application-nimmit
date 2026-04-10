@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Prepare PowerSync assets
+        run: npm run powersync:setup
+
       - name: Build Web App
         run: npm run build
 
