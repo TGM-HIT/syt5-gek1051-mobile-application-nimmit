@@ -1,80 +1,64 @@
-# Synchronization (Supabase)
+# Synchronization (PowerSync & Supabase)
 
 ## Summary
 
-Nimmit is built **offline-first**: the app works with local data first and then synchronizes with Supabase in the background as soon as network connectivity and a valid session are available.  
-The core idea is: **always react immediately locally, make remote state consistent later**.
+Nimmit is built **offline-first** using **PowerSync**. Unlike traditional REST-based sync, PowerSync provides a real-time, bidirectional synchronization layer between a local SQLite database and Supabase (Postgres). 
 
-## Planned Synchronization Approach
+The core principle remains: **Read and write locally first, synchronize automatically in the background.**
 
-### 1) Local Single Source of Truth During Usage
+![PowerSync Architecture](../powersync-approach.avif)
 
-- The UI reads/writes directly to the local store (Signals + localStorage).
-- Every change immediately creates a new local state including `updatedAt`.
-- This keeps the app fully usable even without internet access.
+## Architecture
 
-### 2) Synchronization Triggers
+The synchronization architecture consists of three main components:
 
-Synchronization is started when:
+1.  **Local Database (PowerSync SDK):** A WASM-based SQLite database running in the browser (using OPFS for persistence). The app interacts only with this local database.
+2.  **PowerSync Service:** A cloud middleware that monitors Supabase (Postgres) for changes and streams them to the client. It also handles the filtering of data based on sync rules (Sync Streams).
+3.  **Supabase Backend:** The source of truth where data is persisted in Postgres and authenticated via Supabase Auth.
 
-- App start / app resume
-- Switching from offline to online
-- User action that requires synchronization
-- Periodically based on `settings.sync_interval` (from profile)
+## Data Flow
 
-### 3) Pull-Then-Push Strategy
+### 1) Local-First Usage
+All UI components use the `PowerSyncService` to query and mutate data. 
+- **Queries:** Performed against the local SQLite DB, providing instant feedback.
+- **Mutations:** Changes are written to a local "upload queue" within the SQLite DB and applied immediately to the local state.
 
-Each sync cycle follows this pattern:
+### 2) Pull Strategy (Streaming Down)
+PowerSync uses a streaming approach. Instead of periodic polling or manual "pulling," the PowerSync Service pushes changes from Supabase to the local database in real-time.
+- Defined Sync Streams (e.g., `watch_lists`, `watch_items`) ensure the user only receives data they are authorized to see (based on RLS and Sync Rules).
+- Data is available immediately upon app start, with incremental updates applied as they occur on the server.
 
-1. **Pull**: Load server state from Supabase (only data relevant since the last sync)
-2. **Merge**: Merge local state with server state
-3. **Push**: Write local, not-yet-confirmed changes to Supabase
-4. **Checkpoint**: Update `lastSuccessfulSyncAt` locally
+### 3) Push Strategy (Uploading Up)
+Local changes are processed by the `SupabaseConnector.uploadData` method:
+- PowerSync maintains a transaction log of local changes.
+- The `uploadData` callback iterates through these transactions and uses the `SupabaseClient` to perform `upsert`, `update`, or `delete` operations on the Postgres tables.
+- If a push fails (e.g., due to network issues), PowerSync automatically retries with exponential backoff.
 
-This prevents local changes from being overwritten by stale server data.
+## Conflict Handling
 
-### 4) Conflict Handling
+PowerSync handles most synchronization complexities:
+- **Last-Write-Wins:** By default, the latest update to a record (or field) is preserved.
+- **Transactional Integrity:** Changes made within a single transaction locally are pushed as a unit.
+- **Fatal Errors:** Errors like RLS violations (42501) or integrity constraint violations (23xxx) are caught in `uploadData`, where the failing transaction can be discarded or logged to prevent blocking the sync queue.
 
-Recommended baseline principle per record:
+## Offline & Authentication Flow
 
-- Primary rule: `updated_at` (Last-Write-Wins as a baseline)
-- For deletions: soft delete (`deleted_at`) instead of hard delete, so synchronization remains robust
-- For real collisions (e.g., two users change the same value while offline):
-	- Mark conflict
-	- Optional user decision or rule (e.g., server wins / local wins / field-level merge)
+Nimmit supports a seamless transition from anonymous offline usage to authenticated synchronization:
 
-Optionally, a conflict notification can be triggered (as planned in the user stories).
+1.  **Anonymous Mode:** On first launch, a local `nimmit_user_id` is generated and stored in `localStorage`. All data created is associated with this ID.
+2.  **Sign In:** When the user logs in via Supabase Auth:
+    -   The `PowerSyncService` detects the session change.
+    -   Local data associated with the anonymous ID is migrated to the Supabase `user.id`.
+    -   The `PowerSyncDatabase` connects to the PowerSync Service using the Supabase JWT.
+3.  **Synchronization Start:** Once connected, PowerSync performs an initial sync to download server data and begins uploading any pending local changes.
 
-### 5) Supabase Roles in the Design
+## Synchronized Tables
 
-- **Supabase Auth**: identity and session
-- **Postgres tables**: persistent list and item state
-- **RLS policies**: access only to own or shared lists
-- **Realtime (optional)**: faster updates between devices/users without polling
+The current schema (`publicSchema`) synchronizes the following tables:
+- `Lists`: Shopping lists metadata.
+- `ListItem`: Junction table for items within a list, including amounts and status.
+- `Item`: Global or user-specific item definitions.
+- `Category`: Item categories.
+- `Favorites`: User-specific favorite items.
+- `UserLists`: Shared access definitions for lists.
 
-## Data Flow as a Flowchart
-
-```mermaid
-flowchart TD
-				A[App Start or Resume] --> B{User logged in?}
-				B -- No --> C[Local mode only]
-				C --> D[Store local changes]
-				B -- Yes --> E{Online?}
-				E -- No --> C
-				E -- Yes --> F[Start sync]
-
-				F --> G[Pull from Supabase]
-				G --> H[Merge with local state]
-				H --> I{Conflict detected?}
-				I -- Yes --> J[Mark conflict and optionally notify]
-				I -- No --> K[Update local state]
-				J --> K
-
-				K --> L[Push local changes]
-				L --> M{Push successful?}
-				M -- No --> N[Retry with backoff / next cycle]
-				M -- Yes --> O[Set lastSuccessfulSyncAt]
-				O --> P[Wait for next trigger]
-				N --> P
-				D --> P
-```

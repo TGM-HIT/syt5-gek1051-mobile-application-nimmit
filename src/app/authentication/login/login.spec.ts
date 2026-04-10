@@ -3,21 +3,21 @@ import { provideRouter } from '@angular/router';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 
 import { Login } from './login';
-import { SupabaseService } from '../../services/supabase';
+import { SupabaseConnector } from '../../services/supabase-connector';
 
 describe('Login', () => {
   let component: Login;
   let fixture: ComponentFixture<Login>;
-  let mockSupabaseService: { login: Mock };
+  let mockSupabaseConnector: { login: Mock };
 
   beforeEach(async () => {
-    mockSupabaseService = { login: vi.fn() };
+    mockSupabaseConnector = { login: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [Login],
       providers: [
         provideRouter([]),
-        { provide: SupabaseService, useValue: mockSupabaseService }
+        { provide: SupabaseConnector, useValue: mockSupabaseConnector }
       ]
     }).compileComponents();
 
@@ -93,7 +93,7 @@ describe('Login', () => {
   describe('onSubmit()', () => {
     it('should not call login when form is invalid', async () => {
       await component.onSubmit();
-      expect(mockSupabaseService.login).not.toHaveBeenCalled();
+      expect(mockSupabaseConnector.login).not.toHaveBeenCalled();
     });
 
     it('should mark all controls as touched when form is invalid', async () => {
@@ -102,18 +102,18 @@ describe('Login', () => {
       expect(component.loginForm.controls.password.touched).toBe(true);
     });
 
-    it('should call supabaseService.login with email and password', async () => {
-      mockSupabaseService.login.mockResolvedValue(undefined);
+    it('should call SupabaseConnector.login with email and password', async () => {
+      mockSupabaseConnector.login.mockResolvedValue(undefined);
       component.loginForm.controls.email.setValue('test@example.com');
       component.loginForm.controls.password.setValue('validpassword');
 
       await component.onSubmit();
 
-      expect(mockSupabaseService.login).toHaveBeenCalledWith('test@example.com', 'validpassword');
+      expect(mockSupabaseConnector.login).toHaveBeenCalledWith('test@example.com', 'validpassword');
     });
 
     it('should set loginSucceeded to true on success', async () => {
-      mockSupabaseService.login.mockResolvedValue(undefined);
+      mockSupabaseConnector.login.mockResolvedValue(undefined);
       component.loginForm.controls.email.setValue('test@example.com');
       component.loginForm.controls.password.setValue('validpassword');
 
@@ -123,7 +123,7 @@ describe('Login', () => {
     });
 
     it('should reset form on success', async () => {
-      mockSupabaseService.login.mockResolvedValue(undefined);
+      mockSupabaseConnector.login.mockResolvedValue(undefined);
       component.loginForm.controls.email.setValue('test@example.com');
       component.loginForm.controls.password.setValue('validpassword');
 
@@ -134,7 +134,7 @@ describe('Login', () => {
     });
 
     it('should set submitError on failure', async () => {
-      mockSupabaseService.login.mockRejectedValue(new Error('Invalid credentials'));
+      mockSupabaseConnector.login.mockRejectedValue(new Error('Invalid credentials'));
       component.loginForm.controls.email.setValue('test@example.com');
       component.loginForm.controls.password.setValue('wrongpassword');
 
@@ -144,7 +144,7 @@ describe('Login', () => {
     });
 
     it('should set fallback error message when error is not an Error instance', async () => {
-      mockSupabaseService.login.mockRejectedValue('unknown error');
+      mockSupabaseConnector.login.mockRejectedValue('unknown error');
       component.loginForm.controls.email.setValue('test@example.com');
       component.loginForm.controls.password.setValue('validpassword');
 
@@ -155,7 +155,7 @@ describe('Login', () => {
 
     it('should clear previous error before submitting', async () => {
       component.submitError.set('Old error');
-      mockSupabaseService.login.mockResolvedValue(undefined);
+      mockSupabaseConnector.login.mockResolvedValue(undefined);
       component.loginForm.controls.email.setValue('test@example.com');
       component.loginForm.controls.password.setValue('validpassword');
 
@@ -165,7 +165,7 @@ describe('Login', () => {
     });
 
     it('should set isSubmitting to false after success', async () => {
-      mockSupabaseService.login.mockResolvedValue(undefined);
+      mockSupabaseConnector.login.mockResolvedValue(undefined);
       component.loginForm.controls.email.setValue('test@example.com');
       component.loginForm.controls.password.setValue('validpassword');
 
@@ -175,7 +175,7 @@ describe('Login', () => {
     });
 
     it('should set isSubmitting to false after failure', async () => {
-      mockSupabaseService.login.mockRejectedValue(new Error('fail'));
+      mockSupabaseConnector.login.mockRejectedValue(new Error('fail'));
       component.loginForm.controls.email.setValue('test@example.com');
       component.loginForm.controls.password.setValue('validpassword');
 

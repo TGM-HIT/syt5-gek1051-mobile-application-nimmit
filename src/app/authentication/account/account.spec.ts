@@ -4,7 +4,8 @@ import { Component } from '@angular/core';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 
 import { Account } from './account';
-import { SupabaseService, Profile } from '../../services/supabase';
+import { SupabaseConnector } from '../../services/supabase-connector';
+import { Profile } from '../../types';
 
 @Component({ selector: 'stub', template: '', standalone: true })
 class StubComponent {}
@@ -12,16 +13,16 @@ class StubComponent {}
 const mockUser = { id: 'user-123', email: 'test@example.com' } as any;
 
 const mockProfile: Profile = {
-  u_id: 'user-123',
+  id: 'user-123',
   username: 'testuser',
   settings: { theme: 'light', sync_interval: 15 },
-  updated_at: new Date('2024-01-15T10:30:00'),
+  updated_at: '2024-01-15T10:30:00',
 };
 
 describe('Account', () => {
   let component: Account;
   let fixture: ComponentFixture<Account>;
-  let mockSupabaseService: {
+  let mockSupabaseConnector: {
     getCurrentUser: Mock;
     getProfile: Mock;
     updateProfile: Mock;
@@ -29,7 +30,7 @@ describe('Account', () => {
   };
 
   beforeEach(async () => {
-    mockSupabaseService = {
+    mockSupabaseConnector = {
       getCurrentUser: vi.fn().mockResolvedValue(mockUser),
       getProfile: vi.fn().mockResolvedValue(mockProfile),
       updateProfile: vi.fn(),
@@ -40,7 +41,7 @@ describe('Account', () => {
       imports: [Account],
       providers: [
         provideRouter([{ path: 'login', component: StubComponent }]),
-        { provide: SupabaseService, useValue: mockSupabaseService },
+        { provide: SupabaseConnector, useValue: mockSupabaseConnector },
       ]
     }).compileComponents();
 
@@ -69,7 +70,7 @@ describe('Account', () => {
     });
 
     it('should redirect to /login and not set errorMessage when no user is found', async () => {
-      mockSupabaseService.getCurrentUser.mockResolvedValue(null);
+      mockSupabaseConnector.getCurrentUser.mockResolvedValue(null);
       const newFixture = TestBed.createComponent(Account);
       await newFixture.whenStable();
 
@@ -78,7 +79,7 @@ describe('Account', () => {
     });
 
     it('should set errorMessage when profile is not found', async () => {
-      mockSupabaseService.getProfile.mockResolvedValue(null);
+      mockSupabaseConnector.getProfile.mockResolvedValue(null);
       const newFixture = TestBed.createComponent(Account);
       await newFixture.whenStable();
 
@@ -86,7 +87,7 @@ describe('Account', () => {
     });
 
     it('should redirect to /login when auth session is missing', async () => {
-      mockSupabaseService.getCurrentUser.mockRejectedValue(new Error('Auth session missing'));
+      mockSupabaseConnector.getCurrentUser.mockRejectedValue(new Error('Auth session missing'));
       const newFixture = TestBed.createComponent(Account);
       const newComponent = newFixture.componentInstance;
       await newFixture.whenStable();
@@ -122,7 +123,7 @@ describe('Account', () => {
     it('should not save when form is invalid', async () => {
       component.editForm.controls.username.setValue('ab'); // too short
       await component.saveChanges();
-      expect(mockSupabaseService.updateProfile).not.toHaveBeenCalled();
+      expect(mockSupabaseConnector.updateProfile).not.toHaveBeenCalled();
     });
 
     it('should mark all controls as touched when form is invalid', async () => {
@@ -131,20 +132,15 @@ describe('Account', () => {
       expect(component.editForm.controls.username.touched).toBe(true);
     });
 
-    it('should set errorMessage when profile has no u_id', async () => {
-      component.profile.set({ ...mockProfile, u_id: undefined });
-      await component.saveChanges();
-      expect(component.errorMessage()).toBe('Keine gueltige User-ID gefunden.');
-    });
 
     it('should call updateProfile with correct arguments', async () => {
-      mockSupabaseService.updateProfile.mockResolvedValue({ ...mockProfile, username: 'newname' });
+      mockSupabaseConnector.updateProfile.mockResolvedValue({ ...mockProfile, username: 'newname' });
       component.editForm.controls.username.setValue('newname');
       component.editForm.controls.sync_interval.setValue(30);
 
       await component.saveChanges();
 
-      expect(mockSupabaseService.updateProfile).toHaveBeenCalledWith('user-123', {
+      expect(mockSupabaseConnector.updateProfile).toHaveBeenCalledWith('user-123', {
         username: 'newname',
         sync_interval: 30,
       });
@@ -152,7 +148,7 @@ describe('Account', () => {
 
     it('should update profile signal with returned profile', async () => {
       const updatedProfile = { ...mockProfile, username: 'newname' };
-      mockSupabaseService.updateProfile.mockResolvedValue(updatedProfile);
+      mockSupabaseConnector.updateProfile.mockResolvedValue(updatedProfile);
       component.editForm.controls.username.setValue('newname');
       component.editForm.controls.sync_interval.setValue(15);
 
@@ -162,7 +158,7 @@ describe('Account', () => {
     });
 
     it('should exit edit mode on success', async () => {
-      mockSupabaseService.updateProfile.mockResolvedValue(mockProfile);
+      mockSupabaseConnector.updateProfile.mockResolvedValue(mockProfile);
       component.toggleEditMode();
 
       await component.saveChanges();
@@ -171,7 +167,7 @@ describe('Account', () => {
     });
 
     it('should set errorMessage on failure', async () => {
-      mockSupabaseService.updateProfile.mockRejectedValue(new Error('Update failed'));
+      mockSupabaseConnector.updateProfile.mockRejectedValue(new Error('Update failed'));
       component.editForm.controls.username.setValue('validname');
 
       await component.saveChanges();
@@ -180,7 +176,7 @@ describe('Account', () => {
     });
 
     it('should set fallback errorMessage when error is not an Error instance', async () => {
-      mockSupabaseService.updateProfile.mockRejectedValue('unknown');
+      mockSupabaseConnector.updateProfile.mockRejectedValue('unknown');
       component.editForm.controls.username.setValue('validname');
 
       await component.saveChanges();
@@ -189,7 +185,7 @@ describe('Account', () => {
     });
 
     it('should set isSaving to false after success', async () => {
-      mockSupabaseService.updateProfile.mockResolvedValue(mockProfile);
+      mockSupabaseConnector.updateProfile.mockResolvedValue(mockProfile);
       component.editForm.controls.username.setValue('validname');
 
       await component.saveChanges();
@@ -198,7 +194,7 @@ describe('Account', () => {
     });
 
     it('should set isSaving to false after failure', async () => {
-      mockSupabaseService.updateProfile.mockRejectedValue(new Error('fail'));
+      mockSupabaseConnector.updateProfile.mockRejectedValue(new Error('fail'));
       component.editForm.controls.username.setValue('validname');
 
       await component.saveChanges();
@@ -213,7 +209,7 @@ describe('Account', () => {
     });
 
     it('should return a formatted date string', () => {
-      const result = component.formatUpdatedAt(new Date('2024-01-15T10:30:00'));
+      const result = component.formatUpdatedAt('2024-01-15T10:30:00');
       expect(typeof result).toBe('string');
       expect(result).not.toBe('-');
       expect(result.length).toBeGreaterThan(0);

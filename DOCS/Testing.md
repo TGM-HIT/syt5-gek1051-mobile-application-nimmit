@@ -4,15 +4,15 @@ This document describes **which automated tests exist** in Nimmit, **what each t
 
 ## Current status
 
-- **Web (Angular):** 12 spec files (`*.spec.ts`) with 129 test cases (`it(...)`)
+- **Web (Angular):** 24 spec files (`*.spec.ts`) with 196 test cases (`it(...)`)
 - **Android (native):** 2 JUnit tests (1 local unit test + 1 instrumented test)
 - **Web E2E/UI automation:** none at the moment (no Cypress/Playwright setup in this repo)
 
 ## Web (Angular) test setup (tooling)
 
-- **Runner / Framework:** Vitest (via Angular CLI’s `@angular/build:unit-test` builder)
+- **Runner / Framework:** Vitest (via Angular CLI's `@angular/build:unit-test` builder)
 - **Angular testing utilities:** `TestBed` and `ComponentFixture`
-- **DOM environment:** JSDOM (browser APIs such as `localStorage` / `matchMedia` are mocked where required)
+- **DOM environment:** JSDOM (browser APIs such as `localStorage`, `matchMedia`, `Worker`, and `navigator.locks` are explicitly mocked to support PowerSync SQLite integration and Angular Signals)
 - **Coverage:** `@vitest/coverage-v8` with reporters `lcov`, `text-summary`, `json-summary`
 
 ## Android (native) test setup (tooling)

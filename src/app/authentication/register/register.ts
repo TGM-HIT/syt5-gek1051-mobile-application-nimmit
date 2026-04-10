@@ -1,7 +1,7 @@
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { SupabaseService } from '../../services/supabase';
+import { SupabaseConnector } from '../../services/supabase-connector';
 
 @Component({
   selector: 'app-register',
@@ -11,7 +11,7 @@ import { SupabaseService } from '../../services/supabase';
 })
 export class Register implements OnDestroy {
   private readonly fb = inject(FormBuilder);
-  private readonly supabaseService = inject(SupabaseService);
+  private readonly supabaseService = inject(SupabaseConnector);
   private readonly router = inject(Router);
 
   private redirectTimeoutId: number | null = null;

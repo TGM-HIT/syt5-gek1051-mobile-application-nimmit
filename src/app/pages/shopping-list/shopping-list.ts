@@ -1,27 +1,50 @@
-import { Component, computed, signal, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus } from 'lucide-angular';
-import { ShoppingItem, FilterType } from '../../models';
-import { ShoppingListService, ModalService } from '../../services';
+import { Component, OnDestroy, OnInit, computed, signal, inject, ChangeDetectorRef } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, UserPlus, Star, Coffee, Apple, Milk, Drumstick, Croissant, Snowflake, Candy, Brush, Package  } from 'lucide-angular';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-item-modal/add-item-modal';
 import { EditListModal, EditListData, EditListResult } from '../../components/edit-list-modal/edit-list-modal';
+import { InviteUserModal, InviteUserData, InviteUserResult } from '../../components/invite-user-modal/invite-user-modal';
+import { ModalService } from '../../services/modal.service';
+import { ShoppingListDataService, ShoppingItemRow } from '../../services/shopping-list-data.service';
+import { SupabaseConnector } from '../../services/supabase-connector';
+import { FilterType } from '../../types';
+import { PowerSyncService } from '../../services/powersync';
+import { FavouriteItem } from '../../models';
+import { ShoppingListService } from '../../services/shopping-list.service';
 
 @Component({
   selector: 'app-shopping-list',
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, ReactiveFormsModule],
   templateUrl: './shopping-list.html',
   styleUrl: './shopping-list.scss',
 })
-export class ShoppingList {
+export class ShoppingList implements OnInit, OnDestroy {
+  private readonly shoppingListData = inject(ShoppingListDataService);
   private readonly shoppingListService = inject(ShoppingListService);
+  private readonly supabase = inject(SupabaseConnector);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly modalService = inject(ModalService);
+  private readonly powerSync = inject(PowerSyncService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly items = signal<ShoppingItemRow[]>([]);
+  readonly listName = signal('Meine Einkaufsliste');
+  readonly listDescription = signal('Tippe auf +, um Produkte hinzuzufuegen');
+  private readonly listId = signal<bigint | null>(null);
+  private isDisposed = false;
+  private deleted = false;
+  readonly isOnline = signal<boolean>(navigator.onLine);
+  private readonly handleOnlineStatusChange = () => {
+    if (this.isDisposed) {
+      return;
+    }
+    this.isOnline.set(navigator.onLine);
+    this.cdr.detectChanges();
+  };
 
   // Lucide Icons
-  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus };
-
-  // Liste Daten aus Service
-  readonly listName = this.shoppingListService.listName;
-  readonly listDescription = this.shoppingListService.listDescription;
+  readonly icons = { Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, UserPlus, Star, Coffee, Apple, Milk, Drumstick, Croissant, Snowflake, Candy, Brush, Package };
 
   // Verfügbare Kategorien
   readonly categories = [
@@ -38,6 +61,7 @@ export class ShoppingList {
 
   // Such- und Filter-State (lokal)
   readonly searchQuery = signal('');
+  readonly showAutocomplete = signal(false);
   readonly activeFilter = signal<FilterType>('all');
   readonly expandedItemId = signal<string | null>(null);
   readonly selectedCategories = signal<string[]>([]);
@@ -50,8 +74,36 @@ export class ShoppingList {
   private isSwiping = false;
   private readonly SWIPE_THRESHOLD = 70;
 
-  // Items aus Service
-  readonly items = this.shoppingListService.items;
+  // Category visual mapping
+  getCategoryIcon(category: string): any {
+    switch (category) {
+      case 'Getränke': return this.icons.Coffee;
+      case 'Obst & Gemüse': return this.icons.Apple;
+      case 'Milchprodukte': return this.icons.Milk;
+      case 'Fleisch & Fisch': return this.icons.Drumstick;
+      case 'Backwaren': return this.icons.Croissant;
+      case 'Tiefkühl': return this.icons.Snowflake;
+      case 'Süßigkeiten': return this.icons.Candy;
+      case 'Haushalt': return this.icons.Brush;
+      case 'Sonstiges': return this.icons.Package;
+      default: return this.icons.Package;
+    }
+  }
+
+  getCategoryColor(category: string): string {
+    switch (category) {
+      case 'Getränke': return '#3498db'; // blue
+      case 'Obst & Gemüse': return '#2ecc71'; // green
+      case 'Milchprodukte': return '#f1c40f'; // yellow
+      case 'Fleisch & Fisch': return '#e74c3c'; // red
+      case 'Backwaren': return '#e67e22'; // orange
+      case 'Tiefkühl': return '#00cec9'; // cyan
+      case 'Süßigkeiten': return '#9b59b6'; // purple
+      case 'Haushalt': return '#95a5a6'; // gray
+      case 'Sonstiges': return '#34495e'; // dark gray
+      default: return '#34495e';
+    }
+  }
 
   // Computed: Kategorien die in der Liste existieren
   readonly categoriesInList = computed(() => {
@@ -77,11 +129,31 @@ export class ShoppingList {
 
   // Computed: Gefilterte Items
   readonly filteredItems = computed(() => {
-    return this.shoppingListService.getFilteredItems(
-      this.activeFilter(),
-      this.searchQuery(),
-      this.selectedCategories()
-    );
+    const activeFilter = this.activeFilter();
+    const search = this.searchQuery().trim().toLowerCase();
+    const selectedCategories = this.selectedCategories();
+
+    return this.items().filter((item) => {
+      if (activeFilter === 'purchased' && !this.isPurchased(item)) {
+        return false;
+      }
+      if (activeFilter === 'notPurchased' && this.isPurchased(item)) {
+        return false;
+      }
+
+      if (selectedCategories.length > 0 && !selectedCategories.includes(item.category)) {
+        return false;
+      }
+
+      if (!search) {
+        return true;
+      }
+      return (
+        item.name.toLowerCase().includes(search)
+        || item.category.toLowerCase().includes(search)
+        || (item.info?.toLowerCase().includes(search) ?? false)
+      );
+    });
   });
 
   // Computed: Keine Ergebnisse gefunden
@@ -89,11 +161,207 @@ export class ShoppingList {
     return this.searchQuery().trim().length > 0 && this.filteredItems().length === 0;
   });
 
+  // Autocomplete und Favourites
+  readonly favourites = this.shoppingListService.favourites;
+  readonly isQueryEmpty = computed(() => !this.searchQuery().trim());
+
+  readonly filteredFavourites = computed(() => {
+    const query = this.searchQuery().toLowerCase().trim();
+    const favs = this.favourites();
+    if (!query) return [];
+    return favs.filter((fav: FavouriteItem) => fav.name.toLowerCase().includes(query));
+  });
+
+  readonly shouldShowAutocomplete = computed(() =>
+    this.showAutocomplete() && !this.isQueryEmpty() && this.filteredFavourites().length > 0
+  );
+
+  onSearchQueryChange(newQuery: string): void {
+    this.searchQuery.set(newQuery);
+    this.showAutocomplete.set(true);
+  }
+
+  hideAutocomplete(): void {
+    this.showAutocomplete.set(false);
+  }
+
+  getFavouriteDetails(fav: FavouriteItem): string {
+    const sizeStr = fav.size ? `${fav.size} ` : '';
+    const unitStr = fav.unit !== 'Einheit' ? fav.unit : '';
+    return `${sizeStr}${unitStr}`;
+  }
+
+  hasFavouriteDetails(fav: FavouriteItem): boolean {
+    return !!(fav.size || fav.unit !== 'Einheit');
+  }
+
+  async addFavouriteItem(fav: FavouriteItem): Promise<void> {
+    this.showAutocomplete.set(false);
+    this.searchQuery.set('');
+
+    const result = await this.modalService.open<AddItemData, AddItemResult>({
+      component: AddItemModal,
+      data: {
+        prefillName: fav.name,
+        prefillUnit: fav.unit,
+        prefillSize: fav.size
+      }
+    });
+
+    const listId = this.listId();
+    if (result && listId !== null) {
+      const user = await this.supabase.getCurrentUser();
+      if (!user) {
+        await this.shoppingListData.addItemToList(listId, result, null);
+        return;
+      }
+      await this.shoppingListData.addItemToList(listId, result, user.id);
+    }
+  }
+
   // Computed: Counts für Tabs aus Service
-  readonly allCount = this.shoppingListService.allCount;
-  readonly notPurchasedCount = this.shoppingListService.notPurchasedCount;
-  readonly purchasedCount = this.shoppingListService.purchasedCount;
-  readonly progressPercentage = this.shoppingListService.progressPercentage;
+  readonly allCount = computed(() => this.items().length);
+  readonly purchasedCount = computed(() => this.items().filter((item) => this.isPurchased(item)).length);
+  readonly notPurchasedCount = computed(() => this.items().filter((item) => !this.isPurchased(item)).length);
+  readonly progressPercentage = computed(() => {
+    const total = this.allCount();
+    if (total === 0) {
+      return 0;
+    }
+    return Math.round((this.purchasedCount() / total) * 100);
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  async ngOnInit() {
+    window.addEventListener('online', this.handleOnlineStatusChange);
+    window.addEventListener('offline', this.handleOnlineStatusChange);
+
+    await this.resolveListId();
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    this.powerSync.ready$.subscribe(async initialized => {
+      if (initialized) {
+        await this.watchListInfo();
+        this.watchItems();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.isDisposed = true;
+    window.removeEventListener('online', this.handleOnlineStatusChange);
+    window.removeEventListener('offline', this.handleOnlineStatusChange);
+  }
+
+  private async resolveListId(): Promise<void> {
+    const listIdParam = this.route.snapshot.queryParamMap.get('listId');
+    const parsed = listIdParam ? BigInt(listIdParam) : BigInt(-1);
+
+    if (parsed > BigInt(-1)) {
+      this.listId.set(parsed);
+      return;
+    }
+
+    const session = await this.supabase.getSession();
+    const userId = session?.user.id;
+
+    if (!userId) {
+      return;
+    }
+
+    const latestListId = await this.shoppingListData.getLatestListIdForUser(userId);
+    this.listId.set(latestListId);
+  }
+
+  private async watchListInfo(): Promise<void> {
+    const listId = this.listId();
+
+    if (!listId) {
+      return;
+    }
+
+    const sql = `
+      SELECT id, name, description FROM "Lists" where id = ?`;
+
+    
+    this.powerSync.watchWithCallback(sql, (result) => {
+      if (this.isDisposed || this.deleted) {
+        return;
+      }
+      const rows = this.toRows<{ id: bigint; name: string; description: string | null }>(result.rows);
+      const list = rows[0];
+      if (list) {
+        this.listName.set(list.name || 'Meine Einkaufsliste');
+        this.listDescription.set(list.description || 'Tippe auf +, um Produkte hinzuzufuegen');
+        this.cdr.detectChanges();
+        return;
+      }
+
+      this.listName.set('Meine Einkaufsliste');
+      this.listDescription.set('Tippe auf +, um Produkte hinzuzufuegen');
+      this.cdr.detectChanges();
+    }, [String(listId)]);
+  }
+
+  private watchItems(): void {
+    const listId = this.listId();
+
+    if (!listId) {
+      this.items.set([]);
+      return;
+    }
+
+    const sql = `SELECT 
+        li.id,
+        li.item AS itemId,
+        i.name,
+        COALESCE(c.name, 'Sonstiges') AS category,
+        li.target_amount AS totalQuantity,
+        li.curr_amount AS purchasedQuantity,
+        i.description AS info,
+        i.content AS size,
+        li.amount_unit AS unit,
+        li.created_at AS createdAt,
+        li.updated_at AS updatedAt
+        FROM "ListItem" li 
+        JOIN "Item" i ON i.id = li.item 
+        LEFT JOIN "Category" c ON c.id = i.category
+        WHERE li.liste = ? ORDER BY createdAt ASC`;
+
+    this.powerSync.watchWithCallback(sql, (result) => {
+      if (this.isDisposed || this.deleted) {
+        return;
+      }
+      const rows = this.toRows<ShoppingItemRow>(result.rows);
+      this.items.set(rows);
+      this.cdr.detectChanges();
+    }, [String(this.listId())]);
+  }
+
+  private toRows<T>(rows: unknown): T[] {
+    if (Array.isArray(rows)) {
+      return rows as T[];
+    }
+
+    if (rows && typeof rows === 'object') {
+      const maybeRowList = rows as { length?: unknown; item?: unknown };
+      if (typeof maybeRowList.length === 'number' && typeof maybeRowList.item === 'function') {
+        const result: T[] = [];
+        for (let i = 0; i < maybeRowList.length; i += 1) {
+          result.push((maybeRowList.item as (index: number) => T)(i));
+        }
+        return result;
+      }
+
+      const maybeArray = Reflect.get(rows, '_array');
+      if (Array.isArray(maybeArray)) {
+        return maybeArray as T[];
+      }
+    }
+
+    return [];
+  }
+
+
 
   // Item expandieren/kollabieren
   toggleExpand(itemId: string): void {
@@ -162,31 +430,31 @@ export class ShoppingList {
     }
   }
 
-  onTouchEnd(item: ShoppingItem): void {
+  onTouchEnd(item: ShoppingItemRow): void {
     const offset = this.swipeOffset();
-    
+
     if (Math.abs(offset) >= this.SWIPE_THRESHOLD) {
       if (this.isPurchased(item)) {
         // Für gekaufte Items: links = undo, rechts = delete
         if (offset > 0) {
           // Swipe right - delete
-          this.shoppingListService.deleteItem(item.id);
+          void this.shoppingListData.deleteListItem(item.id);
         } else {
           // Swipe left - mark as not purchased
-          this.shoppingListService.markAsNotPurchased(item.id);
+          void this.shoppingListData.setPurchasedQuantity(item.id, 0);
         }
       } else {
         // Für nicht gekaufte Items: links = purchased, rechts = delete
         if (offset > 0) {
           // Swipe right - delete
-          this.shoppingListService.deleteItem(item.id);
+          void this.shoppingListData.deleteListItem(item.id);
         } else {
           // Swipe left - mark as purchased
-          this.shoppingListService.markAsPurchased(item.id);
+          void this.shoppingListData.setPurchasedQuantity(item.id, item.totalQuantity);
         }
       }
     }
-    
+
     this.resetSwipe();
   }
 
@@ -212,25 +480,27 @@ export class ShoppingList {
   }
 
   // Item als gekauft markieren
-  markAsPurchased(item: ShoppingItem): void {
-    this.shoppingListService.markAsPurchased(item.id);
+  markAsPurchased(item: ShoppingItemRow): void {
+    void this.shoppingListData.setPurchasedQuantity(item.id, item.totalQuantity);
     this.expandedItemId.set(null);
   }
 
   // Item als nicht gekauft markieren
-  markAsNotPurchased(item: ShoppingItem): void {
-    this.shoppingListService.markAsNotPurchased(item.id);
+  markAsNotPurchased(item: ShoppingItemRow): void {
+    void this.shoppingListData.setPurchasedQuantity(item.id, 0);
     this.expandedItemId.set(null);
   }
 
   // Eingekaufte Menge erhöhen
-  incrementQuantity(item: ShoppingItem): void {
-    this.shoppingListService.incrementPurchasedQuantity(item.id);
+  incrementQuantity(item: ShoppingItemRow): void {
+    const nextAmount = Math.min(item.totalQuantity, item.purchasedQuantity + 1);
+    void this.shoppingListData.setPurchasedQuantity(item.id, nextAmount);
   }
 
   // Eingekaufte Menge verringern
-  decrementQuantity(item: ShoppingItem): void {
-    this.shoppingListService.decrementPurchasedQuantity(item.id);
+  decrementQuantity(item: ShoppingItemRow): void {
+    const nextAmount = Math.max(0, item.purchasedQuantity - 1);
+    void this.shoppingListData.setPurchasedQuantity(item.id, nextAmount);
   }
 
   // Neues Item hinzufügen
@@ -238,68 +508,96 @@ export class ShoppingList {
     const result = await this.modalService.open<AddItemData, AddItemResult>({
       component: AddItemModal,
       data: { prefillName }
-    });
+    }).finally(() => {this.searchQuery.set('');});
 
-    if (result) {
-      this.shoppingListService.addItem({
-        name: result.name,
-        category: result.category,
-        totalQuantity: result.quantity,
-        info: result.info,
-        size: result.size,
-        unit: result.unit
-      });
+    const listId = this.listId();
+    if (result && listId !== null) {
+      const user = await this.supabase.getCurrentUser();
+      if (!user) {
+        await this.shoppingListData.addItemToList(listId, result, null);
+        return;
+      }
+      await this.shoppingListData.addItemToList(listId, result, user.id);
     }
   }
 
   // Item bearbeiten
-  async editItem(item: ShoppingItem): Promise<void> {
+  async editItem(item: ShoppingItemRow): Promise<void> {
     const result = await this.modalService.open<AddItemData, AddItemResult>({
       component: AddItemModal,
       data: { editItem: item }
     });
 
-    if (result && result.id) {
-      this.shoppingListService.updateItem(result.id, {
-        name: result.name,
-        category: result.category,
-        totalQuantity: result.quantity,
-        info: result.info,
-        size: result.size,
-        unit: result.unit
-      });
+    if (result && item.itemId) {
+      await this.shoppingListData.updateItemInList(item.id, item.itemId, result);
     }
     this.expandedItemId.set(null);
   }
 
   // Item löschen
-  deleteItem(item: ShoppingItem): void {
-    this.shoppingListService.deleteItem(item.id);
+  deleteItem(item: ShoppingItemRow): void {
+    void this.shoppingListData.deleteListItem(item.id);
     this.expandedItemId.set(null);
   }
 
   // Prüfen ob Item gekauft ist
-  isPurchased(item: ShoppingItem): boolean {
-    return this.shoppingListService.isPurchased(item);
+  isPurchased(item: ShoppingItemRow): boolean {
+    return item.purchasedQuantity >= item.totalQuantity;
   }
 
   // Status Text generieren
-  getStatusText(item: ShoppingItem): string {
-    return this.shoppingListService.getStatusText(item);
+  getStatusText(item: ShoppingItemRow): string {
+    if (item.totalQuantity <= 1) {
+      return this.isPurchased(item) ? 'Eingekauft' : 'Offen';
+    }
+    return `${item.purchasedQuantity}/${item.totalQuantity}`;
   }
 
   // Listennamen und Beschreibung bearbeiten
   async editListInfo(): Promise<void> {
+    const aloneInList = await this.supabase.getUserCountForList(this.listId() ?? BigInt(-1)) === 1;
+
     const result = await this.modalService.open<EditListData, EditListResult>({
       component: EditListModal,
       data: {
         name: this.listName(),
-        description: this.listDescription()
+        description: this.listDescription(),
+        aloneInList
       }
     });
 
-    if (result) {
-      this.shoppingListService.updateListInfo(result.name, result.description);
+    const listId = this.listId();
+    if (result?.action === 'save' && listId !== null && result.name !== undefined && result.description !== undefined) {
+      await this.shoppingListData.updateListInfo(listId, result.name, result.description);
+      return;
     }
+
+    if (result?.action === 'delete' && listId !== null) {
+      this.deleted = true;
+      await this.router.navigate(['/lists']);
+      console.warn("List deleted", listId);
+      await this.shoppingListData.deleteList(listId);
+    }
+  }
+
+  async openInviteModal(): Promise<void> {
+    if (!this.isOnline()) {
+      return;
+    }
+
+    const listId = this.listId();
+    if (!listId) {
+      return;
+    }
+    const currentUsers = await this.supabase.getUsersForList(listId);
+    const inviterEmail = (await this.supabase.getSession())?.user.email ?? '';
+    await this.modalService.open<InviteUserData, InviteUserResult>({
+      component: InviteUserModal,
+      data: {
+        listId,
+        inviterEmail,
+        currentUsers
+      },
+    });
   }
 }

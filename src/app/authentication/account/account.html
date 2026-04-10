@@ -16,8 +16,8 @@
 
             <div class="attribute-grid">
                 <div class="attribute-row">
-                    <span class="attribute-key">u_id</span>
-                    <span class="attribute-value">{{ profile.u_id || '-' }}</span>
+                    <span class="attribute-key">id</span>
+                    <span class="attribute-value">{{ profile.id || '-' }}</span>
                 </div>
                 <div class="attribute-row">
                     <span class="attribute-key">username</span>
@@ -25,11 +25,11 @@
                 </div>
                 <div class="attribute-row">
                     <span class="attribute-key">settings.theme</span>
-                    <span class="attribute-value">{{ profile.settings.theme }}</span>
+                    <span class="attribute-value">{{ profile.settings!.theme }}</span>
                 </div>
                 <div class="attribute-row">
                     <span class="attribute-key">settings.sync_interval</span>
-                    <span class="attribute-value">{{ profile.settings.sync_interval }} min</span>
+                    <span class="attribute-value">{{ profile.settings!.sync_interval }} min</span>
                 </div>
                 <div class="attribute-row">
                     <span class="attribute-key">updated_at</span>
