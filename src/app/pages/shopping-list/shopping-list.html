@@ -126,8 +126,7 @@
             <div class="item-name-price-container">
               <h3 class="item-name">{{ item.name }}</h3>
               @if (item.price) {
-              <div class="item-price">{{ item.price }}{{ item.currency === 'Euro' ? '€' : item.currency === 'USD' ? '$'
-                : ' ' + item.currency }}</div>
+              <div class="item-price">{{ currencyService.format(item.price) }}</div>
               }
             </div>
             <div class="item-meta">

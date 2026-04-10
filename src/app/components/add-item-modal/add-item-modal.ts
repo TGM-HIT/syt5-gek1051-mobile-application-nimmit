@@ -5,6 +5,7 @@ import { ModalService } from '../../services/modal.service';
 import { Currency, ShoppingItemRow, ShoppingListDataService, Unit } from '../../services/shopping-list-data.service';
 import { Category } from '../../types';
 import { PowerSyncService } from '../../services/powersync';
+import { CurrencyService } from '../../services/currency.service';
 
 type EditableShoppingItem = Pick<ShoppingItemRow, 'id' | 'name' | 'category' | 'totalQuantity' | 'info' | 'size' | 'unit' | 'price' | 'currency'>;
 
@@ -34,6 +35,7 @@ export interface AddItemResult {
 export class AddItemModal implements OnInit {
   private readonly modalService = inject(ModalService);
   private readonly shoppingListDataService = inject(ShoppingListDataService);
+  private readonly currencyService = inject(CurrencyService);
 
   // Input data from modal service
   readonly data = input<AddItemData>();
@@ -47,7 +49,7 @@ export class AddItemModal implements OnInit {
   readonly info = signal('');
   readonly size = signal<number | undefined>(undefined);
   readonly unit = signal<Unit>('Einheit');
-  readonly currency = signal<Currency>('Euro');
+  readonly currency = signal<Currency>(this.currencyService.currentCurrency());
   readonly price = signal<number | undefined>(undefined);
 
   // Edit mode
@@ -92,7 +94,7 @@ export class AddItemModal implements OnInit {
       this.info.set(item.info || '');
       this.size.set(item.size);
       this.unit.set(item.unit || 'Einheit');
-      this.currency.set(item.currency || 'Euro');
+      this.currency.set(item.currency || this.currencyService.currentCurrency());
       this.price.set(item.price || undefined);
     } else if (inputData?.prefillName) {
       this.name.set(inputData.prefillName);

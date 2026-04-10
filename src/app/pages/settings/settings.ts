@@ -6,6 +6,7 @@ import { LucideAngularModule, Check, ChevronDown } from 'lucide-angular';
 import { DefaultList } from '../../services/default-list';
 import { SupabaseConnector } from '../../services/supabase-connector';
 import { PowerSyncService, USER_ID_PLACEHOLDER } from '../../services/powersync';
+import { CurrencyService } from '../../services/currency.service';
 
 interface ListOption {
   id: bigint;
@@ -42,6 +43,21 @@ interface ListOption {
           >
             System
           </button>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <span class="setting-label">Bezugswährung</span>
+        <div class="theme-buttons">
+          @for (c of currencyService.availableCurrencies; track c) {
+            <button
+              class="theme-btn"
+              [class.active]="currencyService.currentCurrency() === c"
+              (click)="currencyService.setCurrency(c)"
+            >
+              {{ c }}
+            </button>
+          }
         </div>
       </div>
 
@@ -191,6 +207,7 @@ interface ListOption {
 })
 export class Settings {
   readonly themeService = inject(ThemeService);
+  readonly currencyService = inject(CurrencyService);
   private readonly defaultList = inject(DefaultList);
   private readonly powerSync = inject(PowerSyncService);
   private readonly supabase = inject(SupabaseConnector);

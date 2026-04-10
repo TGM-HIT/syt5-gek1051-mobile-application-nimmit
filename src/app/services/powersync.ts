@@ -69,8 +69,7 @@ const ListItem = new Table(
     curr_amount: column.integer,
     target_amount: column.integer,
     amount_unit: column.text,
-    price: column.real,
-    currency: column.text
+    price_usd: column.real,
   },
   { indexes: { liste_item_idx: ["liste", "item"] } }
 );
@@ -146,7 +145,18 @@ export class PowerSyncService {
   }
 
   get<T>(sql: string, parameters: unknown[] = []): Promise<T> {
-    const injectedParameters = parameters.map(param => param === USER_ID_PLACEHOLDER ? this.currentUserId : param);
+    const injectedParameters = parameters.map(param => {
+      if (param === USER_ID_PLACEHOLDER) {
+        return this.currentUserId;
+      } else if (typeof param === 'object' && param !== null && 'user' in param && 'list' in param) {
+        const placeholder = param as USER_LIST_ID_PLACEHOLDER;
+        if (placeholder.user === USER_ID_PLACEHOLDER) {
+          return `${this.currentUserId}|${placeholder.list}`;
+        } 
+        return `${placeholder.user}|${placeholder.list}`;
+      } 
+      return param;
+    });
     return this.db.get<T>(sql, injectedParameters);
   }
 

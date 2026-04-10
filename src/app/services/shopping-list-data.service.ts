@@ -45,7 +45,6 @@ export interface UpsertListItemInput {
   size?: number;
   unit: Unit;
   price?: number;
-  currency?: Currency;
 }
 
 interface WatchResult<T> {
@@ -107,8 +106,7 @@ export class ShoppingListDataService {
         i.description AS info,
         i.content AS size,
         li.amount_unit AS unit,
-        li.price AS price,
-        li.currency AS currency,
+        li.price_usd AS price,
         li.created_at AS createdAt,
         li.updated_at AS updatedAt
       FROM "ListItem" li
@@ -157,11 +155,11 @@ export class ShoppingListDataService {
     await this.powerSync.execute(
       `
       INSERT INTO "ListItem"
-        (id, liste, item, created_at, updated_at, curr_amount, target_amount, amount_unit, price, currency)
+        (id, liste, item, created_at, updated_at, curr_amount, target_amount, amount_unit, price_usd)
       VALUES
-        (?, ?, ?, datetime(), datetime(), 0, ?, ?, ?, ?)
+        (?, ?, ?, datetime(), datetime(), 0, ?, ?, ?)
       `,
-      [compKey, listId, newItemId, payload.quantity, payload.unit, payload.price ?? null, payload.currency ?? null]
+      [compKey, listId, newItemId, payload.quantity, payload.unit, payload.price ?? null]
     );
   }
 
@@ -185,8 +183,7 @@ export class ShoppingListDataService {
       UPDATE "ListItem"
       SET target_amount = ?,
           amount_unit = ?,
-          price = ?,
-          currency = ?,
+          price_usd = ?,
           curr_amount = CASE
             WHEN curr_amount > ? THEN ?
             ELSE curr_amount
@@ -194,7 +191,7 @@ export class ShoppingListDataService {
           updated_at = datetime()
       WHERE id = ?
       `,
-      [payload.quantity, payload.unit, payload.price ?? null, payload.currency ?? null, payload.quantity, payload.quantity, listItemId]
+      [payload.quantity, payload.unit, payload.price ?? null, payload.quantity, payload.quantity, listItemId]
     );
   }
 

@@ -160,6 +160,28 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
     return data;
   }
 
+  async updateProfileCurrency(userId: string, currency: string): Promise<void> {
+    const existingProfile = await this.getProfile(userId);
+    if (!existingProfile) {
+      return;
+    }
+
+    const { error } = await this.client
+      .from('profiles')
+      .update({
+        settings: {
+          ...existingProfile.settings,
+          currency,
+        },
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (error) {
+       console.error('Fehler beim Speichern der Waehrung auf Supabase:', error);
+    }
+  }
+
   async getUserCountForList(listId: bigint): Promise<number> {
     const rpcResult = await this.client.rpc('get_user_count_for_list', { list_id: listId });
     if (rpcResult.error) {

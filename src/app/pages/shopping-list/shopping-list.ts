@@ -10,6 +10,7 @@ import { ShoppingListDataService, ShoppingItemRow } from '../../services/shoppin
 import { SupabaseConnector } from '../../services/supabase-connector';
 import { FilterType } from '../../types';
 import { PowerSyncService } from '../../services/powersync';
+import { CurrencyService } from '../../services/currency.service';
 
 @Component({
   selector: 'app-shopping-list',
@@ -24,6 +25,7 @@ export class ShoppingList implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly modalService = inject(ModalService);
   private readonly powerSync = inject(PowerSyncService);
+  readonly currencyService = inject(CurrencyService);
   private readonly items = signal<ShoppingItemRow[]>([]);
   readonly listName = signal('Meine Einkaufsliste');
   readonly listDescription = signal('Tippe auf +, um Produkte hinzuzufuegen');
@@ -221,8 +223,7 @@ export class ShoppingList implements OnInit, OnDestroy {
         i.description AS info,
         i.content AS size,
         li.amount_unit AS unit,
-        li.price AS price,
-        li.currency AS currency,
+        li.price_usd AS price,
         li.created_at AS createdAt,
         li.updated_at AS updatedAt
         FROM "ListItem" li 
@@ -392,6 +393,9 @@ export class ShoppingList implements OnInit, OnDestroy {
 
     const listId = this.listId();
     if (result && listId !== null) {
+      if (result.price !== undefined && result.currency) {
+        result.price = this.currencyService.convertToUsd(result.price, result.currency);
+      }
       const user = await this.supabase.getCurrentUser();
       if (!user) {
         await this.shoppingListData.addItemToList(listId, result, null);
@@ -403,12 +407,20 @@ export class ShoppingList implements OnInit, OnDestroy {
 
   // Item bearbeiten
   async editItem(item: ShoppingItemRow): Promise<void> {
+    const editItemDisplay = {
+      ...item,
+      price: item.price !== undefined && item.price !== null ? this.currencyService.convertFromUsd(item.price) : undefined,
+      currency: this.currencyService.currentCurrency()
+    };
     const result = await this.modalService.open<AddItemData, AddItemResult>({
       component: AddItemModal,
-      data: { editItem: item }
+      data: { editItem: editItemDisplay }
     });
 
     if (result && item.itemId) {
+      if (result.price !== undefined && result.currency) {
+        result.price = this.currencyService.convertToUsd(result.price, result.currency);
+      }
       await this.shoppingListData.updateItemInList(item.id, item.itemId, result);
     }
     this.expandedItemId.set(null);

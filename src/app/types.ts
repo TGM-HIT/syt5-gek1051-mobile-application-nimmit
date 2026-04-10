@@ -95,6 +95,7 @@ export interface UserLists {
 export interface UserSettings {
   theme: Theme;
   sync_interval: number;
+  currency?: string | null;
 }
 
 export interface Profile {
