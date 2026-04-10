@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Prepare PowerSync assets
+        run: npm run powersync:setup
+
       - name: Build Angular app for GitHub Pages
         run: npm run build:pages
 
