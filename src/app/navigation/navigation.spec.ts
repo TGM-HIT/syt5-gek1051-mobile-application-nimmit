@@ -7,6 +7,8 @@ import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { ShoppingListDataService } from '../services';
 import { DefaultList } from '../services/default-list';
 import { SupabaseConnector } from '../services/supabase-connector';
+import { provideTransloco, translocoConfig } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../transloco/transloco-loader';
 
 describe('Navigation', () => {
   let component: Navigation;
@@ -39,6 +41,15 @@ describe('Navigation', () => {
         RouterModule.forRoot([])
       ],
       providers: [
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
         { provide: ModalService, useValue: mockModalService },
         { provide: ShoppingListDataService, useValue: mockShoppingListService },
         { provide: DefaultList, useValue: { listId$: { subscribe: () => { /* mock */ } }, getDefaultList: () => 1n } },

@@ -1,10 +1,11 @@
 import { Component, computed, inject, OnDestroy, signal } from '@angular/core';
-import { ThemeService } from '../../services';
+import { LanguageService, ThemeService, AppLanguage } from '../../services';
 import { RouterLink } from '@angular/router';
 import { Theme } from '../../types';
 import { LucideAngularModule, Check, ChevronDown } from 'lucide-angular';
 import { DefaultList } from '../../services/default-list';
 import { PowerSyncService, USER_ID_PLACEHOLDER } from '../../services/powersync';
+import { TranslocoModule } from '@jsverse/transloco';
 
 interface ListOption {
   id: bigint;
@@ -15,10 +16,11 @@ interface ListOption {
   selector: 'app-settings',
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
-  imports: [RouterLink, LucideAngularModule],
+  imports: [RouterLink, LucideAngularModule, TranslocoModule],
 })
 export class Settings implements OnDestroy {
   readonly themeService = inject(ThemeService);
+  readonly languageService = inject(LanguageService);
   private readonly defaultList = inject(DefaultList);
   private readonly powerSync = inject(PowerSyncService);
   readonly icons = { Check, ChevronDown };
@@ -26,17 +28,19 @@ export class Settings implements OnDestroy {
   private stopListsWatch: (() => void) | null = null;
 
   readonly lists = signal<ListOption[]>([]);
+  readonly languages = this.languageService.getSupportedLanguages();
   readonly isListDropdownOpen = signal(false);
+  readonly isLanguageDropdownOpen = signal(false);
   readonly selectedDefaultListId = signal<bigint | null>(this.defaultList.getDefaultList());
   readonly selectedListName = computed(() => {
     const selectedId = this.selectedDefaultListId();
 
     if (selectedId === null) {
-      return 'None';
+      return null;
     }
 
     const selected = this.lists().find((list) => list.id === selectedId);
-    return selected?.name ?? 'None';
+    return selected?.name ?? null;
   });
 
   constructor() {
@@ -58,6 +62,19 @@ export class Settings implements OnDestroy {
 
   toggleListDropdown(): void {
     this.isListDropdownOpen.update((open) => !open);
+  }
+
+  toggleLanguageDropdown(): void {
+    this.isLanguageDropdownOpen.update((open) => !open);
+  }
+
+  isLanguageSelected(language: AppLanguage): boolean {
+    return this.languageService.language() === language;
+  }
+
+  selectLanguage(language: AppLanguage): void {
+    this.languageService.setLanguage(language);
+    this.isLanguageDropdownOpen.set(false);
   }
 
   isListSelected(listId: bigint): boolean {

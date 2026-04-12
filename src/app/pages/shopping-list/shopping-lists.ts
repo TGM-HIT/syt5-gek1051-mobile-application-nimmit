@@ -7,6 +7,7 @@ import { LucideAngularModule, ListChecks, Plus, ArrowRight, Layers } from 'lucid
 import { AsyncPipe } from '@angular/common';
 import { take } from 'rxjs';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslocoModule } from '@jsverse/transloco';
 
 type ListWithUserCount = Lists & {
   other_users_count?: number | null;
@@ -14,7 +15,7 @@ type ListWithUserCount = Lists & {
 
 @Component({
   selector: 'app-shopping-lists',
-  imports: [LucideAngularModule, AsyncPipe, ReactiveFormsModule],
+  imports: [LucideAngularModule, AsyncPipe, ReactiveFormsModule, TranslocoModule],
   templateUrl: './shopping-lists.html',
   styleUrl: './shopping-lists.scss',
 })

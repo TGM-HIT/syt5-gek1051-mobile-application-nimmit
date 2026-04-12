@@ -8,10 +8,10 @@
           class="connection-badge"
           [class.online]="isOnline()"
           [class.offline]="!isOnline()"
-          aria-label="Verbindungsstatus"
+          [attr.aria-label]="'shoppingLists.statusAria' | transloco"
         >
           <span class="status-icon" aria-hidden="true"></span>
-          <span class="status-text">{{ isOnline() ? 'online' : 'offline' }}</span>
+          <span class="status-text">{{ isOnline() ? ('common.online' | transloco) : ('common.offline' | transloco) }}</span>
         </span>
       </div>
       <p class="list-description">{{ listDescription() }}</p>
@@ -21,11 +21,12 @@
         class="edit-list-btn"
         (click)="openInviteModal()"
         [disabled]="!isOnline()"
-        [title]="isOnline() ? 'Nutzer einladen' : 'Nur online verfuegbar'"
+        [attr.aria-label]="isOnline() ? ('shoppingList.inviteUser' | transloco) : ('shoppingList.inviteOnlyOnline' | transloco)"
+        [title]="isOnline() ? ('shoppingList.inviteUser' | transloco) : ('shoppingList.inviteOnlyOnline' | transloco)"
       >
         <lucide-icon [img]="icons.UserPlus" [size]="20" [strokeWidth]="2"></lucide-icon>
       </button>
-      <button class="edit-list-btn" (click)="editListInfo()">
+      <button class="edit-list-btn" (click)="editListInfo()" [attr.aria-label]="'modals.editList.title' | transloco" [title]="'modals.editList.title' | transloco">
         <lucide-icon [img]="icons.Pencil" [size]="20" [strokeWidth]="2"></lucide-icon>
       </button>
     </div>
@@ -35,7 +36,7 @@
   <div class="search-container">
     <div class="search-input-wrapper">
       <lucide-icon class="search-icon" [img]="icons.Search" [size]="20" [strokeWidth]="2"></lucide-icon>
-      <input type="text" class="search-input" placeholder="Finde ein Produkt..." [ngModel]="searchQuery()"
+      <input type="text" class="search-input" [placeholder]="'shoppingList.searchPlaceholder' | transloco" [ngModel]="searchQuery()"
         (ngModelChange)="onSearchQueryChange($event)" (focus)="showAutocomplete.set(true)" (blur)="hideAutocomplete()"
         (keydown.enter)="onSearchEnter($event)"
         autocomplete="off" />
@@ -56,7 +57,7 @@
       </div>
       }
     </div>
-    <button class="add-item-btn" (click)="addNewItem()">
+    <button class="add-item-btn" (click)="addNewItem()" [attr.aria-label]="'modals.addItem.titleAdd' | transloco" [title]="'modals.addItem.titleAdd' | transloco">
       <lucide-icon [img]="icons.Plus" [size]="24" [strokeWidth]="2"></lucide-icon>
     </button>
   </div>
@@ -65,16 +66,16 @@
   <div class="filter-tabs-container" [class.has-category-selection]="hasCategoryFilter()">
     <div class="filter-tabs-scroll">
       <button class="filter-tab" [class.active]="activeFilter() === 'all'" (click)="setFilter('all')">
-        Alle
+        {{ 'shoppingList.filterAll' | transloco }}
         <span class="badge">{{ allCount() }}</span>
       </button>
       <span class="tab-divider"></span>
       <button class="filter-tab" [class.active]="activeFilter() === 'notPurchased'" (click)="setFilter('notPurchased')">
-        Nicht Gekauft
+        {{ 'shoppingList.filterNotPurchased' | transloco }}
         <span class="badge">{{ notPurchasedCount() }}</span>
       </button>
       <button class="filter-tab" [class.active]="activeFilter() === 'purchased'" (click)="setFilter('purchased')">
-        Eingekauft
+        {{ 'shoppingList.filterPurchased' | transloco }}
         <span class="badge">{{ purchasedCount() }}</span>
       </button>
       <span class="tab-divider"></span>
@@ -103,10 +104,10 @@
     <!-- Keine Ergebnisse gefunden -->
     @if (hasNoResults()) {
     <div class="no-results">
-      <p>Kein Produkt gefunden</p>
+      <p>{{ 'shoppingList.noProductFound' | transloco }}</p>
       <button class="add-not-found-btn" (click)="addNewItem(searchQuery())">
         <lucide-icon [img]="icons.Plus" [size]="20" [strokeWidth]="2"></lucide-icon>
-        <span>"{{ searchQuery() }}" hinzufügen</span>
+        <span>{{ 'shoppingList.addProduct' | transloco: { query: searchQuery() } }}</span>
       </button>
     </div>
     }
@@ -150,15 +151,15 @@
             }
           </button>
 
-          <div class="item-header-actions" aria-label="Aktionen">
-            <button type="button" class="item-header-action-btn delete" aria-label="Item löschen" (click)="deleteItem(item)">
+          <div class="item-header-actions" [attr.aria-label]="'shoppingList.aria.actions' | transloco">
+            <button type="button" class="item-header-action-btn delete" [attr.aria-label]="'shoppingList.aria.deleteItem' | transloco" (click)="deleteItem(item)">
               <lucide-icon [img]="icons.Trash2" [size]="20" [strokeWidth]="2"></lucide-icon>
             </button>
-            <button type="button" class="item-header-action-btn edit" aria-label="Item bearbeiten" (click)="editItem(item)">
+            <button type="button" class="item-header-action-btn edit" [attr.aria-label]="'shoppingList.aria.editItem' | transloco" (click)="editItem(item)">
               <lucide-icon [img]="icons.Pencil" [size]="20" [strokeWidth]="2"></lucide-icon>
             </button>
             @if (item.totalQuantity > 1) {
-            <div class="quantity-controls header" aria-label="Menge einkaufen">
+            <div class="quantity-controls header" [attr.aria-label]="'shoppingList.aria.quantityControls' | transloco">
               <button class="quantity-btn" [disabled]="item.purchasedQuantity === 0" (click)="decrementQuantity(item)">
                 <lucide-icon [img]="icons.Minus" [size]="18" [strokeWidth]="2"></lucide-icon>
               </button>
@@ -169,7 +170,7 @@
               </button>
             </div>
             }
-            <button type="button" class="item-header-action-btn confirm" aria-label="Als gekauft markieren" (click)="markAsPurchased(item)">
+            <button type="button" class="item-header-action-btn confirm" [attr.aria-label]="'shoppingList.aria.markPurchased' | transloco" (click)="markAsPurchased(item)">
               <lucide-icon [img]="icons.Check" [size]="20" [strokeWidth]="2.5"></lucide-icon>
             </button>
           </div>
@@ -180,20 +181,20 @@
         <div class="item-expanded">
           @if (item.info) {
           <div class="item-info-section">
-            <h4>Informationen</h4>
+            <h4>{{ 'shoppingList.infoTitle' | transloco }}</h4>
             <p>{{ item.info }}</p>
           </div>
           }
 
           <div class="item-actions">
-            <button class="action-btn delete" (click)="deleteItem(item)">
+            <button class="action-btn delete" [attr.aria-label]="'shoppingList.aria.deleteItem' | transloco" (click)="deleteItem(item)">
               <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
             </button>
-            <button class="action-btn edit" (click)="editItem(item)">
+            <button class="action-btn edit" [attr.aria-label]="'shoppingList.aria.editItem' | transloco" (click)="editItem(item)">
               <lucide-icon [img]="icons.Pencil" [size]="24" [strokeWidth]="2"></lucide-icon>
             </button>
             @if (item.totalQuantity > 1) {
-            <div class="quantity-controls">
+            <div class="quantity-controls" [attr.aria-label]="'shoppingList.aria.quantityControls' | transloco">
               <button class="quantity-btn" [disabled]="item.purchasedQuantity === 0" (click)="decrementQuantity(item)">
                 <lucide-icon [img]="icons.Minus" [size]="18" [strokeWidth]="2"></lucide-icon>
               </button>
@@ -204,7 +205,7 @@
               </button>
             </div>
             }
-            <button class="action-btn confirm" (click)="markAsPurchased(item)">
+            <button class="action-btn confirm" [attr.aria-label]="'shoppingList.aria.markPurchased' | transloco" (click)="markAsPurchased(item)">
               <lucide-icon [img]="icons.Check" [size]="24" [strokeWidth]="2.5"></lucide-icon>
             </button>
           </div>
@@ -218,7 +219,7 @@
     <!-- Separator für eingekaufte Items -->
     @if (purchasedCount() > 0 && activeFilter() !== 'notPurchased') {
     <div class="section-divider">
-      <span>Eingekauft</span>
+      <span>{{ 'shoppingList.purchasedSection' | transloco }}</span>
     </div>
     }
 
@@ -261,11 +262,11 @@
             }
           </button>
 
-          <div class="item-header-actions" aria-label="Aktionen">
-            <button type="button" class="item-header-action-btn delete" aria-label="Item löschen" (click)="deleteItem(item)">
+          <div class="item-header-actions" [attr.aria-label]="'shoppingList.aria.actions' | transloco">
+            <button type="button" class="item-header-action-btn delete" [attr.aria-label]="'shoppingList.aria.deleteItem' | transloco" (click)="deleteItem(item)">
               <lucide-icon [img]="icons.Trash2" [size]="20" [strokeWidth]="2"></lucide-icon>
             </button>
-            <button type="button" class="item-header-action-btn undo" aria-label="Als nicht gekauft markieren" (click)="markAsNotPurchased(item)">
+            <button type="button" class="item-header-action-btn undo" [attr.aria-label]="'shoppingList.aria.markNotPurchased' | transloco" (click)="markAsNotPurchased(item)">
               <lucide-icon [img]="icons.Undo2" [size]="20" [strokeWidth]="2"></lucide-icon>
             </button>
           </div>
@@ -276,16 +277,16 @@
         <div class="item-expanded">
           @if (item.info) {
           <div class="item-info-section">
-            <h4>Informationen</h4>
+            <h4>{{ 'shoppingList.infoTitle' | transloco }}</h4>
             <p>{{ item.info }}</p>
           </div>
           }
 
           <div class="item-actions">
-            <button class="action-btn delete" (click)="deleteItem(item)">
+            <button class="action-btn delete" [attr.aria-label]="'shoppingList.aria.deleteItem' | transloco" (click)="deleteItem(item)">
               <lucide-icon [img]="icons.Trash2" [size]="24" [strokeWidth]="2"></lucide-icon>
             </button>
-            <button class="action-btn undo" (click)="markAsNotPurchased(item)">
+            <button class="action-btn undo" [attr.aria-label]="'shoppingList.aria.markNotPurchased' | transloco" (click)="markAsNotPurchased(item)">
               <lucide-icon [img]="icons.Undo2" [size]="24" [strokeWidth]="2"></lucide-icon>
             </button>
           </div>

@@ -1,29 +1,29 @@
 <div class="page-container">
     <section class="login-card">
         @if (loginSucceeded()) {
-        <h1>Willkommen zurueck</h1>
-        <p class="subtitle">Du wirst gleich weitergeleitet...</p>
-        <p class="feedback success-box">Anmeldung erfolgreich.</p>
+        <h1>{{ 'auth.login.welcomeBack' | transloco }}</h1>
+        <p class="subtitle">{{ 'auth.login.redirecting' | transloco }}</p>
+        <p class="feedback success-box">{{ 'auth.login.success' | transloco }}</p>
         } @else {
-        <h1>Anmelden</h1>
-        <p class="subtitle">Melde dich an, um auf dein Konto zuzugreifen.</p>
+        <h1>{{ 'auth.login.title' | transloco }}</h1>
+        <p class="subtitle">{{ 'auth.login.subtitle' | transloco }}</p>
 
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
             <div class="field-group">
-                <label for="email">E-Mail</label>
-                <input id="email" type="email" formControlName="email" placeholder="name@beispiel.de"
+                <label for="email">{{ 'auth.login.email' | transloco }}</label>
+                <input id="email" type="email" formControlName="email" [placeholder]="'auth.login.emailPlaceholder' | transloco"
                     autocomplete="email" [class.invalid]="isInvalid('email')" />
                 @if (isInvalid('email')) {
-                <small class="error">Bitte gib eine gueltige E-Mail-Adresse ein.</small>
+                <small class="error">{{ 'auth.login.emailInvalid' | transloco }}</small>
                 }
             </div>
 
             <div class="field-group">
-                <label for="password">Passwort</label>
-                <input id="password" type="password" formControlName="password" placeholder="dein Passwort"
+                <label for="password">{{ 'auth.login.password' | transloco }}</label>
+                <input id="password" type="password" formControlName="password" [placeholder]="'auth.login.passwordPlaceholder' | transloco"
                     autocomplete="current-password" [class.invalid]="isInvalid('password')" />
                 @if (isInvalid('password')) {
-                <small class="error">Bitte gib dein Passwort ein.</small>
+                <small class="error">{{ 'auth.login.passwordInvalid' | transloco }}</small>
                 }
             </div>
 
@@ -32,15 +32,15 @@
             }
 
             <button type="submit" class="login-btn" [disabled]="isSubmitting()">
-                {{ isSubmitting() ? 'Anmeldung läuft...' : 'Anmelden' }}
+                {{ isSubmitting() ? ('auth.login.submitting' | transloco) : ('auth.login.submit' | transloco) }}
             </button>
         </form>
         }
 
-        <h3>Registrieren</h3>
-        <p class="subtitle">oder, registriere dich jetzt!</p>
+        <h3>{{ 'auth.login.registerTitle' | transloco }}</h3>
+        <p class="subtitle">{{ 'auth.login.registerSubtitle' | transloco }}</p>
         <button type="button" routerLink="/register" class="login-btn" style="text-align: center;">
-            Hier registrieren
+            {{ 'auth.login.registerCta' | transloco }}
         </button>
     </section>
 </div>

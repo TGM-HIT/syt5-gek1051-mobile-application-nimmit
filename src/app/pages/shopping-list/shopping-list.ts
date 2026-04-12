@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit, computed, signal, inject, ChangeDetectorR
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, UserPlus, Star, Coffee, Apple, Milk, Drumstick, Croissant, Snowflake, Candy, Brush, Package  } from 'lucide-angular';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-item-modal/add-item-modal';
 import { EditListModal, EditListData, EditListResult } from '../../components/edit-list-modal/edit-list-modal';
 import { InviteUserModal, InviteUserData, InviteUserResult } from '../../components/invite-user-modal/invite-user-modal';
@@ -16,7 +17,7 @@ import { ShoppingListService } from '../../services/shopping-list.service';
 
 @Component({
   selector: 'app-shopping-list',
-  imports: [FormsModule, LucideAngularModule, ReactiveFormsModule],
+  imports: [FormsModule, LucideAngularModule, ReactiveFormsModule, TranslocoModule],
   templateUrl: './shopping-list.html',
   styleUrl: './shopping-list.scss',
 })
@@ -30,9 +31,10 @@ export class ShoppingList implements OnInit, OnDestroy {
   private readonly confirmModal = inject(ConfirmModalService);
   private readonly powerSync = inject(PowerSyncService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly transloco = inject(TranslocoService);
   private readonly items = signal<ShoppingItemRow[]>([]);
-  readonly listName = signal('Meine Einkaufsliste');
-  readonly listDescription = signal('Tippe auf +, um Produkte hinzuzufuegen');
+  readonly listName = signal(this.transloco.translate('shoppingList.defaultListName'));
+  readonly listDescription = signal(this.transloco.translate('shoppingList.defaultListDescription'));
   private readonly listId = signal<bigint | null>(null);
   private isDisposed = false;
   private deleted = false;
@@ -346,17 +348,21 @@ export class ShoppingList implements OnInit, OnDestroy {
       if (this.isDisposed || this.deleted) {
         return;
       }
+
+      const defaultName = this.transloco.translate('shoppingList.defaultListName');
+      const defaultDescription = this.transloco.translate('shoppingList.defaultListDescription');
+
       const rows = this.toRows<{ id: bigint; name: string; description: string | null }>(result.rows);
       const list = rows[0];
       if (list) {
-        this.listName.set(list.name || 'Meine Einkaufsliste');
-        this.listDescription.set(list.description || 'Tippe auf +, um Produkte hinzuzufuegen');
+        this.listName.set(list.name || defaultName);
+        this.listDescription.set(list.description || defaultDescription);
         this.cdr.detectChanges();
         return;
       }
 
-      this.listName.set('Meine Einkaufsliste');
-      this.listDescription.set('Tippe auf +, um Produkte hinzuzufuegen');
+      this.listName.set(defaultName);
+      this.listDescription.set(defaultDescription);
       this.cdr.detectChanges();
     }, [String(listId)]);
   }
@@ -599,10 +605,10 @@ export class ShoppingList implements OnInit, OnDestroy {
     this.expandedItemId.set(null);
 
     const confirmed = await this.confirmModal.confirm({
-      title: 'Produkt löschen?',
-      message: `Möchtest du „${item.name}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
-      confirmText: 'Löschen',
-      cancelText: 'Abbrechen',
+      title: this.transloco.translate('shoppingList.confirmDeleteItemTitle'),
+      message: this.transloco.translate('shoppingList.confirmDeleteItemMessage', { name: item.name }),
+      confirmText: this.transloco.translate('common.delete'),
+      cancelText: this.transloco.translate('common.cancel'),
     });
 
     if (!confirmed) {
@@ -620,7 +626,9 @@ export class ShoppingList implements OnInit, OnDestroy {
   // Status Text generieren
   getStatusText(item: ShoppingItemRow): string {
     if (item.totalQuantity <= 1) {
-      return this.isPurchased(item) ? 'Eingekauft' : 'Offen';
+      return this.isPurchased(item)
+        ? this.transloco.translate('shoppingList.status.purchased')
+        : this.transloco.translate('shoppingList.status.open');
     }
     return `${item.purchasedQuantity}/${item.totalQuantity}`;
   }
@@ -652,16 +660,16 @@ export class ShoppingList implements OnInit, OnDestroy {
       const confirmed = await this.confirmModal.confirm(
         result.action === 'delete'
           ? {
-              title: 'Liste löschen?',
-              message: `Möchtest du die Liste „${this.listName()}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
-              confirmText: 'Löschen',
-              cancelText: 'Abbrechen',
+              title: this.transloco.translate('shoppingList.confirmDeleteListTitle'),
+              message: this.transloco.translate('shoppingList.confirmDeleteListMessage', { name: this.listName() }),
+              confirmText: this.transloco.translate('common.delete'),
+              cancelText: this.transloco.translate('common.cancel'),
             }
           : {
-              title: 'Liste verlassen?',
-              message: `Möchtest du die Liste „${this.listName()}“ wirklich verlassen?`,
-              confirmText: 'Verlassen',
-              cancelText: 'Abbrechen',
+              title: this.transloco.translate('shoppingList.confirmLeaveListTitle'),
+              message: this.transloco.translate('shoppingList.confirmLeaveListMessage', { name: this.listName() }),
+              confirmText: this.transloco.translate('shoppingList.leave'),
+              cancelText: this.transloco.translate('common.cancel'),
             }
       );
 

@@ -2,6 +2,7 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { DOCUMENT } from '@angular/common';
 import { LucideAngularModule, List, Users, Settings, Plus, Star, Menu } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 import { ModalService, ShoppingListDataService } from '../services';
 import { AddItemModal, AddItemResult } from '../components/add-item-modal/add-item-modal';
 import { SupabaseConnector } from '../services/supabase-connector';
@@ -9,7 +10,7 @@ import { DefaultList } from '../services/default-list';
 
 @Component({
   selector: 'app-navigation',
-  imports: [RouterLink, RouterLinkActive, LucideAngularModule],
+  imports: [RouterLink, RouterLinkActive, LucideAngularModule, TranslocoModule],
   templateUrl: './navigation.html',
   styleUrl: './navigation.scss',
 })
