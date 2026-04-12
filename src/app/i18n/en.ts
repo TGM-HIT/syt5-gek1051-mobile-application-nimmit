@@ -127,6 +127,8 @@ export default {
     title: 'My shopping lists',
     subtitle: 'All available lists in one place.',
     statusAria: 'Connection status',
+    loadingTitle: 'Loading lists...',
+    loadingSubtitle: 'Please wait a moment.',
     newListLabel: 'New list',
     newListPlaceholder: 'Create new list...',
     add: 'Add',

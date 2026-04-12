@@ -127,6 +127,8 @@ export default {
     title: 'Meine Einkaufslisten',
     subtitle: 'Alle verfügbaren Listen an einem Ort.',
     statusAria: 'Verbindungsstatus',
+    loadingTitle: 'Listen werden geladen...',
+    loadingSubtitle: 'Bitte kurz warten.',
     newListLabel: 'Neue Liste',
     newListPlaceholder: 'Neue Liste erstellen...',
     add: 'Hinzufügen',

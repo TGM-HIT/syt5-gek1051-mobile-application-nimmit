@@ -5,6 +5,7 @@ android/
 ios/
 dist/
 coverage/
+reports/
 src/assets/
 .idea
 cypress/screenshots/
