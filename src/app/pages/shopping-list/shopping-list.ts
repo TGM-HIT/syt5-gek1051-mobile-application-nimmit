@@ -34,6 +34,8 @@ export class ShoppingList implements OnInit, OnDestroy {
   private readonly listId = signal<bigint | null>(null);
   private isDisposed = false;
   private deleted = false;
+  private stopListInfoWatch: (() => void) | null = null;
+  private stopItemsWatch: (() => void) | null = null;
   readonly isOnline = signal<boolean>(navigator.onLine);
   private readonly handleOnlineStatusChange = () => {
     if (this.isDisposed) {
@@ -266,6 +268,10 @@ export class ShoppingList implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.isDisposed = true;
+    this.stopListInfoWatch?.();
+    this.stopListInfoWatch = null;
+    this.stopItemsWatch?.();
+    this.stopItemsWatch = null;
     window.removeEventListener('online', this.handleOnlineStatusChange);
     window.removeEventListener('offline', this.handleOnlineStatusChange);
   }
@@ -300,8 +306,8 @@ export class ShoppingList implements OnInit, OnDestroy {
     const sql = `
       SELECT id, name, description FROM "Lists" where id = ?`;
 
-    
-    this.powerSync.watchWithCallback(sql, (result) => {
+    this.stopListInfoWatch?.();
+    this.stopListInfoWatch = this.powerSync.watchWithCallback(sql, (result) => {
       if (this.isDisposed || this.deleted) {
         return;
       }
@@ -345,7 +351,8 @@ export class ShoppingList implements OnInit, OnDestroy {
         LEFT JOIN "Category" c ON c.id = i.category
         WHERE li.liste = ? ORDER BY createdAt ASC`;
 
-    this.powerSync.watchWithCallback(sql, (result) => {
+    this.stopItemsWatch?.();
+    this.stopItemsWatch = this.powerSync.watchWithCallback(sql, (result) => {
       if (this.isDisposed || this.deleted) {
         return;
       }

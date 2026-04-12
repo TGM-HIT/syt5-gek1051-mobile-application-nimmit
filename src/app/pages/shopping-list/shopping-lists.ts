@@ -1,11 +1,11 @@
 import { Component, OnDestroy, OnInit, signal, ChangeDetectorRef } from '@angular/core';
 import { Lists } from '../../types';
 import { SupabaseConnector } from '../../services/supabase-connector';
-import { LISTS_TABLE, PowerSyncService, USER_ID_PLACEHOLDER, USER_LIST_ID_PLACEHOLDER } from '../../services/powersync';
+import { PowerSyncService, USER_ID_PLACEHOLDER, USER_LIST_ID_PLACEHOLDER } from '../../services/powersync';
 import { Router } from '@angular/router';
-import { LucideAngularModule, ListChecks, Plus, ArrowRight, Layers, ThermometerSnowflake, Form } from 'lucide-angular';
+import { LucideAngularModule, ListChecks, Plus, ArrowRight, Layers } from 'lucide-angular';
 import { AsyncPipe } from '@angular/common';
-import { BehaviorSubject, take } from 'rxjs';
+import { take } from 'rxjs';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 
 type ListWithUserCount = Lists & {
@@ -22,6 +22,9 @@ export class ShoppingLists implements OnInit, OnDestroy {
   readonly lists = signal<ListWithUserCount[]>([]);
   userId: string | null = null;
   readonly icons = { ListChecks, Plus, ArrowRight, Layers };
+
+  private stopListsWatch: (() => void) | null = null;
+  private watchedListsQuery: { close?: () => void } | null = null;
 
   readonly isOnline = signal<boolean>(navigator.onLine);
   private readonly handleOnlineStatusChange = () => {
@@ -57,6 +60,8 @@ export class ShoppingLists implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     window.removeEventListener('online', this.handleOnlineStatusChange);
     window.removeEventListener('offline', this.handleOnlineStatusChange);
+
+    this.disposeListsWatch();
   }
 
   private async initialize(): Promise<void> {
@@ -65,10 +70,21 @@ export class ShoppingLists implements OnInit, OnDestroy {
   }
 
   getLists() {
-    const sql = `SELECT * FROM "Lists"`;
-    const pendingLists = this.powerSync.query<Lists>(sql).watch();
-    
-    const dispose = pendingLists.registerListener({
+    this.disposeListsWatch();
+    this.lists.set([]);
+
+    const sql = `
+      SELECT l.*
+      FROM "Lists" l
+      INNER JOIN "UserLists" ul ON ul.list = l.id
+      WHERE ul.user = ?
+      ORDER BY l.created_at DESC
+    `;
+
+    const watched = this.powerSync.query<Lists>(sql, [USER_ID_PLACEHOLDER]).watch();
+    this.watchedListsQuery = watched as unknown as { close?: () => void };
+
+    this.stopListsWatch = watched.registerListener({
       onData: async (data) => {
         try {
           const rows = data as Lists[];
@@ -88,7 +104,14 @@ export class ShoppingLists implements OnInit, OnDestroy {
         console.error('Query error:', error);
       }
     });
-  
+
+  }
+
+  private disposeListsWatch(): void {
+    this.stopListsWatch?.();
+    this.stopListsWatch = null;
+    this.watchedListsQuery?.close?.();
+    this.watchedListsQuery = null;
   }
 
   async addList(name: string, description: string = ''): Promise<void> {

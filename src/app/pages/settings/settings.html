@@ -1,0 +1,55 @@
+<div class="page-container">
+  <h1>Einstellungen</h1>
+
+  <div class="setting-item">
+    <span class="setting-label">Theme</span>
+    <div class="theme-buttons">
+      <button class="theme-btn" [class.active]="themeService.theme() === 'light'" (click)="setTheme('light')">
+        Hell
+      </button>
+      <button class="theme-btn" [class.active]="themeService.theme() === 'dark'" (click)="setTheme('dark')">
+        Dunkel
+      </button>
+      <button class="theme-btn" [class.active]="themeService.theme() === 'system'" (click)="setTheme('system')">
+        System
+      </button>
+    </div>
+  </div>
+
+  <div class="setting-item">
+    <span class="setting-label">Standardliste</span>
+    <div class="dropdown-container">
+      <button class="dropdown-trigger" (click)="toggleListDropdown()" type="button">
+        <span class="dropdown-value">{{ selectedListName() }}</span>
+        <lucide-angular [img]="icons.ChevronDown" [class.open]="isListDropdownOpen()"></lucide-angular>
+      </button>
+
+      @if (isListDropdownOpen()) {
+        <div class="dropdown-menu">
+          <button class="dropdown-option" type="button" (click)="selectNoDefaultList()">
+            <span>None</span>
+            @if (isNoneSelected()) {
+              <lucide-angular class="check-icon" [img]="icons.Check"></lucide-angular>
+            }
+          </button>
+
+          @for (list of lists(); track list.id.toString()) {
+            <button class="dropdown-option" type="button" (click)="selectDefaultList(list.id)">
+              <span>{{ list.name }}</span>
+              @if (isListSelected(list.id)) {
+                <lucide-angular class="check-icon" [img]="icons.Check"></lucide-angular>
+              }
+            </button>
+          } @empty {
+            <div class="dropdown-empty">Keine Listen gefunden</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="setting-item">
+    <span class="setting-label">Account</span>
+    <button type="button" class="theme-btn" routerLink="/account">Accounteinstellungen</button>
+  </div>
+</div>

@@ -15,7 +15,7 @@ h1 {
 	padding: 16px;
 	background-color: var(--color-surface);
 	border-radius: 12px;
-	border: 1px solid var(--color-border);
+	border: none;
 	margin-bottom: 12px;
 }
 
@@ -28,8 +28,8 @@ h1 {
 	display: inline-flex;
 	justify-content: center;
 	align-items: center;
-	padding: 12px;
-	border: 1px solid var(--color-border);
+	padding: 16px;
+	border:none;
 	border-radius: 8px;
 	background-color: var(--color-elevated);
 	color: var(--color-text-secondary);
@@ -106,7 +106,7 @@ h1 {
 .text-input {
 	padding: 12px;
 	border-radius: 8px;
-	border: 1px solid var(--color-border);
+	border:none;
 	background-color: var(--color-elevated);
 	color: var(--color-text);
 }
