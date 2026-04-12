@@ -63,10 +63,24 @@ describe('Shopping List', () => {
 
     // Find the item by name and click to expand
     cy.get('.item-name').contains(itemName).parents('.item-card').as('deleteCard');
-    cy.get('@deleteCard').find('.item-header').click();
 
-    // Click the delete button
-    cy.get('@deleteCard').find('.action-btn.delete').click({ force: true });
+    // Desktop shows actions in the header; mobile shows them in the expanded section.
+    cy.get('@deleteCard').then(($card) => {
+      const hasDesktopActions = $card.find('.item-header-actions:visible').length > 0;
+
+      if (hasDesktopActions) {
+        cy.wrap($card).find('.item-header-action-btn.delete').should('be.visible').click();
+        return;
+      }
+
+      cy.wrap($card).find('.item-header-main').click();
+      cy.wrap($card).find('.action-btn.delete').should('be.visible').click();
+    });
+
+    // Confirm deletion
+    cy.get('.modal-content').should('be.visible');
+    cy.get('.confirm-btn').should('be.visible').click();
+    cy.get('.modal-content').should('not.exist');
 
     // The item should no longer exist
     cy.contains('.item-name', itemName).should('not.exist');
@@ -192,14 +206,21 @@ describe('Shopping List', () => {
     cy.get('.submit-btn').click();
     cy.get('.modal-content').should('not.exist');
 
-    // Expand the item
+    // Locate the item card
     cy.get('.item-name').contains(itemName).parents('.item-card').as('editCard');
-    cy.get('@editCard').find('.item-header').click();
 
-    // Wait for the expansion animation or just force click
-    cy.get('@editCard').find('.action-btn.edit').should('be.visible');
-    cy.wait(500); 
-    cy.get('@editCard').find('.action-btn.edit').click({ force: true });
+    // Desktop shows actions in the header; mobile shows them in the expanded section.
+    cy.get('@editCard').then(($card) => {
+      const hasDesktopActions = $card.find('.item-header-actions:visible').length > 0;
+
+      if (hasDesktopActions) {
+        cy.wrap($card).find('.item-header-action-btn.edit').should('be.visible').click();
+        return;
+      }
+
+      cy.wrap($card).find('.item-header-main').click();
+      cy.wrap($card).find('.action-btn.edit').should('be.visible').click();
+    });
     cy.get('.modal-content').should('be.visible');
 
     // Verify modal is in edit mode
