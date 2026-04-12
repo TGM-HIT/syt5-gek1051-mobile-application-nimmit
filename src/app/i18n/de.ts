@@ -275,4 +275,33 @@ export default {
       closeAria: 'Schließen',
     },
   },
+
+  categories: {
+    'Getränke': 'Getränke',
+    'Obst & Gemüse': 'Obst & Gemüse',
+    'Milchprodukte': 'Milchprodukte',
+    'Fleisch & Fisch': 'Fleisch & Fisch',
+    'Backwaren': 'Backwaren',
+    'Tiefkühl': 'Tiefkühl',
+    'Süßigkeiten': 'Süßigkeiten',
+    'Haushalt': 'Haushalt',
+    'Snacks': 'Snacks',
+    'Konserven': 'Konserven',
+    'Drogerie': 'Drogerie',
+    'Tierbedarf': 'Tierbedarf',
+    'Sonstiges': 'Sonstiges',
+  },
+
+  units: {
+    Einheit: 'Einheit',
+    g: 'g',
+    dag: 'dag',
+    kg: 'kg',
+    mL: 'mL',
+    L: 'L',
+    Flasche: 'Flasche',
+    Kiste: 'Kiste',
+    Dose: 'Dose',
+    Packung: 'Packung',
+  },
 };

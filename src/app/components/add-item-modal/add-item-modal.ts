@@ -1,7 +1,7 @@
 import { Component, inject, signal, input, OnInit, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, X, Plus, Minus, Star } from 'lucide-angular';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ModalService } from '../../services/modal.service';
 import { ShoppingItemRow, ShoppingListDataService, Unit } from '../../services/shopping-list-data.service';
 import { Category } from '../../types';
@@ -36,6 +36,7 @@ export interface AddItemResult {
 })
 export class AddItemModal implements OnInit {
   private readonly modalService = inject(ModalService);
+  private readonly transloco = inject(TranslocoService);
 
   private readonly shoppingListDataService = inject(ShoppingListDataService);
   private readonly shoppingListService = inject(ShoppingListService);
@@ -168,7 +169,7 @@ export class AddItemModal implements OnInit {
 
   getFavouriteDetails(fav: FavouriteItem): string {
     const sizeStr = fav.size ? `${fav.size} ` : '';
-    const unitStr = fav.unit !== 'Einheit' ? fav.unit : '';
+    const unitStr = fav.unit !== 'Einheit' ? this.transloco.translate(`units.${fav.unit}`) : '';
     return `${sizeStr}${unitStr}`;
   }
 

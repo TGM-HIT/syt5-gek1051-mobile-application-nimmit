@@ -47,11 +47,11 @@
             <h3 class="item-name">{{ item.name }}</h3>
             <div class="item-meta">
               @if (item.size && item.unit !== 'Einheit') {
-                <span class="size-badge">{{ item.size }} {{ item.unit }}</span>
+                <span class="size-badge">{{ item.size }} {{ ('units.' + item.unit) | transloco }}</span>
               } @else if (item.size) {
                 <span class="size-badge">{{ item.size }}</span>
               } @else if (item.unit !== 'Einheit') {
-                <span class="size-badge">{{ item.unit }}</span>
+                <span class="size-badge">{{ ('units.' + item.unit) | transloco }}</span>
               }
             </div>
           </div>

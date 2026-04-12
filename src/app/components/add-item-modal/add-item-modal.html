@@ -62,7 +62,7 @@
       <select id="category" class="form-select" [ngModel]="category()" (ngModelChange)="category.set($event)"
         name="category">
         @for (cat of categories(); track cat.id) {
-        <option [value]="cat.name">{{ cat.name }}</option>
+        <option [value]="cat.name">{{ ('categories.' + cat.name) | transloco }}</option>
         }
       </select>
     </div>
@@ -89,7 +89,7 @@
           (ngModelChange)="size.set($event)" name="size" min="0" />
         <select class="form-select unit-select" [ngModel]="unit()" (ngModelChange)="unit.set($event)" name="unit">
           @for (u of units; track u) {
-          <option [value]="u">{{ u }}</option>
+          <option [value]="u">{{ ('units.' + u) | transloco }}</option>
           }
         </select>
       </div>

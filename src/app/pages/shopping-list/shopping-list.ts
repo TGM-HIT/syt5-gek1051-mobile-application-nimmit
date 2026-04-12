@@ -227,7 +227,7 @@ export class ShoppingList implements OnInit, OnDestroy {
 
   getFavouriteDetails(fav: FavouriteItem): string {
     const sizeStr = fav.size ? `${fav.size} ` : '';
-    const unitStr = fav.unit !== 'Einheit' ? fav.unit : '';
+    const unitStr = fav.unit !== 'Einheit' ? this.transloco.translate(`units.${fav.unit}`) : '';
     return `${sizeStr}${unitStr}`;
   }
 

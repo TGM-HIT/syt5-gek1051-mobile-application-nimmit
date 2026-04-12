@@ -42,7 +42,17 @@ Object.defineProperty(globalThis, 'localStorage', {value: {getItem: ()=>null, se
         }),
         { provide: ModalService, useValue: mockModalService },
         { provide: ShoppingListService, useValue: mockShoppingListService },
-        { provide: ShoppingListDataService, useValue: { getFavourites: () => [], getCategories: async () => ['Getränke', 'Obst & Gemüse', 'Sonstiges'] } },
+        {
+          provide: ShoppingListDataService,
+          useValue: {
+            getFavourites: () => [],
+            getCategories: async () => [
+              { id: 1n, name: 'Getränke', created_at: new Date().toISOString() },
+              { id: 2n, name: 'Obst & Gemüse', created_at: new Date().toISOString() },
+              { id: 9n, name: 'Sonstiges', created_at: new Date().toISOString() },
+            ],
+          },
+        },
         { provide: PowerSyncService, useValue: { status$: { subscribe: () => { /*mock*/ } } } }
       ]
     }).compileComponents();
@@ -87,9 +97,10 @@ Object.defineProperty(globalThis, 'localStorage', {value: {getItem: ()=>null, se
 
     it('should have predefined categories', () => {
       expect(component.categories().length).toBeGreaterThan(0);
-      expect(component.categories()).toContain('Getränke');
-      expect(component.categories()).toContain('Obst & Gemüse');
-      expect(component.categories()).toContain('Sonstiges');
+      const categoryNames = component.categories().map((category) => category.name);
+      expect(categoryNames).toContain('Getränke');
+      expect(categoryNames).toContain('Obst & Gemüse');
+      expect(categoryNames).toContain('Sonstiges');
     });
 
     it('should have predefined units', () => {

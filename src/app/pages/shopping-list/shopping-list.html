@@ -83,7 +83,7 @@
       <button class="category-tab" [class.active]="isCategorySelected(category)"
         [class.disabled]="!isCategoryInList(category)" [disabled]="!isCategoryInList(category)"
         (click)="toggleCategory(category)">
-        {{ category }}
+        {{ ('categories.' + category) | transloco }}
       </button>
       }
     </div>
@@ -138,9 +138,9 @@
             <div class="item-info">
               <h3 class="item-name">{{ item.name }}</h3>
               <div class="item-meta">
-                <span class="category-badge">{{ item.category }}</span>
+                <span class="category-badge">{{ ('categories.' + item.category) | transloco }}</span>
                 @if (item.size && item.unit) {
-                <span class="size-badge">{{ item.size }} {{ item.unit }}</span>
+                <span class="size-badge">{{ item.size }} {{ ('units.' + item.unit) | transloco }}</span>
                 }
                 <span class="item-status">{{ getStatusText(item) }}</span>
               </div>
@@ -249,9 +249,9 @@
             <div class="item-info">
               <h3 class="item-name">{{ item.name }}</h3>
               <div class="item-meta">
-                <span class="category-badge">{{ item.category }}</span>
+                <span class="category-badge">{{ ('categories.' + item.category) | transloco }}</span>
                 @if (item.size && item.unit) {
-                <span class="size-badge">{{ item.size }} {{ item.unit }}</span>
+                <span class="size-badge">{{ item.size }} {{ ('units.' + item.unit) | transloco }}</span>
                 }
                 <span class="item-status">{{ getStatusText(item) }}</span>
               </div>
