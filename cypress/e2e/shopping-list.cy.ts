@@ -14,7 +14,8 @@ describe('Shopping List', () => {
     // Click the visible navigation add button (bottom bar on mobile, sidebar on desktop)
     cy.get('app-navigation .nav-item.add-button:visible').click();
     cy.get('.modal-content').should('be.visible');
-    cy.get('.modal-title').should('contain.text', 'Produkt hinzufügen');
+    // Don't assert translated title text (CI locale can differ)
+    cy.get('#name').should('be.visible');
     cy.get('.close-btn').click();
     cy.get('.modal-content').should('not.exist');
   });
@@ -88,8 +89,10 @@ describe('Shopping List', () => {
 
   it('should switch to purchased tab', () => {
     // Basic navigation testing for the filter tabs
-    cy.get('.filter-tab').contains('Eingekauft').click();
-    cy.get('.filter-tab').contains('Eingekauft').should('have.class', 'active');
+    cy.get('.filter-tab').should('have.length.at.least', 3);
+    // Index 2 is the "purchased" tab (all, notPurchased, purchased)
+    cy.get('.filter-tab').eq(2).click();
+    cy.get('.filter-tab').eq(2).should('have.class', 'active');
   });
 
   it('should filter items by search query', () => {
@@ -222,9 +225,7 @@ describe('Shopping List', () => {
       cy.wrap($card).find('.action-btn.edit').should('be.visible').click();
     });
     cy.get('.modal-content').should('be.visible');
-
     // Verify modal is in edit mode
-    cy.get('.modal-title').should('contain.text', 'Produkt bearbeiten');
     cy.get('#name').should('have.value', itemName);
 
     // Change name and submit

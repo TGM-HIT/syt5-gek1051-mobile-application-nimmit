@@ -5,10 +5,12 @@ describe('Authentication', () => {
   });
 
   it('should display login page', () => {
-    cy.get('h1').contains('Anmelden');
+    // Don't assert translated strings here (CI locale can differ).
+    cy.location('pathname').should('include', '/login');
+    cy.get('section.login-card').should('be.visible');
     cy.get('input#email').should('be.visible');
     cy.get('input#password').should('be.visible');
-    cy.get('button[type="submit"]').contains('Anmelden');
+    cy.get('button[type="submit"]').should('be.visible');
   });
 
   it('should show validation errors on empty submit', () => {
@@ -25,9 +27,10 @@ describe('Authentication', () => {
   });
 
   it('should navigate to register page', () => {
-    cy.contains('Hier registrieren').click();
-    cy.url().should('include', '/register');
-    cy.get('h1').contains('Konto erstellen');
+    cy.get('button[type="button"].login-btn').click();
+    cy.location('pathname').should('include', '/register');
+    cy.get('section.register-card').should('be.visible');
+    cy.get('input#username').should('be.visible');
   });
 
   // Note: Actual login to Supabase could be simulated if we had test credentials
