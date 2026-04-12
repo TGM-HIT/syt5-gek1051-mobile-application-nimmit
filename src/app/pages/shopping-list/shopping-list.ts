@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-item-modal/add-item-modal';
 import { EditListModal, EditListData, EditListResult } from '../../components/edit-list-modal/edit-list-modal';
 import { InviteUserModal, InviteUserData, InviteUserResult } from '../../components/invite-user-modal/invite-user-modal';
+import { WarningModal, WarningModalData } from '../../components/warning-modal/warning-modal';
 import { ModalService } from '../../services/modal.service';
 import { ShoppingListDataService, ShoppingItemRow } from '../../services/shopping-list-data.service';
 import { SupabaseConnector } from '../../services/supabase-connector';
@@ -560,9 +561,24 @@ export class ShoppingList implements OnInit, OnDestroy {
   }
 
   // Item löschen
-  deleteItem(item: ShoppingItemRow): void {
-    void this.shoppingListData.deleteListItem(item.id);
+  async deleteItem(item: ShoppingItemRow): Promise<void> {
     this.expandedItemId.set(null);
+
+    const confirmed = await this.modalService.open<WarningModalData, boolean>({
+      component: WarningModal,
+      data: {
+        title: 'Produkt löschen?',
+        message: `Möchtest du „${item.name}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
+        confirmText: 'Löschen',
+        cancelText: 'Abbrechen',
+      }
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    await this.shoppingListData.deleteListItem(item.id);
   }
 
   // Prüfen ob Item gekauft ist
@@ -580,7 +596,12 @@ export class ShoppingList implements OnInit, OnDestroy {
 
   // Listennamen und Beschreibung bearbeiten
   async editListInfo(): Promise<void> {
-    const aloneInList = await this.supabase.getUserCountForList(this.listId() ?? BigInt(-1)) === 1;
+    const listId = this.listId();
+    if (listId === null) {
+      return;
+    }
+
+    const aloneInList = await this.supabase.getUserCountForList(listId) === 1;
 
     const result = await this.modalService.open<EditListData, EditListResult>({
       component: EditListModal,
@@ -591,17 +612,47 @@ export class ShoppingList implements OnInit, OnDestroy {
       }
     });
 
-    const listId = this.listId();
-    if (result?.action === 'save' && listId !== null && result.name !== undefined && result.description !== undefined) {
+    if (result?.action === 'save' && result.name !== undefined && result.description !== undefined) {
       await this.shoppingListData.updateListInfo(listId, result.name, result.description);
       return;
     }
 
-    if (result?.action === 'delete' && listId !== null) {
+    if (result?.action === 'delete' || result?.action === 'leave') {
+      const warningConfig: WarningModalData =
+        result.action === 'delete'
+          ? {
+              title: 'Liste löschen?',
+              message: `Möchtest du die Liste „${this.listName()}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
+              confirmText: 'Löschen',
+              cancelText: 'Abbrechen',
+            }
+          : {
+              title: 'Liste verlassen?',
+              message: `Möchtest du die Liste „${this.listName()}“ wirklich verlassen?`,
+              confirmText: 'Verlassen',
+              cancelText: 'Abbrechen',
+            };
+
+      const confirmed = await this.modalService.open<WarningModalData, boolean>({
+        component: WarningModal,
+        data: warningConfig,
+      });
+
+      if (!confirmed) {
+        return;
+      }
+
       this.deleted = true;
       await this.router.navigate(['/lists']);
-      console.warn("List deleted", listId);
-      await this.shoppingListData.deleteList(listId);
+
+      if (result.action === 'delete') {
+        console.warn('List deleted', listId);
+        await this.shoppingListData.deleteList(listId);
+        return;
+      }
+
+      console.warn('Left list', listId);
+      await this.shoppingListData.leaveList(listId);
     }
   }
 

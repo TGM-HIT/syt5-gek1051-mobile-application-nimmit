@@ -137,24 +137,28 @@ describe('EditListModal', () => {
   });
 
   describe('deleteList()', () => {
-    it('should close modal with delete action when confirmed', () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    it('should close modal with delete action when user is alone in list', () => {
+      (component as any).data = () => ({
+        name: 'Meine Liste',
+        description: 'Beschreibung',
+        aloneInList: true,
+      } as EditListData);
 
       component.deleteList();
 
-      expect(confirmSpy).toHaveBeenCalled();
       expect(mockModalService.close).toHaveBeenCalledWith({ action: 'delete' });
-      confirmSpy.mockRestore();
     });
 
-    it('should not close modal when delete is canceled', () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    it('should close modal with leave action when user is not alone in list', () => {
+      (component as any).data = () => ({
+        name: 'Meine Liste',
+        description: 'Beschreibung',
+        aloneInList: false,
+      } as EditListData);
 
       component.deleteList();
 
-      expect(confirmSpy).toHaveBeenCalled();
-      expect(mockModalService.close).not.toHaveBeenCalledWith({ action: 'delete' });
-      confirmSpy.mockRestore();
+      expect(mockModalService.close).toHaveBeenCalledWith({ action: 'leave' });
     });
   });
 

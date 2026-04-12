@@ -10,7 +10,7 @@ export interface EditListData {
 }
 
 export interface EditListResult {
-  action: 'save' | 'delete';
+  action: 'save' | 'delete' | 'leave';
   name?: string;
   description?: string;
 }
@@ -61,10 +61,7 @@ export class EditListModal implements OnInit {
   }
 
   deleteList(): void {
-    const confirmed = window.confirm(`Are you sure you want to ${this.getAloneInList() ? "delete" : "leave"} this list? This action cannot be undone.`);
-    if (!confirmed) {
-      return;
-    }
-    this.modalService.close({ action: 'delete' });
+    this.modalService.close({ action: this.getAloneInList() ? 'delete' : 'leave' });
   }
 }
+

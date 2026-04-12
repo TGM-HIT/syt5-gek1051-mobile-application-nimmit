@@ -19,6 +19,7 @@ export class ModalService {
   private readonly _isOpen = signal(false);
   private readonly _config = signal<ModalConfig | null>(null);
   private _resolvePromise: ((value: unknown) => void) | null = null;
+  private _cleanupTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Public readonly signals
   readonly isOpen = this._isOpen.asReadonly();
@@ -30,6 +31,8 @@ export class ModalService {
    * @returns Promise das resolved wenn das Modal geschlossen wird
    */
   open<T, R = unknown>(config: ModalConfig<T>): Promise<R | undefined> {
+    this.clearCleanupTimer();
+
     const fullConfig: ModalConfig<T> = {
       closeOnBackdropClick: true,
       closeOnEscape: true,
@@ -88,9 +91,23 @@ export class ModalService {
 
   private _cleanup(): void {
     this._isOpen.set(false);
-    // Kurze Verzögerung für Animation
-    setTimeout(() => {
-      this._config.set(null);
+    // Kurze Verzögerung für Animation (aber sicher für direktes Re-Open)
+    this.clearCleanupTimer();
+    this._cleanupTimer = setTimeout(() => {
+      if (!this._isOpen()) {
+        this._config.set(null);
+      }
+      this._cleanupTimer = null;
     }, 200);
   }
+
+  private clearCleanupTimer(): void {
+    if (this._cleanupTimer === null) {
+      return;
+    }
+
+    clearTimeout(this._cleanupTimer);
+    this._cleanupTimer = null;
+  }
 }
+

@@ -1,0 +1,15 @@
+<div class="modal-content">
+  <div class="modal-header">
+    <h2 class="modal-title">{{ title() }}</h2>
+    <button type="button" class="close-btn" (click)="cancel()" aria-label="Schließen">
+      <lucide-icon [img]="icons.X" [size]="24" [strokeWidth]="2"></lucide-icon>
+    </button>
+  </div>
+
+  <p class="modal-message">{{ message() }}</p>
+
+  <div class="actions">
+    <button type="button" class="cancel-btn" (click)="cancel()">{{ cancelText() }}</button>
+    <button type="button" class="confirm-btn" (click)="confirm()">{{ confirmText() }}</button>
+  </div>
+</div>
