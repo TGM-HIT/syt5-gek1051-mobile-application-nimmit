@@ -148,6 +148,21 @@ describe('Shopping List', () => {
     cy.get('.search-input').clear();
   });
 
+  it('should add item from search when not found via Enter', () => {
+    const itemName = 'Birne Spezial ' + Date.now();
+
+    cy.get('.search-input').type(itemName);
+    cy.get('.no-results').should('be.visible');
+    cy.get('.search-input').type('{enter}');
+
+    cy.get('.modal-content').should('be.visible');
+    cy.get('#name').should('have.value', itemName);
+    cy.get('#category').select(1, { force: true });
+    cy.get('.submit-btn').click();
+    cy.get('.modal-content').should('not.exist');
+    cy.get('.item-name').contains(itemName).should('be.visible');
+  });
+
   it('should prevent submitting if name is empty', () => {
     cy.get('.add-item-btn').first().click();
     cy.get('.modal-content').should('be.visible');

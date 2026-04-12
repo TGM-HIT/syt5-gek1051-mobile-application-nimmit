@@ -181,6 +181,24 @@ export class ShoppingList implements OnInit, OnDestroy {
     this.showAutocomplete.set(true);
   }
 
+  onSearchEnter(event: Event): void {
+    if (!(event instanceof KeyboardEvent)) {
+      return;
+    }
+
+    if (event.repeat) {
+      return;
+    }
+
+    if (!this.hasNoResults()) {
+      return;
+    }
+
+    event.preventDefault();
+    this.showAutocomplete.set(false);
+    void this.addNewItem(this.searchQuery());
+  }
+
   hideAutocomplete(): void {
     this.showAutocomplete.set(false);
   }

@@ -37,6 +37,7 @@
       <lucide-icon class="search-icon" [img]="icons.Search" [size]="20" [strokeWidth]="2"></lucide-icon>
       <input type="text" class="search-input" placeholder="Finde ein Produkt..." [ngModel]="searchQuery()"
         (ngModelChange)="onSearchQueryChange($event)" (focus)="showAutocomplete.set(true)" (blur)="hideAutocomplete()"
+        (keydown.enter)="onSearchEnter($event)"
         autocomplete="off" />
 
       @if (shouldShowAutocomplete()) {
