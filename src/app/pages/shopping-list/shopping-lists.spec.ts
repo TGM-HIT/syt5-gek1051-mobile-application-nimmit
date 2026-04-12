@@ -4,6 +4,8 @@ import { ShoppingLists } from './shopping-lists';
 import { SupabaseConnector } from '../../services/supabase-connector';
 import { PowerSyncService } from '../../services/powersync';
 import { of } from 'rxjs';
+import { provideTransloco, translocoConfig } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../../transloco/transloco-loader';
 
 describe('ShoppingLists', () => {
   let component: ShoppingLists;
@@ -29,6 +31,15 @@ describe('ShoppingLists', () => {
       imports: [ShoppingLists],
       providers: [
         provideRouter([]),
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
         { provide: SupabaseConnector, useValue: { session$: of(null), profile$: of(null) } },
         { provide: PowerSyncService, useValue: { status$: of(null), ready$: of(false) } }
       ]

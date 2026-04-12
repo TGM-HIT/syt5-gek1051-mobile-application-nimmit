@@ -206,6 +206,10 @@ export class ShoppingListDataService {
     await this.execute(`DELETE FROM "Lists" WHERE id = ?`, [String(listId)]);
   }
 
+  async leaveList(listId: bigint): Promise<void> {
+    await this.execute(`DELETE FROM "UserLists" WHERE user = ? AND list = ?`, [USER_ID_PLACEHOLDER, String(listId)]);
+  }
+
   async setPurchasedQuantity(listItemId: string, quantity: number): Promise<void> {
     await this.execute(
       `

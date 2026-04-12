@@ -2,8 +2,8 @@
   <!-- Header -->
   <header class="list-header">
     <div class="list-header-content">
-      <h1 class="list-title">Favoriten</h1>
-      <p class="list-description">Deine gespeicherten Produkte</p>
+      <h1 class="list-title">{{ 'favourites.title' | transloco }}</h1>
+      <p class="list-description">{{ 'favourites.subtitle' | transloco }}</p>
     </div>
   </header>
 
@@ -11,17 +11,37 @@
   <div class="search-container">
     <div class="search-input-wrapper">
       <lucide-icon class="search-icon" [img]="icons.Search" [size]="20" [strokeWidth]="2"></lucide-icon>
-      <input type="text" class="search-input" placeholder="Finde einen Favoriten..." [ngModel]="searchQuery()"
+      <input type="text" class="search-input" [attr.placeholder]="'favourites.searchPlaceholder' | transloco" [ngModel]="searchQuery()"
         (ngModelChange)="onSearchQueryChange($event)" autocomplete="off" />
     </div>
   </div>
 
   <!-- Items Liste -->
   <div class="items-container">
+    @if (!favouritesLoaded()) {
+    <div class="items-skeleton" aria-busy="true" role="status">
+      @for (i of [0, 1, 2, 3, 4]; track i) {
+      <div class="item-card skeleton" aria-hidden="true">
+        <div class="item-header">
+          <div class="category-icon-wrapper skeleton-circle"></div>
+          <div class="item-info">
+            <div class="skeleton-line skeleton-line--title"></div>
+            <div class="skeleton-line skeleton-line--meta"></div>
+          </div>
+          <div class="action-buttons" aria-hidden="true">
+            <div class="skeleton-btn"></div>
+            <div class="skeleton-btn"></div>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    } @else {
+
     <!-- Keine Ergebnisse gefunden -->
     @if (hasNoResults()) {
     <div class="no-results">
-      <p>Kein Favorit gefunden</p>
+      <p>{{ 'favourites.noResults' | transloco }}</p>
     </div>
     }
 
@@ -47,19 +67,19 @@
             <h3 class="item-name">{{ item.name }}</h3>
             <div class="item-meta">
               @if (item.size && item.unit !== 'Einheit') {
-                <span class="size-badge">{{ item.size }} {{ item.unit }}</span>
+                <span class="size-badge">{{ item.size }} {{ ('units.' + item.unit) | transloco }}</span>
               } @else if (item.size) {
                 <span class="size-badge">{{ item.size }}</span>
               } @else if (item.unit !== 'Einheit') {
-                <span class="size-badge">{{ item.unit }}</span>
+                <span class="size-badge">{{ ('units.' + item.unit) | transloco }}</span>
               }
             </div>
           </div>
           <div class="action-buttons">
-            <button class="icon-btn edit-btn" (click)="editFavourite(item)">
+            <button class="icon-btn edit-btn" (click)="editFavourite(item)" [attr.aria-label]="'common.edit' | transloco" [attr.title]="'common.edit' | transloco">
               <lucide-icon [img]="icons.Pencil" [size]="20" [strokeWidth]="2"></lucide-icon>
             </button>
-            <button class="icon-btn delete-btn" (click)="deleteFavourite(item)">
+            <button class="icon-btn delete-btn" (click)="deleteFavourite(item)" [attr.aria-label]="'common.delete' | transloco" [attr.title]="'common.delete' | transloco">
               <lucide-icon [img]="icons.Trash2" [size]="20" [strokeWidth]="2"></lucide-icon>
             </button>
           </div>
@@ -70,9 +90,11 @@
     
     @if (favourites().length === 0 && !hasNoResults()) {
       <div class="no-results">
-        <p>Du hast noch keine Favoriten gespeichert.</p>
-        <p>Tipp: In der Einkaufsliste kannst du Produkte mit dem Stern als Favoriten markieren.</p>
+        <p>{{ 'favourites.emptyTitle' | transloco }}</p>
+        <p>{{ 'favourites.emptyHint' | transloco }}</p>
       </div>
+    }
+
     }
   </div>
 </div>

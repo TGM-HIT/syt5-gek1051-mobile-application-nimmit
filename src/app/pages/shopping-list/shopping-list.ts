@@ -2,10 +2,12 @@ import { Component, OnDestroy, OnInit, computed, signal, inject, ChangeDetectorR
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LucideAngularModule, Search, ChevronDown, Trash2, Pencil, Check, Undo2, Plus, Minus, UserPlus, Star, Coffee, Apple, Milk, Drumstick, Croissant, Snowflake, Candy, Brush, Package  } from 'lucide-angular';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-item-modal/add-item-modal';
 import { EditListModal, EditListData, EditListResult } from '../../components/edit-list-modal/edit-list-modal';
 import { InviteUserModal, InviteUserData, InviteUserResult } from '../../components/invite-user-modal/invite-user-modal';
 import { ModalService } from '../../services/modal.service';
+import { ConfirmModalService } from '../../services/confirm-modal.service';
 import { ShoppingListDataService, ShoppingItemRow } from '../../services/shopping-list-data.service';
 import { SupabaseConnector } from '../../services/supabase-connector';
 import { FilterType } from '../../types';
@@ -15,7 +17,7 @@ import { ShoppingListService } from '../../services/shopping-list.service';
 
 @Component({
   selector: 'app-shopping-list',
-  imports: [FormsModule, LucideAngularModule, ReactiveFormsModule],
+  imports: [FormsModule, LucideAngularModule, ReactiveFormsModule, TranslocoModule],
   templateUrl: './shopping-list.html',
   styleUrl: './shopping-list.scss',
 })
@@ -26,15 +28,36 @@ export class ShoppingList implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly modalService = inject(ModalService);
+  private readonly confirmModal = inject(ConfirmModalService);
   private readonly powerSync = inject(PowerSyncService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly transloco = inject(TranslocoService);
   private readonly items = signal<ShoppingItemRow[]>([]);
-  readonly listName = signal('Meine Einkaufsliste');
-  readonly listDescription = signal('Tippe auf +, um Produkte hinzuzufuegen');
+  readonly itemsLoaded = signal(false);
+  readonly listName = signal(this.transloco.translate('shoppingList.defaultListName'));
+  readonly listDescription = signal(this.transloco.translate('shoppingList.defaultListDescription'));
   private readonly listId = signal<bigint | null>(null);
   private isDisposed = false;
   private deleted = false;
+  private stopListInfoWatch: (() => void) | null = null;
+  private stopItemsWatch: (() => void) | null = null;
   readonly isOnline = signal<boolean>(navigator.onLine);
+
+  private readonly desktopMql = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(min-width: 768px)')
+    : null;
+  readonly isDesktop = signal<boolean>(this.desktopMql?.matches ?? false);
+
+  private readonly handleDesktopMediaQueryChange = (event: MediaQueryListEvent): void => {
+    if (this.isDisposed) {
+      return;
+    }
+    this.isDesktop.set(event.matches);
+    if (event.matches) {
+      this.expandedItemId.set(null);
+    }
+    this.cdr.detectChanges();
+  };
   private readonly handleOnlineStatusChange = () => {
     if (this.isDisposed) {
       return;
@@ -181,13 +204,31 @@ export class ShoppingList implements OnInit, OnDestroy {
     this.showAutocomplete.set(true);
   }
 
+  onSearchEnter(event: Event): void {
+    if (!(event instanceof KeyboardEvent)) {
+      return;
+    }
+
+    if (event.repeat) {
+      return;
+    }
+
+    if (!this.hasNoResults()) {
+      return;
+    }
+
+    event.preventDefault();
+    this.showAutocomplete.set(false);
+    void this.addNewItem(this.searchQuery());
+  }
+
   hideAutocomplete(): void {
     this.showAutocomplete.set(false);
   }
 
   getFavouriteDetails(fav: FavouriteItem): string {
     const sizeStr = fav.size ? `${fav.size} ` : '';
-    const unitStr = fav.unit !== 'Einheit' ? fav.unit : '';
+    const unitStr = fav.unit !== 'Einheit' ? this.transloco.translate(`units.${fav.unit}`) : '';
     return `${sizeStr}${unitStr}`;
   }
 
@@ -236,6 +277,15 @@ export class ShoppingList implements OnInit, OnDestroy {
     window.addEventListener('online', this.handleOnlineStatusChange);
     window.addEventListener('offline', this.handleOnlineStatusChange);
 
+    if (this.desktopMql) {
+      this.isDesktop.set(this.desktopMql.matches);
+      if (typeof this.desktopMql.addEventListener === 'function') {
+        this.desktopMql.addEventListener('change', this.handleDesktopMediaQueryChange);
+      } else if (typeof (this.desktopMql as unknown as { addListener?: (listener: (ev: MediaQueryListEvent) => void) => void }).addListener === 'function') {
+        (this.desktopMql as unknown as { addListener: (listener: (ev: MediaQueryListEvent) => void) => void }).addListener(this.handleDesktopMediaQueryChange);
+      }
+    }
+
     await this.resolveListId();
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     this.powerSync.ready$.subscribe(async initialized => {
@@ -248,8 +298,20 @@ export class ShoppingList implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.isDisposed = true;
+    this.stopListInfoWatch?.();
+    this.stopListInfoWatch = null;
+    this.stopItemsWatch?.();
+    this.stopItemsWatch = null;
     window.removeEventListener('online', this.handleOnlineStatusChange);
     window.removeEventListener('offline', this.handleOnlineStatusChange);
+
+    if (this.desktopMql) {
+      if (typeof this.desktopMql.removeEventListener === 'function') {
+        this.desktopMql.removeEventListener('change', this.handleDesktopMediaQueryChange);
+      } else if (typeof (this.desktopMql as unknown as { removeListener?: (listener: (ev: MediaQueryListEvent) => void) => void }).removeListener === 'function') {
+        (this.desktopMql as unknown as { removeListener: (listener: (ev: MediaQueryListEvent) => void) => void }).removeListener(this.handleDesktopMediaQueryChange);
+      }
+    }
   }
 
   private async resolveListId(): Promise<void> {
@@ -282,22 +344,26 @@ export class ShoppingList implements OnInit, OnDestroy {
     const sql = `
       SELECT id, name, description FROM "Lists" where id = ?`;
 
-    
-    this.powerSync.watchWithCallback(sql, (result) => {
+    this.stopListInfoWatch?.();
+    this.stopListInfoWatch = this.powerSync.watchWithCallback(sql, (result) => {
       if (this.isDisposed || this.deleted) {
         return;
       }
+
+      const defaultName = this.transloco.translate('shoppingList.defaultListName');
+      const defaultDescription = this.transloco.translate('shoppingList.defaultListDescription');
+
       const rows = this.toRows<{ id: bigint; name: string; description: string | null }>(result.rows);
       const list = rows[0];
       if (list) {
-        this.listName.set(list.name || 'Meine Einkaufsliste');
-        this.listDescription.set(list.description || 'Tippe auf +, um Produkte hinzuzufuegen');
+        this.listName.set(list.name || defaultName);
+        this.listDescription.set(list.description || defaultDescription);
         this.cdr.detectChanges();
         return;
       }
 
-      this.listName.set('Meine Einkaufsliste');
-      this.listDescription.set('Tippe auf +, um Produkte hinzuzufuegen');
+      this.listName.set(defaultName);
+      this.listDescription.set(defaultDescription);
       this.cdr.detectChanges();
     }, [String(listId)]);
   }
@@ -305,8 +371,11 @@ export class ShoppingList implements OnInit, OnDestroy {
   private watchItems(): void {
     const listId = this.listId();
 
+    this.itemsLoaded.set(false);
+
     if (!listId) {
       this.items.set([]);
+      this.itemsLoaded.set(true);
       return;
     }
 
@@ -327,12 +396,14 @@ export class ShoppingList implements OnInit, OnDestroy {
         LEFT JOIN "Category" c ON c.id = i.category
         WHERE li.liste = ? ORDER BY createdAt ASC`;
 
-    this.powerSync.watchWithCallback(sql, (result) => {
+    this.stopItemsWatch?.();
+    this.stopItemsWatch = this.powerSync.watchWithCallback(sql, (result) => {
       if (this.isDisposed || this.deleted) {
         return;
       }
       const rows = this.toRows<ShoppingItemRow>(result.rows);
       this.items.set(rows);
+      this.itemsLoaded.set(true);
       this.cdr.detectChanges();
     }, [String(this.listId())]);
   }
@@ -535,9 +606,21 @@ export class ShoppingList implements OnInit, OnDestroy {
   }
 
   // Item löschen
-  deleteItem(item: ShoppingItemRow): void {
-    void this.shoppingListData.deleteListItem(item.id);
+  async deleteItem(item: ShoppingItemRow): Promise<void> {
     this.expandedItemId.set(null);
+
+    const confirmed = await this.confirmModal.confirm({
+      title: this.transloco.translate('shoppingList.confirmDeleteItemTitle'),
+      message: this.transloco.translate('shoppingList.confirmDeleteItemMessage', { name: item.name }),
+      confirmText: this.transloco.translate('common.delete'),
+      cancelText: this.transloco.translate('common.cancel'),
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    await this.shoppingListData.deleteListItem(item.id);
   }
 
   // Prüfen ob Item gekauft ist
@@ -548,14 +631,21 @@ export class ShoppingList implements OnInit, OnDestroy {
   // Status Text generieren
   getStatusText(item: ShoppingItemRow): string {
     if (item.totalQuantity <= 1) {
-      return this.isPurchased(item) ? 'Eingekauft' : 'Offen';
+      return this.isPurchased(item)
+        ? this.transloco.translate('shoppingList.status.purchased')
+        : this.transloco.translate('shoppingList.status.open');
     }
     return `${item.purchasedQuantity}/${item.totalQuantity}`;
   }
 
   // Listennamen und Beschreibung bearbeiten
   async editListInfo(): Promise<void> {
-    const aloneInList = await this.supabase.getUserCountForList(this.listId() ?? BigInt(-1)) === 1;
+    const listId = this.listId();
+    if (listId === null) {
+      return;
+    }
+
+    const aloneInList = await this.supabase.getUserCountForList(listId) === 1;
 
     const result = await this.modalService.open<EditListData, EditListResult>({
       component: EditListModal,
@@ -566,17 +656,43 @@ export class ShoppingList implements OnInit, OnDestroy {
       }
     });
 
-    const listId = this.listId();
-    if (result?.action === 'save' && listId !== null && result.name !== undefined && result.description !== undefined) {
+    if (result?.action === 'save' && result.name !== undefined && result.description !== undefined) {
       await this.shoppingListData.updateListInfo(listId, result.name, result.description);
       return;
     }
 
-    if (result?.action === 'delete' && listId !== null) {
+    if (result?.action === 'delete' || result?.action === 'leave') {
+      const confirmed = await this.confirmModal.confirm(
+        result.action === 'delete'
+          ? {
+              title: this.transloco.translate('shoppingList.confirmDeleteListTitle'),
+              message: this.transloco.translate('shoppingList.confirmDeleteListMessage', { name: this.listName() }),
+              confirmText: this.transloco.translate('common.delete'),
+              cancelText: this.transloco.translate('common.cancel'),
+            }
+          : {
+              title: this.transloco.translate('shoppingList.confirmLeaveListTitle'),
+              message: this.transloco.translate('shoppingList.confirmLeaveListMessage', { name: this.listName() }),
+              confirmText: this.transloco.translate('shoppingList.leave'),
+              cancelText: this.transloco.translate('common.cancel'),
+            }
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
       this.deleted = true;
       await this.router.navigate(['/lists']);
-      console.warn("List deleted", listId);
-      await this.shoppingListData.deleteList(listId);
+
+      if (result.action === 'delete') {
+        console.warn('List deleted', listId);
+        await this.shoppingListData.deleteList(listId);
+        return;
+      }
+
+      console.warn('Left list', listId);
+      await this.shoppingListData.leaveList(listId);
     }
   }
 

@@ -2,18 +2,18 @@
 	<header class="lists-header">
 		<div class="lists-header-content">
 			<div class="lists-title-row">
-				<h1 class="lists-title">Meine Einkaufslisten</h1>
+				<h1 class="lists-title">{{ 'shoppingLists.title' | transloco }}</h1>
 				<span
 					class="connection-badge"
 					[class.online]="isOnline()"
 					[class.offline]="!isOnline()"
-					aria-label="Verbindungsstatus"
+					[attr.aria-label]="'shoppingLists.statusAria' | transloco"
 				>
 					<span class="status-icon" aria-hidden="true"></span>
-					<span class="status-text">{{ isOnline() ? 'online' : 'offline' }}</span>
+					<span class="status-text">{{ isOnline() ? ('common.online' | transloco) : ('common.offline' | transloco) }}</span>
 				</span>
 			</div>
-			<p class="lists-subtitle">Alle verfuegbaren Listen an einem Ort.</p>
+			<p class="lists-subtitle">{{ 'shoppingLists.subtitle' | transloco }}</p>
 		</div>
 		<div class="lists-header-icon" aria-hidden="true">
 			<lucide-icon [img]="icons.Layers" [size]="22" [strokeWidth]="2"></lucide-icon>
@@ -21,60 +21,100 @@
 	</header>
 
 	<form class="create-list-form" (submit)="$event.preventDefault(); createList(nameInput)">
-		<label class="sr-only" for="new-list-name">Neue Liste</label>
+		<label class="sr-only" for="new-list-name">{{ 'shoppingLists.newListLabel' | transloco }}</label>
 		<input
 			id="new-list-name"
 			#nameInput
 			type="text"
 			class="create-list-input"
-			placeholder="Neue Liste erstellen..."
+			[placeholder]="'shoppingLists.newListPlaceholder' | transloco"
 			maxlength="80"
 			[formControl]="control"
 		/>
 		<button type="submit" class="create-list-button">
 			<lucide-icon [img]="icons.Plus" [size]="18" [strokeWidth]="2.5"></lucide-icon>
-			<span>Hinzufügen</span>
+			<span>{{ 'shoppingLists.add' | transloco }}</span>
 		</button>
 	</form>
 	@if (control.invalid && control.touched) {
-		<small class="error">Bitte gib einen Namen an.</small>
+		<small class="error">{{ 'shoppingLists.nameRequired' | transloco }}</small>
 	}
 
-	@if ((this.powerSync.ready$ | async) && this.lists().length > 0) {
-		<div class="lists-grid">
-			@for (list of this.lists(); track list.id) {
-				<article class="list-card" (click)="openList(list)">
-					<div class="list-card-main">
-						<div class="list-icon" aria-hidden="true">
-							<lucide-icon [img]="icons.ListChecks" [size]="18" [strokeWidth]="2"></lucide-icon>
+	@if (this.powerSync.ready$ | async) {
+		@if (!this.listsLoaded()) {
+			<div class="lists-grid skeleton-grid" aria-busy="true" role="status">
+				<span class="sr-only">{{ 'shoppingLists.loadingTitle' | transloco }}</span>
+				@for (i of [0, 1, 2, 3]; track i) {
+					<article class="list-card skeleton" aria-hidden="true">
+						<div class="list-card-main">
+							<div class="list-icon skeleton-block"></div>
+							<div class="list-text">
+								<div class="skeleton-line skeleton-line--title"></div>
+								<div class="skeleton-line skeleton-line--small"></div>
+								<div class="skeleton-line skeleton-line--medium"></div>
+							</div>
 						</div>
+						<div class="list-card-action" aria-hidden="true">
+							<div class="skeleton-circle skeleton-circle--sm"></div>
+						</div>
+					</article>
+				}
+			</div>
+		} @else if (this.lists().length > 0) {
+			<div class="lists-grid">
+				@for (list of this.lists(); track list.id) {
+					<article class="list-card" (click)="openList(list)">
+						<div class="list-card-main">
+							<div class="list-icon" aria-hidden="true">
+								<lucide-icon [img]="icons.ListChecks" [size]="18" [strokeWidth]="2"></lucide-icon>
+							</div>
+							<div class="list-text">
+								<h2 class="list-name">{{ list.name }}</h2>
+								@if (list.other_users_count != null && list.other_users_count > 0) {
+									<p class="list-collaboration">{{ (list.other_users_count === 1 ? 'shoppingLists.otherUsersOne' : 'shoppingLists.otherUsersMany') | transloco : { count: list.other_users_count } }}</p>
+								} @else {
+									<p class="list-collaboration solo">{{ 'shoppingLists.solo' | transloco }}</p>
+								}
+								@if (list.description) {
+									<p class="list-description">{{ list.description }}</p>
+								} @else {
+									<p class="list-description placeholder">{{ 'shoppingLists.noDescription' | transloco }}</p>
+								}
+							</div>
+						</div>
+						<div class="list-card-action" aria-hidden="true">
+							<lucide-icon [img]="icons.ArrowRight" [size]="18" [strokeWidth]="2"></lucide-icon>
+						</div>
+					</article>
+				}
+			</div>
+		} @else {
+			<div class="empty-state">
+				<div class="empty-state-icon" aria-hidden="true">
+					<lucide-icon [img]="icons.ListChecks" [size]="30" [strokeWidth]="2"></lucide-icon>
+				</div>
+				<h2>{{ 'shoppingLists.emptyTitle' | transloco }}</h2>
+				<p>{{ 'shoppingLists.emptySubtitle' | transloco }}</p>
+			</div>
+		}
+	} @else {
+		<div class="lists-grid skeleton-grid" aria-busy="true" role="status">
+			<span class="sr-only">{{ 'shoppingLists.loadingTitle' | transloco }}</span>
+			@for (i of [0, 1, 2, 3]; track i) {
+				<article class="list-card skeleton" aria-hidden="true">
+					<div class="list-card-main">
+						<div class="list-icon skeleton-block"></div>
 						<div class="list-text">
-							<h2 class="list-name">{{ list.name }}</h2>
-							@if (list.other_users_count != null && list.other_users_count > 0) {
-								<p class="list-collaboration">{{list.other_users_count}} weitere {{ list.other_users_count === 1 ? 'Person' : 'Personen' }}</p>
-							} @else {
-								<p class="list-collaboration solo">Nur du in dieser Liste</p>
-							}
-							@if (list.description) {
-								<p class="list-description">{{ list.description }}</p>
-							} @else {
-								<p class="list-description placeholder">Keine Beschreibung vorhanden</p>
-							}
+							<div class="skeleton-line skeleton-line--title"></div>
+							<div class="skeleton-line skeleton-line--small"></div>
+							<div class="skeleton-line skeleton-line--medium"></div>
 						</div>
 					</div>
 					<div class="list-card-action" aria-hidden="true">
-						<lucide-icon [img]="icons.ArrowRight" [size]="18" [strokeWidth]="2"></lucide-icon>
+						<div class="skeleton-circle skeleton-circle--sm"></div>
 					</div>
 				</article>
 			}
-		</div>
-	} @else {
-		<div class="empty-state">
-			<div class="empty-state-icon" aria-hidden="true">
-				<lucide-icon [img]="icons.ListChecks" [size]="30" [strokeWidth]="2"></lucide-icon>
-			</div>
-			<h2>Noch keine Listen</h2>
-			<p>Erstelle deine erste Einkaufsliste ueber das Feld oben.</p>
 		</div>
 	}
 </section>

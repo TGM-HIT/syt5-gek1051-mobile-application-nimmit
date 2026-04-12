@@ -1,14 +1,16 @@
 import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-not-found',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslocoModule],
   templateUrl: './not-found.html',
   styleUrl: './not-found.scss',
 })
 export class NotFound {
   private readonly route = inject(ActivatedRoute);
+  private readonly transloco = inject(TranslocoService);
 
   readonly missingType = computed(() => {
     const key = this.route.snapshot.queryParamMap.keys[0];
@@ -35,7 +37,7 @@ export class NotFound {
     const cleaned = rawType.replace(/[_-]+/g, ' ').trim();
 
     if (!cleaned) {
-      return 'Eintrag';
+      return this.transloco.translate('notFound.defaultType');
     }
 
     return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);

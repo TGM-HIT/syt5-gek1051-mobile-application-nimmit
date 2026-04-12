@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { provideTransloco, translocoConfig, TranslocoService } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../../transloco/transloco-loader';
+import { firstValueFrom } from 'rxjs';
 
 import { Register } from './register';
 import { SupabaseConnector } from '../../services/supabase-connector';
@@ -17,9 +20,22 @@ describe('Register', () => {
       imports: [Register],
       providers: [
         provideRouter([]),
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
         { provide: SupabaseConnector, useValue: mockSupabaseConnector }
       ]
     }).compileComponents();
+
+    const transloco = TestBed.inject(TranslocoService);
+    transloco.setActiveLang('de');
+    await firstValueFrom(transloco.load('de'));
 
     fixture = TestBed.createComponent(Register);
     component = fixture.componentInstance;
@@ -161,7 +177,7 @@ describe('Register', () => {
 
       await component.onSubmit();
 
-      expect(component.submitError()).toBe('Die Passwoerter stimmen nicht ueberein.');
+      expect(component.submitError()).toBe('Die Passwörter stimmen nicht überein.');
     });
 
     it('should call register with email, username and password', async () => {

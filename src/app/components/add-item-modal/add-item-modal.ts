@@ -1,6 +1,7 @@
 import { Component, inject, signal, input, OnInit, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, X, Plus, Minus, Star } from 'lucide-angular';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ModalService } from '../../services/modal.service';
 import { ShoppingItemRow, ShoppingListDataService, Unit } from '../../services/shopping-list-data.service';
 import { Category } from '../../types';
@@ -29,12 +30,13 @@ export interface AddItemResult {
 
 @Component({
   selector: 'app-add-item-modal',
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, TranslocoModule],
   templateUrl: './add-item-modal.html',
   styleUrl: './add-item-modal.scss',
 })
 export class AddItemModal implements OnInit {
   private readonly modalService = inject(ModalService);
+  private readonly transloco = inject(TranslocoService);
 
   private readonly shoppingListDataService = inject(ShoppingListDataService);
   private readonly shoppingListService = inject(ShoppingListService);
@@ -81,8 +83,8 @@ export class AddItemModal implements OnInit {
   readonly isEditMode = signal(false);
   private editItemId: string | undefined;
 
-  readonly modalTitle = computed(() => this.isEditMode() ? 'Produkt bearbeiten' : 'Produkt hinzufügen');
-  readonly submitButtonText = computed(() => this.isEditMode() ? 'Speichern' : 'Hinzufügen');
+  readonly modalTitle = computed(() => this.isEditMode() ? 'modals.addItem.titleEdit' : 'modals.addItem.titleAdd');
+  readonly submitButtonText = computed(() => this.isEditMode() ? 'common.save' : 'common.add');
 
   // Predefined categories
   readonly categories = signal<Category[]>([{id: BigInt(9), name: 'Sonstiges', created_at: new Date().toISOString()}]);
@@ -167,7 +169,7 @@ export class AddItemModal implements OnInit {
 
   getFavouriteDetails(fav: FavouriteItem): string {
     const sizeStr = fav.size ? `${fav.size} ` : '';
-    const unitStr = fav.unit !== 'Einheit' ? fav.unit : '';
+    const unitStr = fav.unit !== 'Einheit' ? this.transloco.translate(`units.${fav.unit}`) : '';
     return `${sizeStr}${unitStr}`;
   }
 

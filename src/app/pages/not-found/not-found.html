@@ -1,26 +1,26 @@
 <section class="not-found-page">
 	<header class="not-found-header">
-		<h1>Seite nicht gefunden</h1>
-		<p>Die aufgerufene Ressource ist nicht verfuegbar.</p>
+		<h1>{{ 'notFound.title' | transloco }}</h1>
+		<p>{{ 'notFound.subtitle' | transloco }}</p>
 	</header>
 
 	<article class="not-found-card">
-		<h2>Nicht gefunden</h2>
+		<h2>{{ 'notFound.cardTitle' | transloco }}</h2>
 
 		@if (missingType()) {
 			<p class="not-found-message">
-				Die angegebene <strong>{{ missingType() }}</strong>
+				{{ 'notFound.missingMessagePrefix' | transloco }} <strong>{{ missingType() }}</strong>
 				@if (missingId()) {
-					<span> mit der id = <strong>{{ missingId() }}</strong></span>
+					<span>{{ 'notFound.missingWithId' | transloco : { id: missingId() } }}</span>
 				}
-				konnte nicht gefunden werden.
+				{{ 'notFound.missingMessageSuffix' | transloco }}
 			</p>
 		} @else {
-			<p class="not-found-message">Der angeforderte Inhalt konnte nicht gefunden werden.</p>
+			<p class="not-found-message">{{ 'notFound.genericMessage' | transloco }}</p>
 		}
 
 		<div class="actions">
-			<a class="action-btn secondary" routerLink="/lists">Zu meinen Listen</a>
+			<a class="action-btn secondary" routerLink="/lists">{{ 'notFound.toMyLists' | transloco }}</a>
 		</div>
 	</article>
 </section>

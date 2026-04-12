@@ -13,6 +13,8 @@
   z-index: 1000;
   opacity: 0;
   animation: fadeIn 0.2s ease forwards;
+  overscroll-behavior: none;
+  touch-action: none;
 
   @include screen-md {
     align-items: center;

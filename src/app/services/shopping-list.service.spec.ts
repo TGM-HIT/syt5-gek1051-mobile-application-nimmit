@@ -93,6 +93,19 @@ describe('ShoppingListDataService', () => {
     });
   });
 
+  describe('leaveList()', () => {
+    it('should delete only the current user relation from UserLists', async () => {
+      mockPowerSync.execute.mockResolvedValue({});
+
+      await service.leaveList(5n);
+
+      expect(mockPowerSync.execute).toHaveBeenCalledWith(
+        expect.stringContaining('DELETE FROM "UserLists" WHERE user = ? AND list = ?'),
+        [USER_ID_PLACEHOLDER, '5']
+      );
+    });
+  });
+
   describe('setPurchasedQuantity()', () => {
     it('should execute update on ListItem for curr_amount', async () => {
       mockPowerSync.execute.mockResolvedValue({});
