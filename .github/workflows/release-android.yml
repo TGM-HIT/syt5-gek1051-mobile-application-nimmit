@@ -20,9 +20,13 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm install
+
+      - name: Prepare PowerSync assets
+        run: npm run powersync:setup
 
       - name: Build Web App
         run: npm run build

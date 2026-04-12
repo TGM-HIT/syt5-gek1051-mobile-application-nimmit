@@ -1,0 +1,129 @@
+.page-container {
+  padding: 16px;
+  padding-bottom: 100px;
+}
+
+h1 {
+  color: var(--color-text);
+  margin-bottom: 24px;
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--color-surface);
+  border-radius: 12px;
+  //border: 1px solid var(--color-border);
+}
+
+.setting-item + .setting-item {
+  margin-top: 16px;
+}
+
+.setting-label {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.theme-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.theme-btn {
+  flex: 1; 
+  padding: 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--color-elevated);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-btn:hover {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.theme-btn.active {
+  background-color: #29b5f2;
+  border-color: #29b5f2;
+  color: white;
+}
+
+.dropdown-container {
+  position: relative;
+}
+
+.dropdown-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--color-elevated);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.dropdown-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+lucide-angular {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+lucide-angular.open {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  margin-top: 8px;
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--color-elevated);
+}
+
+.dropdown-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.dropdown-option:last-child {
+  border-bottom: 0;
+}
+
+.dropdown-option:hover {
+  background: var(--color-surface);
+}
+
+.check-icon {
+  color: #29b5f2;
+}
+
+.dropdown-empty {
+  padding: 12px;
+  color: var(--color-text-secondary);
+}

@@ -1,5 +1,27 @@
-<main class="app-content">
-  <router-outlet></router-outlet>
-</main>
-<app-navigation></app-navigation>
-<app-modal-container></app-modal-container>
+@if (isPowerSyncError()) {
+  <app-app-error></app-app-error>
+} @else if (!isPowerSyncReady()) {
+  <section class="startup-screen" aria-live="polite" role="status" [attr.data-mode]="isDarkMode() ? 'dark' : 'light'">
+    <div class="startup-glow" aria-hidden="true"></div>
+
+    <div class="startup-card">
+      <p class="startup-kicker">nimmit</p>
+    <h1 class="startup-title">{{ 'startup.syncingTitle' | transloco }}</h1>
+    <p class="startup-subtitle">{{ 'startup.syncingSubtitle' | transloco }}</p>
+
+      <div class="startup-spinner" aria-hidden="true"></div>
+
+      <div class="startup-dots" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </section>
+} @else {
+  <main class="app-content">
+    <router-outlet></router-outlet>
+  </main>
+  <app-navigation></app-navigation>
+  <app-modal-container></app-modal-container>
+}

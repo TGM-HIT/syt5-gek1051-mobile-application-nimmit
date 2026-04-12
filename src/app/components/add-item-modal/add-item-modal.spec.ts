@@ -1,23 +1,59 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AddItemModal, AddItemData, AddItemResult } from './add-item-modal';
 import { ModalService } from '../../services/modal.service';
+import { ShoppingListService } from '../../services/shopping-list.service';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { signal } from '@angular/core';
+import { ShoppingListDataService } from '../../services/shopping-list-data.service';
+import { PowerSyncService } from '../../services/powersync';
+import { provideTransloco, translocoConfig } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../../transloco/transloco-loader';
 
 describe('AddItemModal', () => {
   let component: AddItemModal;
   let fixture: ComponentFixture<AddItemModal>;
   let mockModalService: { dismiss: Mock, close: Mock };
+  let mockShoppingListService: { favourites: import('@angular/core').WritableSignal<any[]>, isCurrentFavourite: Mock, toggleFavourite: Mock };
 
   beforeEach(async () => {
+Object.defineProperty(globalThis, 'localStorage', {value: {getItem: ()=>null, setItem: ()=>{/*mock*/}, removeItem: ()=>null, clear: ()=>{/*mock*/}}});
     mockModalService = {
       dismiss: vi.fn(),
       close: vi.fn()
     };
 
+    mockShoppingListService = {
+      favourites: signal([]),
+      isCurrentFavourite: vi.fn().mockReturnValue(false),
+      toggleFavourite: vi.fn()
+    };
+
     await TestBed.configureTestingModule({
       imports: [AddItemModal],
       providers: [
-        { provide: ModalService, useValue: mockModalService }
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
+        { provide: ModalService, useValue: mockModalService },
+        { provide: ShoppingListService, useValue: mockShoppingListService },
+        {
+          provide: ShoppingListDataService,
+          useValue: {
+            getFavourites: () => [],
+            getCategories: async () => [
+              { id: 1n, name: 'Getränke', created_at: new Date().toISOString() },
+              { id: 2n, name: 'Obst & Gemüse', created_at: new Date().toISOString() },
+              { id: 9n, name: 'Sonstiges', created_at: new Date().toISOString() },
+            ],
+          },
+        },
+        { provide: PowerSyncService, useValue: { status$: { subscribe: () => { /*mock*/ } } } }
       ]
     }).compileComponents();
 
@@ -60,10 +96,11 @@ describe('AddItemModal', () => {
     });
 
     it('should have predefined categories', () => {
-      expect(component.categories.length).toBeGreaterThan(0);
-      expect(component.categories).toContain('Getränke');
-      expect(component.categories).toContain('Obst & Gemüse');
-      expect(component.categories).toContain('Sonstiges');
+      expect(component.categories().length).toBeGreaterThan(0);
+      const categoryNames = component.categories().map((category) => category.name);
+      expect(categoryNames).toContain('Getränke');
+      expect(categoryNames).toContain('Obst & Gemüse');
+      expect(categoryNames).toContain('Sonstiges');
     });
 
     it('should have predefined units', () => {
@@ -75,13 +112,13 @@ describe('AddItemModal', () => {
   });
 
   describe('edit mode', () => {
-    it('should populate form from editItem data', () => {
+    it('should populate form from editItem data', async () => {
       // Create new fixture with edit data
       const editFixture = TestBed.createComponent(AddItemModal);
       const editComponent = editFixture.componentInstance;
-      
+
       // Manually set the input and call ngOnInit
-      (editComponent as any).data = () => ({
+      editFixture.componentRef.setInput('data', {
         editItem: {
           id: 'test-id',
           name: 'Milch',
@@ -95,10 +132,11 @@ describe('AddItemModal', () => {
           size: 500
         }
       } as AddItemData);
-      
-      editComponent.ngOnInit();
+
+      await editComponent.ngOnInit();
       editFixture.detectChanges();
 
+      editFixture.detectChanges();
       expect(editComponent.isEditMode()).toBe(true);
       expect(editComponent.name()).toBe('Milch');
       expect(editComponent.category()).toBe('Milchprodukte');
@@ -112,9 +150,9 @@ describe('AddItemModal', () => {
   describe('incrementQuantity()', () => {
     it('should increase quantity by 1', () => {
       expect(component.quantity()).toBe(1);
-      
+
       component.incrementQuantity();
-      
+
       expect(component.quantity()).toBe(2);
     });
 
@@ -122,7 +160,7 @@ describe('AddItemModal', () => {
       component.incrementQuantity();
       component.incrementQuantity();
       component.incrementQuantity();
-      
+
       expect(component.quantity()).toBe(4);
     });
   });
@@ -130,29 +168,29 @@ describe('AddItemModal', () => {
   describe('decrementQuantity()', () => {
     it('should decrease quantity by 1', () => {
       component.incrementQuantity(); // Now 2
-      
+
       component.decrementQuantity();
-      
+
       expect(component.quantity()).toBe(1);
     });
 
     it('should not go below 1', () => {
       expect(component.quantity()).toBe(1);
-      
+
       component.decrementQuantity();
-      
+
       expect(component.quantity()).toBe(1);
     });
 
     it('should stop at 1 when decrementing multiple times', () => {
       component.incrementQuantity(); // 2
       component.incrementQuantity(); // 3
-      
+
       component.decrementQuantity(); // 2
       component.decrementQuantity(); // 1
       component.decrementQuantity(); // Still 1
       component.decrementQuantity(); // Still 1
-      
+
       expect(component.quantity()).toBe(1);
     });
   });
@@ -160,7 +198,7 @@ describe('AddItemModal', () => {
   describe('close()', () => {
     it('should call modalService.dismiss()', () => {
       component.close();
-      
+
       expect(mockModalService.dismiss).toHaveBeenCalled();
     });
   });
@@ -168,17 +206,17 @@ describe('AddItemModal', () => {
   describe('submit()', () => {
     it('should not submit when name is empty', () => {
       component.name.set('');
-      
+
       component.submit();
-      
+
       expect(mockModalService.close).not.toHaveBeenCalled();
     });
 
     it('should not submit when name is only whitespace', () => {
       component.name.set('   ');
-      
+
       component.submit();
-      
+
       expect(mockModalService.close).not.toHaveBeenCalled();
     });
 
@@ -186,9 +224,9 @@ describe('AddItemModal', () => {
       component.name.set('Milch');
       component.category.set('Milchprodukte');
       component.quantity.set(2);
-      
+
       component.submit();
-      
+
       expect(mockModalService.close).toHaveBeenCalledWith(expect.objectContaining({
         name: 'Milch',
         category: 'Milchprodukte',
@@ -199,9 +237,9 @@ describe('AddItemModal', () => {
 
     it('should trim name before submitting', () => {
       component.name.set('  Milch  ');
-      
+
       component.submit();
-      
+
       expect(mockModalService.close).toHaveBeenCalledWith(expect.objectContaining({
         name: 'Milch'
       }));
@@ -210,9 +248,9 @@ describe('AddItemModal', () => {
     it('should include info when provided', () => {
       component.name.set('Milch');
       component.info.set('Bio');
-      
+
       component.submit();
-      
+
       expect(mockModalService.close).toHaveBeenCalledWith(expect.objectContaining({
         info: 'Bio'
       }));
@@ -221,9 +259,9 @@ describe('AddItemModal', () => {
     it('should set info to undefined when empty', () => {
       component.name.set('Milch');
       component.info.set('');
-      
+
       component.submit();
-      
+
       const callArg = mockModalService.close.mock.calls[0][0] as AddItemResult;
       expect(callArg.info).toBeUndefined();
     });
@@ -234,6 +272,54 @@ describe('AddItemModal', () => {
       expect(component.icons.X).toBeDefined();
       expect(component.icons.Plus).toBeDefined();
       expect(component.icons.Minus).toBeDefined();
+      expect(component.icons.Star).toBeDefined();
+    });
+  });
+
+  describe('Favourites and Autocomplete', () => {
+    const mockFavoriten = [
+      { id: '1', name: 'Milch', unit: 'L', size: 1 },
+      { id: '2', name: 'Brot', unit: 'Einheit' },
+      { id: '3', name: 'Milka', unit: 'g', size: 100 }
+    ];
+
+    beforeEach(() => {
+      mockShoppingListService.favourites.set(mockFavoriten);
+    });
+
+    it('should filter favourites correctly', () => {
+      component.name.set('Mil');
+      const filtered = component.filteredFavourites();
+      expect(filtered.length).toBe(2);
+      expect(filtered[0].name).toBe('Milch');
+      expect(filtered[1].name).toBe('Milka');
+    });
+
+    it('should return all favourites when name is empty', () => {
+      component.name.set('');
+      expect(component.filteredFavourites().length).toBe(3);
+    });
+
+    it('should show complete favourites list only when name is empty', () => {
+      component.name.set('');
+      expect(component.shouldShowFavouritesList()).toBe(true);
+
+      component.name.set('M');
+      expect(component.shouldShowFavouritesList()).toBe(false);
+    });
+
+    it('should show autocomplete when typing and matches exist', () => {
+      component.name.set('Mil');
+      component.showAutocomplete.set(true);
+      expect(component.shouldShowAutocomplete()).toBe(true);
     });
   });
 });
+
+
+
+
+
+
+
+

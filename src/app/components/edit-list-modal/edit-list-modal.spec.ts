@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { EditListModal, EditListData, EditListResult } from './edit-list-modal';
 import { ModalService } from '../../services/modal.service';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { provideTransloco, translocoConfig } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../../transloco/transloco-loader';
 
 describe('EditListModal', () => {
   let component: EditListModal;
@@ -17,6 +19,15 @@ describe('EditListModal', () => {
     await TestBed.configureTestingModule({
       imports: [EditListModal],
       providers: [
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
         { provide: ModalService, useValue: mockModalService }
       ]
     }).compileComponents();
@@ -92,6 +103,7 @@ describe('EditListModal', () => {
       component.submit();
       
       expect(mockModalService.close).toHaveBeenCalledWith({
+        action: 'save',
         name: 'Neue Liste',
         description: 'Neue Beschreibung'
       } as EditListResult);
@@ -104,6 +116,7 @@ describe('EditListModal', () => {
       component.submit();
       
       expect(mockModalService.close).toHaveBeenCalledWith(expect.objectContaining({
+        action: 'save',
         name: 'Trimmed Name'
       }));
     });
@@ -115,6 +128,7 @@ describe('EditListModal', () => {
       component.submit();
       
       expect(mockModalService.close).toHaveBeenCalledWith(expect.objectContaining({
+        action: 'save',
         description: 'Trimmed Description'
       }));
     });
@@ -126,9 +140,36 @@ describe('EditListModal', () => {
       component.submit();
       
       expect(mockModalService.close).toHaveBeenCalledWith({
+        action: 'save',
         name: 'Name',
         description: ''
       });
+    });
+  });
+
+  describe('deleteList()', () => {
+    it('should close modal with delete action when user is alone in list', () => {
+      (component as any).data = () => ({
+        name: 'Meine Liste',
+        description: 'Beschreibung',
+        aloneInList: true,
+      } as EditListData);
+
+      component.deleteList();
+
+      expect(mockModalService.close).toHaveBeenCalledWith({ action: 'delete' });
+    });
+
+    it('should close modal with leave action when user is not alone in list', () => {
+      (component as any).data = () => ({
+        name: 'Meine Liste',
+        description: 'Beschreibung',
+        aloneInList: false,
+      } as EditListData);
+
+      component.deleteList();
+
+      expect(mockModalService.close).toHaveBeenCalledWith({ action: 'leave' });
     });
   });
 
