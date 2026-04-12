@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -35,11 +35,25 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Prepare PowerSync assets
+        run: npm run powersync:setup
+
+      - name: Generate coverage + component test HTML reports
+        run: |
+          mkdir -p reports/component-tests
+          npm run test:coverage -- --reporters=html --output-file reports/component-tests/index.html
+
       - name: Build Angular app for GitHub Pages
         run: npm run build:pages
 
       - name: Add SPA fallback for GitHub Pages
         run: cp dist/nimmit/browser/index.html dist/nimmit/browser/404.html
+
+      - name: Copy reports into GitHub Pages output
+        run: |
+          mkdir -p dist/nimmit/browser/reports
+          cp -r reports/component-tests dist/nimmit/browser/reports/component-tests
+          cp -r coverage/nimmit/lcov-report dist/nimmit/browser/reports/coverage
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4
@@ -57,4 +71,4 @@ jobs:
     steps:
       - name: Deploy GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

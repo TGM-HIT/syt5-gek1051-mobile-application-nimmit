@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Component } from '@angular/core';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { provideTransloco, translocoConfig } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../../transloco/transloco-loader';
 
 import { Account } from './account';
 import { SupabaseConnector } from '../../services/supabase-connector';
@@ -41,6 +43,15 @@ describe('Account', () => {
       imports: [Account],
       providers: [
         provideRouter([{ path: 'login', component: StubComponent }]),
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
         { provide: SupabaseConnector, useValue: mockSupabaseConnector },
       ]
     }).compileComponents();
@@ -83,7 +94,7 @@ describe('Account', () => {
       const newFixture = TestBed.createComponent(Account);
       await newFixture.whenStable();
 
-      expect(newFixture.componentInstance.errorMessage()).toBe('Profil konnte nicht geladen werden.');
+      expect(newFixture.componentInstance.errorMessage()).toBe('Account-Daten konnten nicht geladen werden.');
     });
 
     it('should redirect to /login when auth session is missing', async () => {

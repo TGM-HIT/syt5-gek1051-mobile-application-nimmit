@@ -2,20 +2,24 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { User } from '@supabase/supabase-js';
 import { SupabaseConnector } from '../../services/supabase-connector';
+import { ConfirmModalService } from '../../services/confirm-modal.service';
 import { Profile, Timestamp } from '../../types';
 
 @Component({
   selector: 'app-account',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslocoModule],
   templateUrl: './account.html',
   styleUrl: './account.scss',
 })
 export class Account implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly supabaseService = inject(SupabaseConnector);
+  private readonly confirmModal = inject(ConfirmModalService);
   private readonly router = inject(Router);
+  private readonly transloco = inject(TranslocoService);
 
   readonly isLoading = signal(true);
   readonly isSaving = signal(false);
@@ -49,7 +53,7 @@ export class Account implements OnInit {
 
     const profile = this.profile();
     if (!profile?.id) {
-      this.errorMessage.set('Keine gueltige User-ID gefunden.');
+      this.errorMessage.set(this.transloco.translate('auth.account.invalidUserId'));
       return;
     }
 
@@ -68,7 +72,9 @@ export class Account implements OnInit {
       this.isEditMode.set(false);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Profil konnte nicht aktualisiert werden.';
+        error instanceof Error
+          ? error.message
+          : this.transloco.translate('auth.account.profileUpdateFailed');
       this.errorMessage.set(message);
     } finally {
       this.isSaving.set(false);
@@ -80,7 +86,10 @@ export class Account implements OnInit {
       return '-';
     }
 
-    return new Intl.DateTimeFormat('de-DE', {
+    const activeLang = this.transloco.getActiveLang();
+    const locale = activeLang === 'de' ? 'de-DE' : 'en-US';
+
+    return new Intl.DateTimeFormat(locale, {
       dateStyle: 'medium',
       timeStyle: 'short',
     }).format(new Date(updatedAt));
@@ -94,7 +103,8 @@ export class Account implements OnInit {
       const currentUser = await this.supabaseService.getCurrentUser();
 
       if (!currentUser) {
-        throw new Error('Kein eingeloggter Benutzer gefunden.');
+        void this.router.navigateByUrl('/login');
+        return;
       }
 
       this.user.set(currentUser);
@@ -102,14 +112,17 @@ export class Account implements OnInit {
       const profile = await this.supabaseService.getProfile(currentUser.id);
 
       if (!profile) {
-        throw new Error('Profil konnte nicht geladen werden.');
+        this.errorMessage.set(this.transloco.translate('auth.account.accountLoadFailed'));
+        return;
       }
 
       this.profile.set(profile);
       this.resetFormFromProfile();
     } catch (error) {
       const errorMsg =
-        error instanceof Error ? error.message : 'Account-Daten konnten nicht geladen werden.';
+        error instanceof Error
+          ? error.message
+          : this.transloco.translate('auth.account.accountLoadFailed');
 
       const errorCode =
         typeof error === 'object' && error !== null && 'code' in error
@@ -118,7 +131,6 @@ export class Account implements OnInit {
 
       const isAuthError =
         errorMsg.includes('Auth session missing') ||
-        errorMsg.includes('Kein eingeloggter Benutzer') ||
         /jwt|token|session/i.test(errorMsg) ||
         errorCode.startsWith('PGRST3');
 
@@ -134,10 +146,20 @@ export class Account implements OnInit {
     }
   }
 
-  protected logout(): void {
-    this.supabaseService.logout().then(() => {
-      window.location.href = '/login';
+  protected async logout(): Promise<void> {
+    const confirmed = await this.confirmModal.confirm({
+      title: this.transloco.translate('auth.account.logoutTitle'),
+      message: this.transloco.translate('auth.account.logoutMessage'),
+      confirmText: this.transloco.translate('auth.account.logoutConfirm'),
+      cancelText: this.transloco.translate('common.cancel'),
     });
+
+    if (!confirmed) {
+      return;
+    }
+
+    await this.supabaseService.logout();
+    window.location.href = '/login';
   }
 
   private resetFormFromProfile(): void {
@@ -149,3 +171,4 @@ export class Account implements OnInit {
     });
   }
 }
+

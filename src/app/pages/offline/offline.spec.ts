@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideTransloco, translocoConfig } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../../transloco/transloco-loader';
 import { Offline } from './offline';
 
 describe('Offline', () => {
@@ -9,7 +11,18 @@ describe('Offline', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Offline],
-      providers: [provideRouter([])]
+      providers: [
+        provideRouter([]),
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
+      ]
     })
     .compileComponents();
 

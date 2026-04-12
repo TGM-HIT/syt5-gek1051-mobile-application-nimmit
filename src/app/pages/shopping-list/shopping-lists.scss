@@ -24,11 +24,52 @@
 	min-width: 0;
 }
 
+.lists-title-row {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	flex-wrap: wrap;
+	margin-bottom: var(--spacing-1);
+}
+
 .lists-title {
-	margin: 0 0 var(--spacing-1) 0;
+	margin: 0;
 	font-size: var(--font-size-2xl);
 	font-weight: 700;
 	color: var(--color-text);
+}
+
+.connection-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	padding: 6px var(--spacing-3);
+	border-radius: var(--radius-full);
+	border: none;
+	background-color: var(--color-elevated);
+	color: var(--color-text-muted);
+	font-size: var(--font-size-xs);
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.status-icon {
+	width: 8px;
+	height: 8px;
+	border-radius: var(--radius-full);
+	background-color: var(--color-error);
+}
+
+.connection-badge.online .status-icon {
+	background-color: var(--color-success);
+}
+
+.connection-badge.offline .status-icon {
+	background-color: var(--color-error);
+}
+
+.status-text {
+	font-style: normal;
 }
 
 .lists-subtitle {
@@ -46,22 +87,21 @@
 	border-radius: var(--radius-default);
 	background-color: var(--color-elevated);
 	color: var(--color-text-muted);
-	border: 1px solid var(--color-border);
+	//border: 1px solid var(--color-border);
 }
 
 .create-list-form {
 	display: flex;
 	align-items: center;
-	gap: var(--spacing-3);
+	gap: var(--spacing-2);
 	margin-bottom: var(--spacing-5);
 }
 
 .create-list-input {
-	flex: 1;
 	width: 100%;
 	height: 52px;
 	padding: 0 var(--spacing-4);
-	border: 2px solid var(--color-border);
+	border:none;
 	border-radius: var(--radius-md);
 	background-color: var(--color-surface);
 	color: var(--color-text);
@@ -114,7 +154,7 @@
 	width: 100%;
 	padding: var(--spacing-4);
 	background-color: var(--color-surface);
-	border: 1px solid var(--color-border);
+	//border: 1px solid var(--color-border);
 	border-radius: var(--radius-md);
 	cursor: pointer;
 	transition: border-color 0.2s ease, transform 0.15s ease, background-color 0.2s ease;
@@ -245,6 +285,58 @@
 	clip: rect(0, 0, 0, 0);
 	white-space: nowrap;
 	border: 0;
+}
+
+// ============================================
+// SKELETON LOADER
+// ============================================
+
+.list-card.skeleton {
+	cursor: default;
+	pointer-events: none;
+
+	&:hover,
+	&:active {
+		transform: none;
+		background-color: var(--color-surface);
+	}
+}
+
+.skeleton-block {
+	background-color: var(--color-border-light);
+}
+
+.skeleton-line {
+	display: block;
+	height: 12px;
+	border-radius: var(--radius-full);
+	background-color: var(--color-border-light);
+
+	&.skeleton-line--title {
+		height: 16px;
+		width: 60%;
+		margin-bottom: var(--spacing-2);
+	}
+
+	&.skeleton-line--small {
+		width: 42%;
+		margin-bottom: var(--spacing-2);
+	}
+
+	&.skeleton-line--medium {
+		width: 78%;
+	}
+}
+
+.skeleton-circle {
+	display: block;
+	background-color: var(--color-border-light);
+
+	&.skeleton-circle--sm {
+		width: 18px;
+		height: 18px;
+		border-radius: var(--radius-full);
+	}
 }
 
 @media (max-width: 520px) {

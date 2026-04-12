@@ -4,12 +4,14 @@ import { ShoppingListService } from '../../services/shopping-list.service';
 import { ModalService } from '../../services/modal.service';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal } from '@angular/core';
+import { provideTransloco, translocoConfig } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../../transloco/transloco-loader';
 
 describe('Favourites', () => {
   let component: Favourites;
   let fixture: ComponentFixture<Favourites>;
-  let mockShoppingListService: any;
-  let mockModalService: any;
+  let mockShoppingListService: { favourites: any, removeFavourite: ReturnType<typeof vi.fn>, updateFavourite: ReturnType<typeof vi.fn> };
+  let mockModalService: { open: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     mockShoppingListService = {
@@ -28,6 +30,15 @@ describe('Favourites', () => {
     await TestBed.configureTestingModule({
       imports: [Favourites],
       providers: [
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
         { provide: ShoppingListService, useValue: mockShoppingListService },
         { provide: ModalService, useValue: mockModalService }
       ]

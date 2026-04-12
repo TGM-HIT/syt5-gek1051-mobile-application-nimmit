@@ -54,7 +54,7 @@ jobs:
 
       - name: Upload coverage to Codecov (token)
         if: ${{ env.CODECOV_TOKEN != '' }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: coverage/nimmit/lcov.info
           token: ${{ env.CODECOV_TOKEN }}
@@ -64,7 +64,7 @@ jobs:
 
       - name: Upload coverage to Codecov (OIDC fallback)
         if: ${{ env.CODECOV_TOKEN == '' }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: coverage/nimmit/lcov.info
           use_oidc: true

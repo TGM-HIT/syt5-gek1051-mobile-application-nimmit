@@ -1,42 +1,42 @@
 <div class="page-container">
-    <h1>Account</h1>
+    <h1>{{ 'auth.account.title' | transloco }}</h1>
 
     <div class="setting-item" *ngIf="isLoading()">
-        <span class="setting-label">Lade Account-Daten...</span>
+        <span class="setting-label">{{ 'auth.account.loading' | transloco }}</span>
     </div>
 
     <div class="setting-item error" *ngIf="!isLoading() && errorMessage()">
-        <span class="setting-label">Fehler</span>
+        <span class="setting-label">{{ 'auth.account.error' | transloco }}</span>
         <span>{{ errorMessage() }}</span>
     </div>
 
     <ng-container *ngIf="!isLoading() && profile() as profile">
         <div class="setting-item">
-            <span class="setting-label">Profilinformationen</span>
+            <span class="setting-label">{{ 'auth.account.profileInfo' | transloco }}</span>
 
             <div class="attribute-grid">
                 <div class="attribute-row">
-                    <span class="attribute-key">id</span>
+                    <span class="attribute-key">{{ 'auth.account.attributes.id' | transloco }}</span>
                     <span class="attribute-value">{{ profile.id || '-' }}</span>
                 </div>
                 <div class="attribute-row">
-                    <span class="attribute-key">username</span>
+                    <span class="attribute-key">{{ 'auth.account.attributes.username' | transloco }}</span>
                     <span class="attribute-value">{{ profile.username }}</span>
                 </div>
                 <div class="attribute-row">
-                    <span class="attribute-key">settings.theme</span>
+                    <span class="attribute-key">{{ 'auth.account.attributes.theme' | transloco }}</span>
                     <span class="attribute-value">{{ profile.settings!.theme }}</span>
                 </div>
                 <div class="attribute-row">
-                    <span class="attribute-key">settings.sync_interval</span>
+                    <span class="attribute-key">{{ 'auth.account.attributes.syncInterval' | transloco }}</span>
                     <span class="attribute-value">{{ profile.settings!.sync_interval }} min</span>
                 </div>
                 <div class="attribute-row">
-                    <span class="attribute-key">updated_at</span>
+                    <span class="attribute-key">{{ 'auth.account.attributes.updatedAt' | transloco }}</span>
                     <span class="attribute-value">{{ formatUpdatedAt(profile.updated_at) }}</span>
                 </div>
                 <div class="attribute-row">
-                    <span class="attribute-key">auth.email</span>
+                    <span class="attribute-key">{{ 'auth.account.attributes.email' | transloco }}</span>
                     <span class="attribute-value">{{ user()?.email || '-' }}</span>
                 </div>
             </div>
@@ -44,28 +44,32 @@
 
         <div class="setting-item">
             <div class="edit-header">
-                <span class="setting-label">Edit Mode</span>
+                <span class="setting-label">{{ 'auth.account.editMode' | transloco }}</span>
                 <button class="theme-btn" [class.active]="isEditMode()" (click)="toggleEditMode()">
-                    {{ isEditMode() ? 'Bearbeiten beenden' : 'Bearbeiten aktivieren' }}
+                    {{ isEditMode()
+                      ? ('auth.account.stopEditing' | transloco)
+                      : ('auth.account.startEditing' | transloco) }}
                 </button>
             </div>
 
             <form class="edit-form" *ngIf="isEditMode()" [formGroup]="editForm" (ngSubmit)="saveChanges()">
-                <label class="field-label" for="username">Username</label>
+                <label class="field-label" for="username">{{ 'auth.register.username' | transloco }}</label>
                 <input id="username" type="text" class="text-input" formControlName="username" />
 
                 <label class="field-label" for="sync_interval">
-                    Sync-Intervall: {{ editForm.controls.sync_interval.value }} min
+                    {{ 'auth.account.syncIntervalLabel' | transloco : { minutes: editForm.controls.sync_interval.value } }}
                 </label>
                 <input id="sync_interval" class="slider-input" type="range" min="1" max="60" step="1"
                     formControlName="sync_interval" />
 
                 <button class="theme-btn active" type="submit" [disabled]="isSaving()">
-                    {{ isSaving() ? 'Speichere...' : 'Änderungen speichern' }}
+                    {{ isSaving()
+                      ? ('auth.account.saving' | transloco)
+                      : ('auth.account.saveChanges' | transloco) }}
                 </button>
             </form>
         </div>
-        <button type="button" class="theme-btn back-link" (click)="this.logout()">Abmelden</button>
-        <a class="theme-btn back-link" routerLink="/settings">Zurück zu Einstellungen</a>
+        <button type="button" class="theme-btn back-link" (click)="this.logout()">{{ 'auth.account.logout' | transloco }}</button>
+        <button type="button" class="theme-btn back-link" routerLink="/settings">{{ 'auth.account.backToSettings' | transloco }}</button>
     </ng-container>
 </div>

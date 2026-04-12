@@ -48,10 +48,10 @@ Object.defineProperty(globalThis, 'matchMedia', {
 describe('App', () => {
   beforeEach(async () => {
     globalThis.Worker = class {
-      addEventListener() {}
-      removeEventListener() {}
-      postMessage() {}
-      terminate() {}
+      addEventListener() { /* mock */ }
+      removeEventListener() { /* mock */ }
+      postMessage() { /* mock */ }
+      terminate() { /* mock */ }
     } as any;
     localStorageMock.clear();
     vi.clearAllMocks();

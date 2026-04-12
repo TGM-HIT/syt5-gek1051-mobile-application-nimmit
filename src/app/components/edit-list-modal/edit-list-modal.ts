@@ -1,6 +1,7 @@
 import { Component, inject, signal, input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, X, Trash2 } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 import { ModalService } from '../../services/modal.service';
 
 export interface EditListData {
@@ -10,14 +11,14 @@ export interface EditListData {
 }
 
 export interface EditListResult {
-  action: 'save' | 'delete';
+  action: 'save' | 'delete' | 'leave';
   name?: string;
   description?: string;
 }
 
 @Component({
   selector: 'app-edit-list-modal',
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, TranslocoModule],
   templateUrl: './edit-list-modal.html',
   styleUrl: './edit-list-modal.scss',
 })
@@ -61,10 +62,7 @@ export class EditListModal implements OnInit {
   }
 
   deleteList(): void {
-    const confirmed = window.confirm(`Are you sure you want to ${this.getAloneInList() ? "delete" : "leave"} this list? This action cannot be undone.`);
-    if (!confirmed) {
-      return;
-    }
-    this.modalService.close({ action: 'delete' });
+    this.modalService.close({ action: this.getAloneInList() ? 'delete' : 'leave' });
   }
 }
+

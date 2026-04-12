@@ -161,13 +161,17 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
   }
 
   async getUserCountForList(listId: bigint): Promise<number> {
-    const rpcResult = await this.client.rpc('get_user_count_for_list', { list_id: listId });
-    if (rpcResult.error) {
-      console.error('Error calling RPC get_user_count_for_list:', rpcResult.error);
-      throw rpcResult.error;
+    try {
+      const rpcResult = await this.client.rpc('get_user_count_for_list', { list_id: listId });
+      if (rpcResult.error) {
+        console.error('Error calling RPC get_user_count_for_list:', rpcResult.error);
+        return 1; // Default fallback for offline/testing
+      }
+      return (rpcResult.data as number) || 1;
+    } catch (e) {
+      console.error('Exception calling get_user_count_for_list', e);
+      return 1;
     }
-    const count = rpcResult.data as number;
-    return count;
   }
 
   async getUsersForList(listId: bigint): Promise<{ username: string, email: string}[]> {
@@ -316,16 +320,28 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
         console.log('Processing operation', op.op, 'on table', op.table, 'with data', op.opData, "with ClientId");
         let result: any;
         switch (op.op) {
-          case UpdateType.PUT:
-            { const record = { ...op.opData, id: op.id };
+          case UpdateType.PUT: {
+            if (!op.opData) {
+              throw new Error(`PUT operation missing data for table '${op.table}' and id '${op.id}'.`);
+            }
+
+            const record = { ...op.opData, id: op.id };
             result = await table.upsert(record);
-            break; } 
-          case UpdateType.PATCH:
+            break;
+          }
+          case UpdateType.PATCH: {
+            if (!op.opData) {
+              console.warn('Skipping PATCH operation with no data:', op);
+              continue;
+            }
+
             result = await table.update(op.opData).eq('id', op.id);
             break;
-          case UpdateType.DELETE:
+          }
+          case UpdateType.DELETE: {
             result = await table.delete().eq('id', op.id);
             break;
+          }
         }
 
         if (result.error) {

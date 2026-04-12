@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { provideTransloco, translocoConfig, TranslocoService } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../../transloco/transloco-loader';
+import { firstValueFrom } from 'rxjs';
 
 import { Login } from './login';
 import { SupabaseConnector } from '../../services/supabase-connector';
@@ -17,9 +20,22 @@ describe('Login', () => {
       imports: [Login],
       providers: [
         provideRouter([]),
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
         { provide: SupabaseConnector, useValue: mockSupabaseConnector }
       ]
     }).compileComponents();
+
+    const transloco = TestBed.inject(TranslocoService);
+    transloco.setActiveLang('de');
+    await firstValueFrom(transloco.load('de'));
 
     fixture = TestBed.createComponent(Login);
     component = fixture.componentInstance;

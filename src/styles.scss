@@ -39,6 +39,12 @@ html {
   line-height: var(--line-height-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE/Edge (legacy)
+
+  &::-webkit-scrollbar {
+    display: none; // Chrome/Safari/Edge (Chromium)
+  }
 }
 
 body {
@@ -49,6 +55,12 @@ body {
   color: var(--color-text);
   // Sanfte Übergänge beim Theme-Wechsel
   transition: background-color 0.3s ease, color 0.3s ease;
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE/Edge (legacy)
+
+  &::-webkit-scrollbar {
+    display: none; // Chrome/Safari/Edge (Chromium)
+  }
 }
 
 // Theme Transition für alle Elemente die Theme-Farben nutzen

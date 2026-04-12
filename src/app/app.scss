@@ -1,5 +1,7 @@
+@use '../theme' as *;
+
 :host {
-  --connection-status-height: 24px;
+  --connection-status-height: 0px;
   --startup-bg-1: var(--color-primary-50);
   --startup-bg-2: var(--color-accent-50);
   --startup-orb-1: var(--color-accent-100);
@@ -124,6 +126,10 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
+
+  @include screen-md {
+    padding-left: calc(env(safe-area-inset-left, 0px) + var(--nav-sidebar-width, 0px));
+  }
 }
 
 .connection-status {

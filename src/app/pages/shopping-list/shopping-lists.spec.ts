@@ -4,6 +4,8 @@ import { ShoppingLists } from './shopping-lists';
 import { SupabaseConnector } from '../../services/supabase-connector';
 import { PowerSyncService } from '../../services/powersync';
 import { of } from 'rxjs';
+import { provideTransloco, translocoConfig } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../../transloco/transloco-loader';
 
 describe('ShoppingLists', () => {
   let component: ShoppingLists;
@@ -11,13 +13,13 @@ describe('ShoppingLists', () => {
 
   beforeEach(async () => {
     // Mock for localStorage
-    const localStorageMock = (function () {
-      let store: { [key: string]: string } = {};
+    const localStorageMock = (() => {
+      let store: Record<string, string> = {};
       return {
-        getItem: function (key: string) { return store[key] || null; },
-        setItem: function (key: string, value: string) { store[key] = value.toString(); },
-        removeItem: function (key: string) { delete store[key]; },
-        clear: function () { store = {}; }
+        getItem(key: string) { return store[key] || null; },
+        setItem(key: string, value: string) { store[key] = value; },
+        removeItem(key: string) { delete store[key]; },
+        clear() { store = {}; }
       };
     })();
 
@@ -29,6 +31,15 @@ describe('ShoppingLists', () => {
       imports: [ShoppingLists],
       providers: [
         provideRouter([]),
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
         { provide: SupabaseConnector, useValue: { session$: of(null), profile$: of(null) } },
         { provide: PowerSyncService, useValue: { status$: of(null), ready$: of(false) } }
       ]

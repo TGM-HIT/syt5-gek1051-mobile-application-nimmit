@@ -30,6 +30,17 @@ declare global {
       login(): Chainable<void>;
 
       /**
+       * Visits a route while injecting a mocked Supabase session before the app bootstraps.
+       * This is required with Cypress test isolation enabled.
+       */
+      visitWithAuth(path: string): Chainable<void>;
+
+      /**
+       * Waits for the app to finish its PowerSync initialization and render routes.
+       */
+      waitForAppReady(): Chainable<void>;
+
+      /**
        * Mocks Supabase sync network requests.
        */
       bypassSync(): Chainable<void>;
@@ -62,10 +73,42 @@ Cypress.Commands.add('login', () => {
   });
 });
 
+Cypress.Commands.add('visitWithAuth', (path: string) => {
+  const fakeToken = {
+    access_token: 'fake-jwt-token',
+    token_type: 'bearer',
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    refresh_token: 'fake-refresh-token',
+    user: {
+      id: 'mock-user-123',
+      aud: 'authenticated',
+      role: 'authenticated',
+      email: 'test@example.com',
+      email_confirmed_at: new Date().toISOString(),
+      app_metadata: { provider: 'email', providers: ['email'] },
+      user_metadata: { username: 'TestUser' },
+      identities: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  };
+
+  cy.visit(path, {
+    onBeforeLoad(win) {
+      win.localStorage.setItem('sb-oioegtvwcxizjbbvktdv-auth-token', JSON.stringify(fakeToken));
+    },
+  });
+});
+
+Cypress.Commands.add('waitForAppReady', () => {
+  cy.get('main.app-content', { timeout: 30000 }).should('exist');
+});
+
 Cypress.Commands.add('bypassSync', () => {
     // Intercept Supabase network requests to simulate an offline state or prevent real DB mutation during UI tests
-    cy.intercept('GET', '**/rest/v1/*', { statusCode: 200, body: [] }).as('mockSupabaseGet');
-    cy.intercept('POST', '**/rest/v1/*', { statusCode: 201, body: {} }).as('mockSupabasePost');
-    cy.intercept('PATCH', '**/rest/v1/*', { statusCode: 200, body: {} }).as('mockSupabasePatch');
-    cy.intercept('DELETE', '**/rest/v1/*', { statusCode: 200, body: {} }).as('mockSupabaseDelete');
+    cy.intercept('GET', '**/rest/v1/**', { statusCode: 200, body: [] }).as('mockSupabaseGet');
+    cy.intercept('POST', '**/rest/v1/**', { statusCode: 200, body: 0 }).as('mockSupabasePost');
+    cy.intercept('PATCH', '**/rest/v1/**', { statusCode: 200, body: {} }).as('mockSupabasePatch');
+    cy.intercept('DELETE', '**/rest/v1/**', { statusCode: 200, body: {} }).as('mockSupabaseDelete');
 });
