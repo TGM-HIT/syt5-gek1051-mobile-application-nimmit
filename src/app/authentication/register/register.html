@@ -1,54 +1,54 @@
 <div class="page-container">
     <section class="register-card">
         @if (registrationSucceeded()) {
-        <h1>Willkommen bei nimmit</h1>
+        <h1>{{ 'auth.register.welcome' | transloco }}</h1>
         <p class="subtitle">
-            Deine Registrierung war erfolgreich.
+            {{ 'auth.register.successSubtitle' | transloco }}
         </p>
         <p class="feedback success-box">
-            Du wirst in {{ redirectCountdown() }} Sekunden zur Hauptseite weitergeleitet.
+            {{ 'auth.register.redirectCountdown' | transloco : { seconds: redirectCountdown() } }}
         </p>
         } @else {
-        <h1>Konto erstellen</h1>
+        <h1>{{ 'auth.register.title' | transloco }}</h1>
         <p class="subtitle">
-            Erstelle dein Konto und synchronisiere deine Listen sicher ueber alle Geraete.
+            {{ 'auth.register.subtitle' | transloco }}
         </p>
 
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
             <div class="field-group">
-                <label for="email">E-Mail</label>
-                <input id="email" type="email" formControlName="email" placeholder="name@beispiel.de"
+                <label for="email">{{ 'auth.register.email' | transloco }}</label>
+                <input id="email" type="email" formControlName="email" [placeholder]="'auth.register.emailPlaceholder' | transloco"
                     autocomplete="email" [class.invalid]="isInvalid('email')" />
                 @if (isInvalid('email')) {
-                <small class="error">Bitte gib eine gueltige E-Mail-Adresse ein.</small>
+                <small class="error">{{ 'auth.register.emailInvalid' | transloco }}</small>
                 }
             </div>
 
             <div class="field-group">
-                <label for="username">Benutzername</label>
-                <input id="username" type="text" formControlName="username" placeholder="mindestens 3 Zeichen"
+                <label for="username">{{ 'auth.register.username' | transloco }}</label>
+                <input id="username" type="text" formControlName="username" [placeholder]="'auth.register.usernamePlaceholder' | transloco"
                     autocomplete="username" [class.invalid]="isInvalid('username')" />
                 @if (isInvalid('username')) {
-                <small class="error">Dein Benutzername muss mindestens 3 Zeichen haben.</small>
+                <small class="error">{{ 'auth.register.usernameInvalid' | transloco }}</small>
                 }
             </div>
 
             <div class="field-group">
-                <label for="password">Passwort</label>
-                <input id="password" type="password" formControlName="password" placeholder="mindestens 8 Zeichen"
+                <label for="password">{{ 'auth.register.password' | transloco }}</label>
+                <input id="password" type="password" formControlName="password" [placeholder]="'auth.register.passwordPlaceholder' | transloco"
                     autocomplete="new-password" [class.invalid]="isInvalid('password')" />
                 @if (isInvalid('password')) {
-                <small class="error">Das Passwort muss mindestens 8 Zeichen haben.</small>
+                <small class="error">{{ 'auth.register.passwordInvalid' | transloco }}</small>
                 }
             </div>
 
             <div class="field-group">
-                <label for="confirmPassword">Passwort wiederholen</label>
+                <label for="confirmPassword">{{ 'auth.register.confirmPassword' | transloco }}</label>
                 <input id="confirmPassword" type="password" formControlName="confirmPassword"
-                    placeholder="wiederhole dein Passwort" autocomplete="new-password"
+                    [placeholder]="'auth.register.confirmPasswordPlaceholder' | transloco" autocomplete="new-password"
                     [class.invalid]="isInvalid('confirmPassword') || !passwordsMatch()" />
                 @if (isInvalid('confirmPassword') || !passwordsMatch()) {
-                <small class="error">Die Passwoerter muessen identisch sein.</small>
+                <small class="error">{{ 'auth.register.confirmPasswordInvalid' | transloco }}</small>
                 }
             </div>
 
@@ -57,7 +57,7 @@
             }
 
             <button type="submit" class="register-btn" [disabled]="isSubmitting()">
-                {{ isSubmitting() ? 'Registrierung laeuft...' : 'Registrieren' }}
+                {{ isSubmitting() ? ('auth.register.submitting' | transloco) : ('auth.register.submit' | transloco) }}
             </button>
         </form>
         }

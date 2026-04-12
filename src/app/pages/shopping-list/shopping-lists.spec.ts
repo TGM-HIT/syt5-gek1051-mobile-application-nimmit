@@ -1,0 +1,58 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { ShoppingLists } from './shopping-lists';
+import { SupabaseConnector } from '../../services/supabase-connector';
+import { PowerSyncService } from '../../services/powersync';
+import { of } from 'rxjs';
+import { provideTransloco, translocoConfig } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../../transloco/transloco-loader';
+
+describe('ShoppingLists', () => {
+  let component: ShoppingLists;
+  let fixture: ComponentFixture<ShoppingLists>;
+
+  beforeEach(async () => {
+    // Mock for localStorage
+    const localStorageMock = (() => {
+      let store: Record<string, string> = {};
+      return {
+        getItem(key: string) { return store[key] || null; },
+        setItem(key: string, value: string) { store[key] = value; },
+        removeItem(key: string) { delete store[key]; },
+        clear() { store = {}; }
+      };
+    })();
+
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: localStorageMock,
+    });
+
+    await TestBed.configureTestingModule({
+      imports: [ShoppingLists],
+      providers: [
+        provideRouter([]),
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
+        { provide: SupabaseConnector, useValue: { session$: of(null), profile$: of(null) } },
+        { provide: PowerSyncService, useValue: { status$: of(null), ready$: of(false) } }
+      ]
+    })
+    .compileComponents();
+
+    fixture = TestBed.createComponent(ShoppingLists);
+    component = fixture.componentInstance;
+    await fixture.whenStable();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+

@@ -1,8 +1,8 @@
 <div class="modal-content">
   <!-- Header -->
   <div class="modal-header">
-    <h2 class="modal-title">Liste bearbeiten</h2>
-    <button class="close-btn" (click)="close()">
+    <h2 class="modal-title">{{ 'modals.editList.title' | transloco }}</h2>
+    <button type="button" class="close-btn" (click)="close()" [attr.aria-label]="'common.close' | transloco">
       <lucide-icon [img]="icons.X" [size]="24" [strokeWidth]="2"></lucide-icon>
     </button>
   </div>
@@ -11,12 +11,12 @@
   <form class="modal-form" (ngSubmit)="submit()">
     <!-- Listenname -->
     <div class="form-group">
-      <label for="listName">Listenname *</label>
+      <label for="listName">{{ 'modals.editList.name' | transloco }}</label>
       <input
         type="text"
         id="listName"
         class="form-input"
-        placeholder="z.B. Wocheneinkauf..."
+        [attr.placeholder]="'modals.editList.namePlaceholder' | transloco"
         [ngModel]="name()"
         (ngModelChange)="name.set($event)"
         name="listName"
@@ -26,11 +26,11 @@
 
     <!-- Beschreibung -->
     <div class="form-group">
-      <label for="listDescription">Beschreibung</label>
+      <label for="listDescription">{{ 'modals.editList.description' | transloco }}</label>
       <textarea
         id="listDescription"
         class="form-textarea"
-        placeholder="z.B. Einkauf für die Party am Samstag..."
+        [attr.placeholder]="'modals.editList.descriptionPlaceholder' | transloco"
         [ngModel]="description()"
         (ngModelChange)="description.set($event)"
         name="listDescription"
@@ -40,7 +40,18 @@
 
     <!-- Submit Button -->
     <button type="submit" class="submit-btn" [disabled]="!name().trim()">
-      Speichern
+      {{ 'common.save' | transloco }}
+    </button>
+
+    <button type="button" class="delete-btn" (click)="deleteList()">
+      @if(this.getAloneInList()) {
+        <lucide-icon [img]="icons.Trash2" [size]="20" [strokeWidth]="2"></lucide-icon>
+      {{ 'modals.editList.deleteList' | transloco }}
+      }
+       @else {
+        <lucide-icon [img]="icons.UserX" [size]="20" [strokeWidth]="2"></lucide-icon>
+      {{ 'modals.editList.leaveList' | transloco }}
+      }
     </button>
   </form>
 </div>

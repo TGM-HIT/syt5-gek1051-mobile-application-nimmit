@@ -1,11 +1,13 @@
 import { Component } from '@angular/core';
+import { TranslocoModule } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-groups',
+  imports: [TranslocoModule],
   template: `
     <div class="page-container">
-      <h1>Gruppen</h1>
-      <p>Hier werden deine Gruppen angezeigt.</p>
+      <h1>{{ 'groups.title' | transloco }}</h1>
+      <p>{{ 'groups.subtitle' | transloco }}</p>
     </div>
   `,
   styles: [`

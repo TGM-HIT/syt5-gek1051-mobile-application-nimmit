@@ -1,22 +1,24 @@
 describe('Navigation', () => {
   beforeEach(() => {
-    // Navigating to the home page redirects or opens the default page (shopping list)
-    cy.visit('/');
+    cy.bypassSync();
+    // Visit with a mocked Supabase session so route guards allow navigation
+    cy.visitWithAuth('/');
+    cy.waitForAppReady();
   });
 
   it('should navigate to Groups page', () => {
-    cy.get('nav.bottom-navigation a[routerLink="/groups"]').click();
+    cy.get('app-navigation a[routerLink="/groups"]:visible').click();
     cy.url().should('include', '/groups');
   });
 
   it('should navigate to Settings page', () => {
-    cy.get('nav.bottom-navigation a[routerLink="/settings"]').click();
+    cy.get('app-navigation a[routerLink="/settings"]:visible').click();
     cy.url().should('include', '/settings');
   });
 
   it('should navigate back to Shopping List page', () => {
     cy.visit('/settings');
-    cy.get('nav.bottom-navigation a[routerLink="/list"]').click();
-    cy.url().should('include', '/list');
+    cy.get('app-navigation a[routerLink="/lists"]:visible').click();
+    cy.url().should('include', '/lists');
   });
 });

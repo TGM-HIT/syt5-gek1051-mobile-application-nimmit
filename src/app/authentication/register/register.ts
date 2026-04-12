@@ -1,18 +1,20 @@
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { SupabaseService } from '../../services/supabase';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { SupabaseConnector } from '../../services/supabase-connector';
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslocoModule],
   templateUrl: './register.html',
   styleUrl: './register.scss',
 })
 export class Register implements OnDestroy {
   private readonly fb = inject(FormBuilder);
-  private readonly supabaseService = inject(SupabaseService);
+  private readonly supabaseService = inject(SupabaseConnector);
   private readonly router = inject(Router);
+  private readonly transloco = inject(TranslocoService);
 
   private redirectTimeoutId: number | null = null;
   private redirectIntervalId: number | null = null;
@@ -45,7 +47,7 @@ export class Register implements OnDestroy {
     if (this.registerForm.invalid || !this.passwordsMatch()) {
       this.registerForm.markAllAsTouched();
       if (!this.passwordsMatch()) {
-        this.submitError.set('Die Passwoerter stimmen nicht ueberein.');
+        this.submitError.set(this.transloco.translate('auth.register.passwordsMismatch'));
       }
       return;
     }
@@ -62,7 +64,7 @@ export class Register implements OnDestroy {
       const message =
         error instanceof Error
           ? error.message
-          : 'Registrierung fehlgeschlagen. Bitte versuche es erneut.';
+          : this.transloco.translate('auth.register.submitFailed');
       this.submitError.set(message);
     } finally {
       this.isSubmitting.set(false);

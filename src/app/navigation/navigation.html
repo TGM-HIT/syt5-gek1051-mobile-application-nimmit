@@ -1,5 +1,41 @@
-<nav class="bottom-navigation">
-  <a routerLink="/list" routerLinkActive="active" class="nav-item">
+<nav class="sidebar-navigation" [class.is-open]="isSidebarOpen()" [attr.aria-label]="'navigation.ariaLabel' | transloco">
+  <button type="button" class="nav-item sidebar-toggle" (click)="toggleSidebar()" [attr.aria-label]="'navigation.toggle' | transloco">
+    <lucide-icon [img]="icons.Menu" [size]="24" [strokeWidth]="2"></lucide-icon>
+    <span class="nav-label">{{ 'navigation.menu' | transloco }}</span>
+  </button>
+
+  <div class="sidebar-items">
+    <a routerLink="/lists" class="nav-item" [class.active]="isListSectionActive()">
+      <lucide-icon [img]="icons.List" [size]="24" [strokeWidth]="2"></lucide-icon>
+      <span class="nav-label">{{ 'navigation.lists' | transloco }}</span>
+    </a>
+
+    <a routerLink="/groups" routerLinkActive="active" class="nav-item">
+      <lucide-icon [img]="icons.Users" [size]="24" [strokeWidth]="2"></lucide-icon>
+      <span class="nav-label">{{ 'navigation.groups' | transloco }}</span>
+    </a>
+
+    <a routerLink="/favourites" routerLinkActive="active" class="nav-item">
+      <lucide-icon [img]="icons.Star" [size]="24" [strokeWidth]="2"></lucide-icon>
+      <span class="nav-label">{{ 'navigation.favourites' | transloco }}</span>
+    </a>
+
+    <a routerLink="/settings" class="nav-item" [class.active]="isSettingsSectionActive()">
+      <lucide-icon [img]="icons.Settings" [size]="24" [strokeWidth]="2"></lucide-icon>
+      <span class="nav-label">{{ 'navigation.settings' | transloco }}</span>
+    </a>
+  </div>
+
+  @if (this.resolveListId() !== null) {
+    <button class="nav-item add-button" (click)="addNewItem()" [attr.aria-label]="'navigation.addProduct' | transloco">
+      <lucide-icon [img]="icons.Plus" [size]="28" [strokeWidth]="2.5"></lucide-icon>
+      <span class="nav-label">{{ 'navigation.add' | transloco }}</span>
+    </button>
+  }
+</nav>
+
+<nav class="bottom-navigation" [attr.aria-label]="'navigation.ariaLabel' | transloco">
+  <a routerLink="/lists" class="nav-item" [class.active]="isListSectionActive()">
     <lucide-icon [img]="icons.List" [size]="24" [strokeWidth]="2"></lucide-icon>
   </a>
 
@@ -7,11 +43,16 @@
     <lucide-icon [img]="icons.Users" [size]="24" [strokeWidth]="2"></lucide-icon>
   </a>
 
-  <a routerLink="/settings" routerLinkActive="active" class="nav-item">
-    <lucide-icon [img]="icons.Settings" [size]="24" [strokeWidth]="2"></lucide-icon>
+  <a routerLink="/favourites" routerLinkActive="active" class="nav-item">
+    <lucide-icon [img]="icons.Star" [size]="24" [strokeWidth]="2"></lucide-icon>
   </a>
 
-  <button class="nav-item add-button" (click)="addNewItem()">
-    <lucide-icon [img]="icons.Plus" [size]="28" [strokeWidth]="2.5"></lucide-icon>
-  </button>
+  <a routerLink="/settings" class="nav-item" [class.active]="isSettingsSectionActive()">
+    <lucide-icon [img]="icons.Settings" [size]="24" [strokeWidth]="2"></lucide-icon>
+  </a>
+  @if (this.resolveListId() !== null) {
+    <button class="nav-item add-button" (click)="addNewItem()">
+      <lucide-icon [img]="icons.Plus" [size]="28" [strokeWidth]="2.5"></lucide-icon>
+    </button>
+  }
 </nav>
