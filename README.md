@@ -7,8 +7,8 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/blob/main/LICENSE)
 [![Commits](https://img.shields.io/badge/Commits-open%20history-6e7781)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/commits/main)
 [![Issues](https://img.shields.io/badge/Issues-open%20tracker-6e7781)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/issues)
-![CI](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/ci.yml/badge.svg?branch=main)
-[![Coverage](.github/badges/coverage.svg)](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/coverage.yml)
+[![CI](https://github.com/TGM-HIT/syt5-gek1051-mobile-application-nimmit/actions/workflows/ci.yml/badge.svg?branch=main)](https://tgm-hit.github.io/syt5-gek1051-mobile-application-nimmit/reports/component-tests/index.html)
+[![Coverage](.github/badges/coverage.svg)](https://tgm-hit.github.io/syt5-gek1051-mobile-application-nimmit/reports/coverage/index.html)
 
 ## CI Reports
 

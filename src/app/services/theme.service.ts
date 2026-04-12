@@ -1,7 +1,7 @@
 import { Injectable, signal, effect, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { Theme } from '../types';
 
-export type Theme = 'light' | 'dark' | 'system';
 
 const THEME_STORAGE_KEY = 'nimmit-theme';
 

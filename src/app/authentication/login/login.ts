@@ -1,18 +1,20 @@
 import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { SupabaseService } from '../../services/supabase';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { SupabaseConnector } from '../../services/supabase-connector';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoModule],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
 export class Login implements OnDestroy {
   private readonly fb = inject(FormBuilder);
-  private readonly supabaseService = inject(SupabaseService);
+  private readonly supabaseService = inject(SupabaseConnector);
   private readonly router = inject(Router);
+  private readonly transloco = inject(TranslocoService);
 
   private redirectTimeoutId: number | null = null;
 
@@ -48,7 +50,7 @@ export class Login implements OnDestroy {
       const message =
         error instanceof Error
           ? error.message
-          : 'Anmeldung fehlgeschlagen. Bitte versuche es erneut.';
+          : this.transloco.translate('auth.login.submitFailed');
       this.submitError.set(message);
     } finally {
       this.isSubmitting.set(false);

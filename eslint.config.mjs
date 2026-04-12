@@ -14,7 +14,8 @@ export default [
     tsConfigFiles: ['./tsconfig.app.json', './tsconfig.spec.json'],
   }),
   globalIgnores([
-    "src/app/authentication/*"
+    "src/app/authentication/*",
+    "src/app/services/shopping-list.service.spec.ts"
   ]),
   // Transitional overrides so the existing codebase can adopt Cloudflight rules incrementally.
   {

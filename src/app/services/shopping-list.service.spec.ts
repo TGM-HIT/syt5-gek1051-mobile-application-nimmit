@@ -1,356 +1,143 @@
 import { TestBed } from '@angular/core/testing';
-import { ShoppingListService } from './shopping-list.service';
-import { ShoppingItem } from '../models';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { ShoppingListDataService } from './shopping-list-data.service';
+import { PowerSyncService, USER_ID_PLACEHOLDER } from './powersync';
 
-// Mock localStorage
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: vi.fn((key: string) => store[key] || null),
-    setItem: vi.fn((key: string, value: string) => { store[key] = value; }),
-    removeItem: vi.fn((key: string) => { delete store[key]; }),
-    clear: vi.fn(() => { store = {}; }),
-  };
-})();
-
-Object.defineProperty(globalThis, 'localStorage', {
-  value: localStorageMock,
-  writable: true,
-});
-
-describe('ShoppingListService', () => {
-  let service: ShoppingListService;
+describe('ShoppingListDataService', () => {
+  let service: ShoppingListDataService;
+  let mockPowerSync: any;
 
   beforeEach(() => {
-    localStorageMock.clear();
-    vi.clearAllMocks();
-    TestBed.resetTestingModule();
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(ShoppingListService);
+    mockPowerSync = {
+      execute: vi.fn(),
+      get: vi.fn(),
+      db: {
+        watch: vi.fn(),
+        getAll: vi.fn()
+      }
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        ShoppingListDataService,
+        { provide: PowerSyncService, useValue: mockPowerSync }
+      ]
+    });
+
+    service = TestBed.inject(ShoppingListDataService);
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('initial state', () => {
-    it('should have empty items list initially', () => {
-      expect(service.items()).toEqual([]);
+  describe('getLatestListIdForUser()', () => {
+    it('should return list id if found', async () => {
+      mockPowerSync.execute.mockResolvedValue({ rows: [{ id: 42n }] });
+      const id = await service.getLatestListIdForUser('user-1');
+      expect(id).toBe(42n);
+      expect(mockPowerSync.execute).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT l.id'),
+        ['user-1']
+      );
     });
 
-    it('should have default list name', () => {
-      expect(service.listName()).toBe('Meine Einkaufsliste');
-    });
-
-    it('should have default list description', () => {
-      expect(service.listDescription()).toBe('Tippe auf +, um Produkte hinzuzufügen');
-    });
-
-    it('should have allCount as 0', () => {
-      expect(service.allCount()).toBe(0);
-    });
-
-    it('should have progressPercentage as 0', () => {
-      expect(service.progressPercentage()).toBe(0);
-    });
-  });
-
-  describe('addItem()', () => {
-    it('should add a new item to the list', () => {
-      const newItem = {
-        name: 'Milch',
-        category: 'Milchprodukte',
-        totalQuantity: 2,
-        unit: 'Einheit' as const
-      };
-
-      service.addItem(newItem);
-
-      expect(service.items().length).toBe(1);
-      expect(service.items()[0].name).toBe('Milch');
-    });
-
-    it('should generate an id for the new item', () => {
-      const newItem = {
-        name: 'Brot',
-        category: 'Backwaren',
-        totalQuantity: 1,
-        unit: 'Einheit' as const
-      };
-
-      service.addItem(newItem);
-
-      expect(service.items()[0].id).toBeDefined();
-      expect(typeof service.items()[0].id).toBe('string');
-    });
-
-    it('should set purchasedQuantity to 0', () => {
-      const newItem = {
-        name: 'Äpfel',
-        category: 'Obst & Gemüse',
-        totalQuantity: 5,
-        unit: 'Einheit' as const
-      };
-
-      service.addItem(newItem);
-
-      expect(service.items()[0].purchasedQuantity).toBe(0);
-    });
-
-    it('should set createdAt and updatedAt', () => {
-      const newItem = {
-        name: 'Käse',
-        category: 'Milchprodukte',
-        totalQuantity: 1,
-        unit: 'Einheit' as const
-      };
-
-      service.addItem(newItem);
-
-      expect(service.items()[0].createdAt).toBeInstanceOf(Date);
-      expect(service.items()[0].updatedAt).toBeInstanceOf(Date);
-    });
-
-    it('should update allCount', () => {
-      service.addItem({ name: 'Item 1', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
-      service.addItem({ name: 'Item 2', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
-
-      expect(service.allCount()).toBe(2);
+    it('should use USER_ID_PLACEHOLDER if no userId provided', async () => {
+      mockPowerSync.execute.mockResolvedValue({ rows: [] });
+      const id = await service.getLatestListIdForUser(null);
+      expect(id).toBeNull();
+      expect(mockPowerSync.execute).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT l.id'),
+        [USER_ID_PLACEHOLDER]
+      );
     });
   });
 
-  describe('markAsPurchased()', () => {
-    it('should set purchasedQuantity to totalQuantity', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 3, unit: 'Einheit' as const });
-      const itemId = service.items()[0].id;
-
-      service.markAsPurchased(itemId);
-
-      expect(service.items()[0].purchasedQuantity).toBe(3);
+  describe('listExists()', () => {
+    it('should return true if list exists', async () => {
+      mockPowerSync.get.mockResolvedValue({ exists: 1 });
+      const exists = await service.listExists(10n);
+      expect(exists).toBe(true);
+      expect(mockPowerSync.get).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT 1 as "exists"'),
+        ['10', USER_ID_PLACEHOLDER]
+      );
     });
 
-    it('should update purchasedCount', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
-      const itemId = service.items()[0].id;
-      
-      expect(service.purchasedCount()).toBe(0);
-      
-      service.markAsPurchased(itemId);
-      
-      expect(service.purchasedCount()).toBe(1);
-    });
-
-    it('should update progressPercentage', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
-      service.addItem({ name: 'Brot', category: 'Backwaren', totalQuantity: 1, unit: 'Einheit' as const });
-      
-      const itemId = service.items()[0].id;
-      service.markAsPurchased(itemId);
-      
-      expect(service.progressPercentage()).toBe(50);
-    });
-  });
-
-  describe('markAsNotPurchased()', () => {
-    it('should set purchasedQuantity to 0', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 3, unit: 'Einheit' as const });
-      const itemId = service.items()[0].id;
-      
-      service.markAsPurchased(itemId);
-      expect(service.items()[0].purchasedQuantity).toBe(3);
-      
-      service.markAsNotPurchased(itemId);
-      expect(service.items()[0].purchasedQuantity).toBe(0);
-    });
-  });
-
-  describe('updateItem()', () => {
-    it('should update item properties', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
-      const itemId = service.items()[0].id;
-
-      service.updateItem(itemId, { name: 'Hafermilch', totalQuantity: 2 });
-
-      expect(service.items()[0].name).toBe('Hafermilch');
-      expect(service.items()[0].totalQuantity).toBe(2);
-    });
-
-    it('should update updatedAt timestamp', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
-      const itemId = service.items()[0].id;
-
-      service.updateItem(itemId, { name: 'Hafermilch' });
-      
-      // Just verify the updatedAt exists - timestamp comparison not needed
-      expect(service.items()[0].updatedAt).toBeInstanceOf(Date);
-    });
-  });
-
-  describe('deleteItem()', () => {
-    it('should remove item from list', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
-      service.addItem({ name: 'Brot', category: 'Backwaren', totalQuantity: 1, unit: 'Einheit' as const });
-      
-      const itemId = service.items()[0].id;
-      service.deleteItem(itemId);
-
-      expect(service.items().length).toBe(1);
-      expect(service.items()[0].name).toBe('Brot');
-    });
-
-    it('should update allCount after deletion', () => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
-      const itemId = service.items()[0].id;
-
-      expect(service.allCount()).toBe(1);
-      
-      service.deleteItem(itemId);
-      
-      expect(service.allCount()).toBe(0);
-    });
-  });
-
-  describe('getFilteredItems()', () => {
-    beforeEach(() => {
-      service.addItem({ name: 'Milch', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
-      service.addItem({ name: 'Brot', category: 'Backwaren', totalQuantity: 1, unit: 'Einheit' as const });
-      service.addItem({ name: 'Käse', category: 'Milchprodukte', totalQuantity: 1, unit: 'Einheit' as const });
-      
-      // Mark first item as purchased
-      service.markAsPurchased(service.items()[0].id);
-    });
-
-    it('should return all items when filter is "all"', () => {
-      const result = service.getFilteredItems('all', '');
-      expect(result.length).toBe(3);
-    });
-
-    it('should return only not purchased items when filter is "notPurchased"', () => {
-      const result = service.getFilteredItems('notPurchased', '');
-      expect(result.length).toBe(2);
-      expect(result.every(item => item.purchasedQuantity < item.totalQuantity)).toBe(true);
-    });
-
-    it('should return only purchased items when filter is "purchased"', () => {
-      const result = service.getFilteredItems('purchased', '');
-      expect(result.length).toBe(1);
-      expect(result[0].name).toBe('Milch');
-    });
-
-    it('should filter by search query in name', () => {
-      const result = service.getFilteredItems('all', 'brot');
-      expect(result.length).toBe(1);
-      expect(result[0].name).toBe('Brot');
-    });
-
-    it('should filter by search query in category', () => {
-      const result = service.getFilteredItems('all', 'milchprodukte');
-      expect(result.length).toBe(2);
-    });
-
-    it('should be case-insensitive', () => {
-      const result = service.getFilteredItems('all', 'MILCH');
-      expect(result.length).toBe(2); // Milch and items with Milchprodukte category
-    });
-
-    it('should combine filter and search', () => {
-      const result = service.getFilteredItems('notPurchased', 'milch');
-      expect(result.length).toBe(1);
-      expect(result[0].name).toBe('Käse'); // Käse has Milchprodukte category
-    });
-  });
-
-  describe('isPurchased()', () => {
-    it('should return true when purchasedQuantity >= totalQuantity', () => {
-      const item: ShoppingItem = {
-        id: '1',
-        name: 'Test',
-        category: 'Test',
-        totalQuantity: 2,
-        purchasedQuantity: 2,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        unit: 'Einheit'
-      };
-
-      expect(service.isPurchased(item)).toBe(true);
-    });
-
-    it('should return false when purchasedQuantity < totalQuantity', () => {
-      const item: ShoppingItem = {
-        id: '1',
-        name: 'Test',
-        category: 'Test',
-        totalQuantity: 2,
-        purchasedQuantity: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        unit: 'Einheit'
-      };
-
-      expect(service.isPurchased(item)).toBe(false);
-    });
-  });
-
-  describe('getStatusText()', () => {
-    it('should return correct status text', () => {
-      const item: ShoppingItem = {
-        id: '1',
-        name: 'Test',
-        category: 'Test',
-        totalQuantity: 5,
-        purchasedQuantity: 2,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        unit: 'Einheit'
-      };
-
-      expect(service.getStatusText(item)).toBe('2 von 5 gekauft');
+    it('should return false if list does not exist', async () => {
+      mockPowerSync.get.mockResolvedValue({ exists: 0 });
+      const exists = await service.listExists(100n);
+      expect(exists).toBe(false);
     });
   });
 
   describe('updateListInfo()', () => {
-    it('should update list name', () => {
-      service.updateListInfo('Neue Liste', 'Neue Beschreibung');
-      expect(service.listName()).toBe('Neue Liste');
-    });
-
-    it('should update list description', () => {
-      service.updateListInfo('Neue Liste', 'Neue Beschreibung');
-      expect(service.listDescription()).toBe('Neue Beschreibung');
+    it('should execute update sql for lists', async () => {
+      mockPowerSync.execute.mockResolvedValue({});
+      await service.updateListInfo(10n, 'New Name', 'New Desc');
+      expect(mockPowerSync.execute).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE "Lists"'),
+        ['New Name', 'New Desc', '10']
+      );
     });
   });
 
-  describe('computed values', () => {
-    it('should calculate notPurchasedCount correctly', () => {
-      service.addItem({ name: 'Item 1', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
-      service.addItem({ name: 'Item 2', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
-      service.addItem({ name: 'Item 3', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
-      
-      service.markAsPurchased(service.items()[0].id);
-
-      expect(service.notPurchasedCount()).toBe(2);
+  describe('deleteList()', () => {
+    it('should execute delete for ListItem, UserLists, and Lists tables', async () => {
+      mockPowerSync.execute.mockResolvedValue({});
+      await service.deleteList(5n);
+      expect(mockPowerSync.execute).toHaveBeenCalledTimes(3);
+      expect(mockPowerSync.execute).toHaveBeenNthCalledWith(1, expect.stringContaining('DELETE FROM "ListItem"'), ['5']);
+      expect(mockPowerSync.execute).toHaveBeenNthCalledWith(2, expect.stringContaining('DELETE FROM "UserLists"'), ['5']);
+      expect(mockPowerSync.execute).toHaveBeenNthCalledWith(3, expect.stringContaining('DELETE FROM "Lists"'), ['5']);
     });
+  });
 
-    it('should calculate purchasedCount correctly', () => {
-      service.addItem({ name: 'Item 1', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
-      service.addItem({ name: 'Item 2', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
-      
-      service.markAsPurchased(service.items()[0].id);
-      service.markAsPurchased(service.items()[1].id);
+  describe('leaveList()', () => {
+    it('should delete only the current user relation from UserLists', async () => {
+      mockPowerSync.execute.mockResolvedValue({});
 
-      expect(service.purchasedCount()).toBe(2);
+      await service.leaveList(5n);
+
+      expect(mockPowerSync.execute).toHaveBeenCalledWith(
+        expect.stringContaining('DELETE FROM "UserLists" WHERE user = ? AND list = ?'),
+        [USER_ID_PLACEHOLDER, '5']
+      );
     });
+  });
 
-    it('should calculate progressPercentage as 100% when all items purchased', () => {
-      service.addItem({ name: 'Item 1', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
-      service.addItem({ name: 'Item 2', category: 'Test', totalQuantity: 1, unit: 'Einheit' as const });
+  describe('setPurchasedQuantity()', () => {
+    it('should execute update on ListItem for curr_amount', async () => {
+      mockPowerSync.execute.mockResolvedValue({});
+      await service.setPurchasedQuantity('item-123', 5);
+      expect(mockPowerSync.execute).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE "ListItem"'),
+        [5, 'item-123']
+      );
+    });
+  });
+
+  describe('deleteListItem()', () => {
+    it('should execute delete on ListItem for specific id', async () => {
+      mockPowerSync.execute.mockResolvedValue({});
+      await service.deleteListItem('item-123');
+      expect(mockPowerSync.execute).toHaveBeenCalledWith(
+        expect.stringContaining('DELETE FROM "ListItem" WHERE id = ?'),
+        ['item-123']
+      );
+    });
+  });
+
+  describe('getCategories()', () => {
+    it('should retrieve categories from database', async () => {
+      const mockResult = [{ id: 1, name: 'Food', created_at: 'now' }];
+      mockPowerSync.db.getAll.mockResolvedValue(mockResult);
       
-      service.markAsPurchased(service.items()[0].id);
-      service.markAsPurchased(service.items()[1].id);
-
-      expect(service.progressPercentage()).toBe(100);
+      const res = await service.getCategories();
+      expect(res).toEqual(mockResult);
+      expect(mockPowerSync.db.getAll).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT id, name, created_at FROM "Category"')
+      );
     });
   });
 });

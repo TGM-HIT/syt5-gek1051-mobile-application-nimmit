@@ -1,21 +1,24 @@
 import { Component, inject, signal, input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, X } from 'lucide-angular';
+import { LucideAngularModule, X, Trash2 } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 import { ModalService } from '../../services/modal.service';
 
 export interface EditListData {
   name: string;
   description: string;
+  aloneInList: boolean;
 }
 
 export interface EditListResult {
-  name: string;
-  description: string;
+  action: 'save' | 'delete' | 'leave';
+  name?: string;
+  description?: string;
 }
 
 @Component({
   selector: 'app-edit-list-modal',
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, TranslocoModule],
   templateUrl: './edit-list-modal.html',
   styleUrl: './edit-list-modal.scss',
 })
@@ -23,7 +26,7 @@ export class EditListModal implements OnInit {
   private readonly modalService = inject(ModalService);
   
   readonly data = input<EditListData>();
-  readonly icons = { X };
+  readonly icons = { X, Trash2, UserX: X }; 
 
   readonly name = signal('');
   readonly description = signal('');
@@ -36,6 +39,10 @@ export class EditListModal implements OnInit {
     }
   }
 
+  getAloneInList(): boolean {
+    return this.data()?.aloneInList ?? false;
+  }
+
   close(): void {
     this.modalService.dismiss();
   }
@@ -46,10 +53,16 @@ export class EditListModal implements OnInit {
     }
 
     const result: EditListResult = {
+      action: 'save',
       name: this.name().trim(),
       description: this.description().trim()
     };
 
     this.modalService.close(result);
   }
+
+  deleteList(): void {
+    this.modalService.close({ action: this.getAloneInList() ? 'delete' : 'leave' });
+  }
 }
+

@@ -1,0 +1,15 @@
+<div class="modal-content">
+  <div class="modal-header">
+    <h2 class="modal-title">{{ data()?.title || ('modals.warning.defaultTitle' | transloco) }}</h2>
+    <button type="button" class="close-btn" (click)="cancel()" [attr.aria-label]="'modals.warning.closeAria' | transloco">
+      <lucide-icon [img]="icons.X" [size]="24" [strokeWidth]="2"></lucide-icon>
+    </button>
+  </div>
+
+  <p class="modal-message">{{ data()?.message || '' }}</p>
+
+  <div class="actions">
+    <button type="button" class="cancel-btn" (click)="cancel()">{{ data()?.cancelText || ('common.cancel' | transloco) }}</button>
+    <button type="button" class="confirm-btn" (click)="confirm()">{{ data()?.confirmText || ('common.confirm' | transloco) }}</button>
+  </div>
+</div>
