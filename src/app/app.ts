@@ -9,10 +9,11 @@ import { SupabaseConnector } from './services/supabase-connector';
 import { createBaseLogger, LogLevel } from '@powersync/web';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AppError } from './pages/app-error/app-error';
+import { TranslocoModule } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Navigation, ModalContainer, AppError],
+  imports: [RouterOutlet, Navigation, ModalContainer, AppError, TranslocoModule],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
