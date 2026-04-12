@@ -1,5 +1,41 @@
-<nav class="bottom-navigation">
-  <a routerLink="/lists" routerLinkActive="active" class="nav-item">
+<nav class="sidebar-navigation" [class.is-open]="isSidebarOpen()" aria-label="Navigation">
+  <button type="button" class="nav-item sidebar-toggle" (click)="toggleSidebar()" aria-label="Navigation umschalten">
+    <lucide-icon [img]="icons.Menu" [size]="24" [strokeWidth]="2"></lucide-icon>
+    <span class="nav-label">Menü</span>
+  </button>
+
+  <div class="sidebar-items">
+    <a routerLink="/lists" class="nav-item" [class.active]="isListSectionActive()">
+      <lucide-icon [img]="icons.List" [size]="24" [strokeWidth]="2"></lucide-icon>
+      <span class="nav-label">Listen</span>
+    </a>
+
+    <a routerLink="/groups" routerLinkActive="active" class="nav-item">
+      <lucide-icon [img]="icons.Users" [size]="24" [strokeWidth]="2"></lucide-icon>
+      <span class="nav-label">Gruppen</span>
+    </a>
+
+    <a routerLink="/favourites" routerLinkActive="active" class="nav-item">
+      <lucide-icon [img]="icons.Star" [size]="24" [strokeWidth]="2"></lucide-icon>
+      <span class="nav-label">Favoriten</span>
+    </a>
+
+    <a routerLink="/settings" class="nav-item" [class.active]="isSettingsSectionActive()">
+      <lucide-icon [img]="icons.Settings" [size]="24" [strokeWidth]="2"></lucide-icon>
+      <span class="nav-label">Einstellungen</span>
+    </a>
+  </div>
+
+  @if (this.resolveListId() !== null) {
+    <button class="nav-item add-button" (click)="addNewItem()" aria-label="Produkt hinzufügen">
+      <lucide-icon [img]="icons.Plus" [size]="28" [strokeWidth]="2.5"></lucide-icon>
+      <span class="nav-label">Hinzufügen</span>
+    </button>
+  }
+</nav>
+
+<nav class="bottom-navigation" aria-label="Navigation">
+  <a routerLink="/lists" class="nav-item" [class.active]="isListSectionActive()">
     <lucide-icon [img]="icons.List" [size]="24" [strokeWidth]="2"></lucide-icon>
   </a>
 
@@ -11,7 +47,7 @@
     <lucide-icon [img]="icons.Star" [size]="24" [strokeWidth]="2"></lucide-icon>
   </a>
 
-  <a routerLink="/settings" routerLinkActive="active" class="nav-item">
+  <a routerLink="/settings" class="nav-item" [class.active]="isSettingsSectionActive()">
     <lucide-icon [img]="icons.Settings" [size]="24" [strokeWidth]="2"></lucide-icon>
   </a>
   @if (this.resolveListId() !== null) {

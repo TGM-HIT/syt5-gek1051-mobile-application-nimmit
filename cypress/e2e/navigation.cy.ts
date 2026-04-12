@@ -7,18 +7,18 @@ describe('Navigation', () => {
   });
 
   it('should navigate to Groups page', () => {
-    cy.get('nav.bottom-navigation a[routerLink="/groups"]').click();
+    cy.get('app-navigation a[routerLink="/groups"]:visible').click();
     cy.url().should('include', '/groups');
   });
 
   it('should navigate to Settings page', () => {
-    cy.get('nav.bottom-navigation a[routerLink="/settings"]').click();
+    cy.get('app-navigation a[routerLink="/settings"]:visible').click();
     cy.url().should('include', '/settings');
   });
 
   it('should navigate back to Shopping List page', () => {
     cy.visit('/settings');
-    cy.get('nav.bottom-navigation a[routerLink="/lists"]').click();
+    cy.get('app-navigation a[routerLink="/lists"]:visible').click();
     cy.url().should('include', '/lists');
   });
 });

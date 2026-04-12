@@ -55,6 +55,12 @@ interface ListOption {
 
           @if (isListDropdownOpen()) {
             <div class="dropdown-menu">
+              <button class="dropdown-option" type="button" (click)="selectNoDefaultList()">
+                <span>None</span>
+                @if (isNoneSelected()) {
+                  <lucide-angular class="check-icon" [img]="icons.Check"></lucide-angular>
+                }
+              </button>
               @for (list of lists(); track list.id.toString()) {
                 <button class="dropdown-option" type="button" (click)="selectDefaultList(list.id)">
                   <span>{{ list.name }}</span>
@@ -201,8 +207,13 @@ export class Settings {
   readonly selectedDefaultListId = signal<bigint | null>(this.defaultList.getDefaultList());
   readonly selectedListName = computed(() => {
     const selectedId = this.selectedDefaultListId();
+
+    if (selectedId === null) {
+      return 'None';
+    }
+
     const selected = this.lists().find((list) => list.id === selectedId);
-    return selected?.name ?? 'Bitte Liste wählen';
+    return selected?.name ?? 'None';
   });
 
   constructor() {
@@ -225,9 +236,19 @@ export class Settings {
     return this.selectedDefaultListId() === listId;
   }
 
+  isNoneSelected(): boolean {
+    return this.selectedDefaultListId() === null;
+  }
+
   selectDefaultList(listId: bigint): void {
     this.selectedDefaultListId.set(listId);
     this.defaultList.setDefaultList(listId);
+    this.isListDropdownOpen.set(false);
+  }
+
+  selectNoDefaultList(): void {
+    this.selectedDefaultListId.set(null);
+    this.defaultList.setDefaultList(null);
     this.isListDropdownOpen.set(false);
   }
 

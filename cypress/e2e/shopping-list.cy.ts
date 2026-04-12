@@ -11,8 +11,8 @@ describe('Shopping List', () => {
   });
 
   it('should open add item modal from navigation add button', () => {
-    // Explicitly target the bottom nav add button, as there might be multiple
-    cy.get('nav.bottom-navigation .nav-item.add-button').click();
+    // Click the visible navigation add button (bottom bar on mobile, sidebar on desktop)
+    cy.get('app-navigation .nav-item.add-button:visible').click();
     cy.get('.modal-content').should('be.visible');
     cy.get('.modal-title').should('contain.text', 'Produkt hinzufügen');
     cy.get('.close-btn').click();
