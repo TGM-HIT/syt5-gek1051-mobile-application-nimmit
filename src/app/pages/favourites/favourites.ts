@@ -62,6 +62,7 @@ export class Favourites {
 
   // Items aus Service
   readonly favourites = this.shoppingListService.favourites;
+  readonly favouritesLoaded = computed(() => this.shoppingListService.loaded?.() ?? true);
 
   readonly filteredFavourites = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();

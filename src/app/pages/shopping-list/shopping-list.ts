@@ -33,6 +33,7 @@ export class ShoppingList implements OnInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly transloco = inject(TranslocoService);
   private readonly items = signal<ShoppingItemRow[]>([]);
+  readonly itemsLoaded = signal(false);
   readonly listName = signal(this.transloco.translate('shoppingList.defaultListName'));
   readonly listDescription = signal(this.transloco.translate('shoppingList.defaultListDescription'));
   private readonly listId = signal<bigint | null>(null);
@@ -370,8 +371,11 @@ export class ShoppingList implements OnInit, OnDestroy {
   private watchItems(): void {
     const listId = this.listId();
 
+    this.itemsLoaded.set(false);
+
     if (!listId) {
       this.items.set([]);
+      this.itemsLoaded.set(true);
       return;
     }
 
@@ -399,6 +403,7 @@ export class ShoppingList implements OnInit, OnDestroy {
       }
       const rows = this.toRows<ShoppingItemRow>(result.rows);
       this.items.set(rows);
+      this.itemsLoaded.set(true);
       this.cdr.detectChanges();
     }, [String(this.listId())]);
   }

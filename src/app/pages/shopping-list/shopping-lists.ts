@@ -21,6 +21,7 @@ type ListWithUserCount = Lists & {
 })
 export class ShoppingLists implements OnInit, OnDestroy {
   readonly lists = signal<ListWithUserCount[]>([]);
+  readonly listsLoaded = signal(false);
   userId: string | null = null;
   readonly icons = { ListChecks, Plus, ArrowRight, Layers };
 
@@ -72,6 +73,7 @@ export class ShoppingLists implements OnInit, OnDestroy {
 
   getLists() {
     this.disposeListsWatch();
+    this.listsLoaded.set(false);
     this.lists.set([]);
 
     const sql = `
@@ -94,15 +96,18 @@ export class ShoppingLists implements OnInit, OnDestroy {
             other_users_count: list.id ? await this.supabase.getUserCountForList(list.id)-1 : null
           })));
           this.lists.set(listsWithUserCount);
+          this.listsLoaded.set(true);
           console.log('Lists set successfully!', listsWithUserCount.length);
           this.cdr.detectChanges();
         } catch (e) {
           console.error('Error updating lists in onData:', e);
+          this.listsLoaded.set(true);
           setTimeout(() => alert(`Error in onData: ${String(e)}`), 100);
         }
       },
       onError: (error) => {
         console.error('Query error:', error);
+        this.listsLoaded.set(true);
       }
     });
 

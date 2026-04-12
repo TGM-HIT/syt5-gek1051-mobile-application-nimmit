@@ -101,6 +101,24 @@
 
   <!-- Items Liste -->
   <div class="items-container">
+    @if (!itemsLoaded()) {
+    <div class="items-skeleton" aria-busy="true" role="status">
+      @for (i of [0, 1, 2, 3, 4, 5]; track i) {
+      <div class="item-card skeleton" aria-hidden="true">
+        <div class="item-header">
+          <div class="item-header-main">
+            <div class="category-icon-wrapper skeleton-circle"></div>
+            <div class="item-info">
+              <div class="skeleton-line skeleton-line--title"></div>
+              <div class="skeleton-line skeleton-line--meta"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    } @else {
+
     <!-- Keine Ergebnisse gefunden -->
     @if (hasNoResults()) {
     <div class="no-results">
@@ -295,6 +313,8 @@
       </div>
     </div>
     }
+    }
+
     }
   </div>
 </div>

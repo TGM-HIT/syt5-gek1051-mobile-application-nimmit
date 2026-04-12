@@ -247,3 +247,45 @@
     }
   }
 }
+
+// ============================================
+// SKELETON LOADER
+// ============================================
+
+.items-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.item-card.skeleton {
+  pointer-events: none;
+}
+
+.item-card.skeleton .skeleton-line {
+  display: block;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface);
+}
+
+.item-card.skeleton .skeleton-line--title {
+  height: 16px;
+  width: 60%;
+  margin-bottom: var(--spacing-2);
+}
+
+.item-card.skeleton .skeleton-line--meta {
+  height: 12px;
+  width: 48%;
+}
+
+.item-card.skeleton .category-icon-wrapper.skeleton-circle {
+  background-color: var(--color-surface);
+}
+
+.item-card.skeleton .skeleton-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-default);
+  background-color: var(--color-surface);
+}

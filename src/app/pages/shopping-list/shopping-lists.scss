@@ -287,6 +287,58 @@
 	border: 0;
 }
 
+// ============================================
+// SKELETON LOADER
+// ============================================
+
+.list-card.skeleton {
+	cursor: default;
+	pointer-events: none;
+
+	&:hover,
+	&:active {
+		transform: none;
+		background-color: var(--color-surface);
+	}
+}
+
+.skeleton-block {
+	background-color: var(--color-border-light);
+}
+
+.skeleton-line {
+	display: block;
+	height: 12px;
+	border-radius: var(--radius-full);
+	background-color: var(--color-border-light);
+
+	&.skeleton-line--title {
+		height: 16px;
+		width: 60%;
+		margin-bottom: var(--spacing-2);
+	}
+
+	&.skeleton-line--small {
+		width: 42%;
+		margin-bottom: var(--spacing-2);
+	}
+
+	&.skeleton-line--medium {
+		width: 78%;
+	}
+}
+
+.skeleton-circle {
+	display: block;
+	background-color: var(--color-border-light);
+
+	&.skeleton-circle--sm {
+		width: 18px;
+		height: 18px;
+		border-radius: var(--radius-full);
+	}
+}
+
 @media (max-width: 520px) {
 	.create-list-form {
 		flex-direction: column;

@@ -20,12 +20,14 @@ export class ShoppingListService {
   private readonly _listName = signal('Meine Einkaufsliste');
   private readonly _listDescription = signal('Tippe auf +, um Produkte hinzuzufügen');
   private readonly _favourites = signal<FavouriteItem[]>([]);
+  private readonly _loaded = signal(false);
 
   // Public readonly signals
   readonly items = this._items.asReadonly();
   readonly listName = this._listName.asReadonly();
   readonly listDescription = this._listDescription.asReadonly();
   readonly favourites = this._favourites.asReadonly();
+  readonly loaded = this._loaded.asReadonly();
 
   constructor() {
     this.loadFromStorage();
@@ -62,6 +64,8 @@ export class ShoppingListService {
       }
     } catch (e) {
       console.error('Fehler beim Laden der Daten:', e);
+    } finally {
+      this._loaded.set(true);
     }
   }
 

@@ -40,41 +40,81 @@
 		<small class="error">{{ 'shoppingLists.nameRequired' | transloco }}</small>
 	}
 
-	@if ((this.powerSync.ready$ | async) && this.lists().length > 0) {
-		<div class="lists-grid">
-			@for (list of this.lists(); track list.id) {
-				<article class="list-card" (click)="openList(list)">
-					<div class="list-card-main">
-						<div class="list-icon" aria-hidden="true">
-							<lucide-icon [img]="icons.ListChecks" [size]="18" [strokeWidth]="2"></lucide-icon>
+	@if (this.powerSync.ready$ | async) {
+		@if (!this.listsLoaded()) {
+			<div class="lists-grid skeleton-grid" aria-busy="true" role="status">
+				<span class="sr-only">{{ 'shoppingLists.loadingTitle' | transloco }}</span>
+				@for (i of [0, 1, 2, 3]; track i) {
+					<article class="list-card skeleton" aria-hidden="true">
+						<div class="list-card-main">
+							<div class="list-icon skeleton-block"></div>
+							<div class="list-text">
+								<div class="skeleton-line skeleton-line--title"></div>
+								<div class="skeleton-line skeleton-line--small"></div>
+								<div class="skeleton-line skeleton-line--medium"></div>
+							</div>
 						</div>
+						<div class="list-card-action" aria-hidden="true">
+							<div class="skeleton-circle skeleton-circle--sm"></div>
+						</div>
+					</article>
+				}
+			</div>
+		} @else if (this.lists().length > 0) {
+			<div class="lists-grid">
+				@for (list of this.lists(); track list.id) {
+					<article class="list-card" (click)="openList(list)">
+						<div class="list-card-main">
+							<div class="list-icon" aria-hidden="true">
+								<lucide-icon [img]="icons.ListChecks" [size]="18" [strokeWidth]="2"></lucide-icon>
+							</div>
+							<div class="list-text">
+								<h2 class="list-name">{{ list.name }}</h2>
+								@if (list.other_users_count != null && list.other_users_count > 0) {
+									<p class="list-collaboration">{{ (list.other_users_count === 1 ? 'shoppingLists.otherUsersOne' : 'shoppingLists.otherUsersMany') | transloco : { count: list.other_users_count } }}</p>
+								} @else {
+									<p class="list-collaboration solo">{{ 'shoppingLists.solo' | transloco }}</p>
+								}
+								@if (list.description) {
+									<p class="list-description">{{ list.description }}</p>
+								} @else {
+									<p class="list-description placeholder">{{ 'shoppingLists.noDescription' | transloco }}</p>
+								}
+							</div>
+						</div>
+						<div class="list-card-action" aria-hidden="true">
+							<lucide-icon [img]="icons.ArrowRight" [size]="18" [strokeWidth]="2"></lucide-icon>
+						</div>
+					</article>
+				}
+			</div>
+		} @else {
+			<div class="empty-state">
+				<div class="empty-state-icon" aria-hidden="true">
+					<lucide-icon [img]="icons.ListChecks" [size]="30" [strokeWidth]="2"></lucide-icon>
+				</div>
+				<h2>{{ 'shoppingLists.emptyTitle' | transloco }}</h2>
+				<p>{{ 'shoppingLists.emptySubtitle' | transloco }}</p>
+			</div>
+		}
+	} @else {
+		<div class="lists-grid skeleton-grid" aria-busy="true" role="status">
+			<span class="sr-only">{{ 'shoppingLists.loadingTitle' | transloco }}</span>
+			@for (i of [0, 1, 2, 3]; track i) {
+				<article class="list-card skeleton" aria-hidden="true">
+					<div class="list-card-main">
+						<div class="list-icon skeleton-block"></div>
 						<div class="list-text">
-							<h2 class="list-name">{{ list.name }}</h2>
-							@if (list.other_users_count != null && list.other_users_count > 0) {
-								<p class="list-collaboration">{{ (list.other_users_count === 1 ? 'shoppingLists.otherUsersOne' : 'shoppingLists.otherUsersMany') | transloco : { count: list.other_users_count } }}</p>
-							} @else {
-								<p class="list-collaboration solo">{{ 'shoppingLists.solo' | transloco }}</p>
-							}
-							@if (list.description) {
-								<p class="list-description">{{ list.description }}</p>
-							} @else {
-								<p class="list-description placeholder">{{ 'shoppingLists.noDescription' | transloco }}</p>
-							}
+							<div class="skeleton-line skeleton-line--title"></div>
+							<div class="skeleton-line skeleton-line--small"></div>
+							<div class="skeleton-line skeleton-line--medium"></div>
 						</div>
 					</div>
 					<div class="list-card-action" aria-hidden="true">
-						<lucide-icon [img]="icons.ArrowRight" [size]="18" [strokeWidth]="2"></lucide-icon>
+						<div class="skeleton-circle skeleton-circle--sm"></div>
 					</div>
 				</article>
 			}
-		</div>
-	} @else {
-		<div class="empty-state">
-			<div class="empty-state-icon" aria-hidden="true">
-				<lucide-icon [img]="icons.ListChecks" [size]="30" [strokeWidth]="2"></lucide-icon>
-			</div>
-			<h2>{{ 'shoppingLists.emptyTitle' | transloco }}</h2>
-			<p>{{ 'shoppingLists.emptySubtitle' | transloco }}</p>
 		</div>
 	}
 </section>
