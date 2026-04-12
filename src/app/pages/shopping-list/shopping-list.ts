@@ -39,6 +39,22 @@ export class ShoppingList implements OnInit, OnDestroy {
   private stopListInfoWatch: (() => void) | null = null;
   private stopItemsWatch: (() => void) | null = null;
   readonly isOnline = signal<boolean>(navigator.onLine);
+
+  private readonly desktopMql = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(min-width: 768px)')
+    : null;
+  readonly isDesktop = signal<boolean>(this.desktopMql?.matches ?? false);
+
+  private readonly handleDesktopMediaQueryChange = (event: MediaQueryListEvent): void => {
+    if (this.isDisposed) {
+      return;
+    }
+    this.isDesktop.set(event.matches);
+    if (event.matches) {
+      this.expandedItemId.set(null);
+    }
+    this.cdr.detectChanges();
+  };
   private readonly handleOnlineStatusChange = () => {
     if (this.isDisposed) {
       return;
@@ -258,6 +274,15 @@ export class ShoppingList implements OnInit, OnDestroy {
     window.addEventListener('online', this.handleOnlineStatusChange);
     window.addEventListener('offline', this.handleOnlineStatusChange);
 
+    if (this.desktopMql) {
+      this.isDesktop.set(this.desktopMql.matches);
+      if (typeof this.desktopMql.addEventListener === 'function') {
+        this.desktopMql.addEventListener('change', this.handleDesktopMediaQueryChange);
+      } else if (typeof (this.desktopMql as unknown as { addListener?: (listener: (ev: MediaQueryListEvent) => void) => void }).addListener === 'function') {
+        (this.desktopMql as unknown as { addListener: (listener: (ev: MediaQueryListEvent) => void) => void }).addListener(this.handleDesktopMediaQueryChange);
+      }
+    }
+
     await this.resolveListId();
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     this.powerSync.ready$.subscribe(async initialized => {
@@ -276,6 +301,14 @@ export class ShoppingList implements OnInit, OnDestroy {
     this.stopItemsWatch = null;
     window.removeEventListener('online', this.handleOnlineStatusChange);
     window.removeEventListener('offline', this.handleOnlineStatusChange);
+
+    if (this.desktopMql) {
+      if (typeof this.desktopMql.removeEventListener === 'function') {
+        this.desktopMql.removeEventListener('change', this.handleDesktopMediaQueryChange);
+      } else if (typeof (this.desktopMql as unknown as { removeListener?: (listener: (ev: MediaQueryListEvent) => void) => void }).removeListener === 'function') {
+        (this.desktopMql as unknown as { removeListener: (listener: (ev: MediaQueryListEvent) => void) => void }).removeListener(this.handleDesktopMediaQueryChange);
+      }
+    }
   }
 
   private async resolveListId(): Promise<void> {
