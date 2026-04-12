@@ -5,8 +5,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-item-modal/add-item-modal';
 import { EditListModal, EditListData, EditListResult } from '../../components/edit-list-modal/edit-list-modal';
 import { InviteUserModal, InviteUserData, InviteUserResult } from '../../components/invite-user-modal/invite-user-modal';
-import { WarningModal, WarningModalData } from '../../components/warning-modal/warning-modal';
 import { ModalService } from '../../services/modal.service';
+import { ConfirmModalService } from '../../services/confirm-modal.service';
 import { ShoppingListDataService, ShoppingItemRow } from '../../services/shopping-list-data.service';
 import { SupabaseConnector } from '../../services/supabase-connector';
 import { FilterType } from '../../types';
@@ -27,6 +27,7 @@ export class ShoppingList implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly modalService = inject(ModalService);
+  private readonly confirmModal = inject(ConfirmModalService);
   private readonly powerSync = inject(PowerSyncService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly items = signal<ShoppingItemRow[]>([]);
@@ -564,14 +565,11 @@ export class ShoppingList implements OnInit, OnDestroy {
   async deleteItem(item: ShoppingItemRow): Promise<void> {
     this.expandedItemId.set(null);
 
-    const confirmed = await this.modalService.open<WarningModalData, boolean>({
-      component: WarningModal,
-      data: {
-        title: 'Produkt löschen?',
-        message: `Möchtest du „${item.name}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
-        confirmText: 'Löschen',
-        cancelText: 'Abbrechen',
-      }
+    const confirmed = await this.confirmModal.confirm({
+      title: 'Produkt löschen?',
+      message: `Möchtest du „${item.name}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
+      confirmText: 'Löschen',
+      cancelText: 'Abbrechen',
     });
 
     if (!confirmed) {
@@ -618,7 +616,7 @@ export class ShoppingList implements OnInit, OnDestroy {
     }
 
     if (result?.action === 'delete' || result?.action === 'leave') {
-      const warningConfig: WarningModalData =
+      const confirmed = await this.confirmModal.confirm(
         result.action === 'delete'
           ? {
               title: 'Liste löschen?',
@@ -631,12 +629,8 @@ export class ShoppingList implements OnInit, OnDestroy {
               message: `Möchtest du die Liste „${this.listName()}“ wirklich verlassen?`,
               confirmText: 'Verlassen',
               cancelText: 'Abbrechen',
-            };
-
-      const confirmed = await this.modalService.open<WarningModalData, boolean>({
-        component: WarningModal,
-        data: warningConfig,
-      });
+            }
+      );
 
       if (!confirmed) {
         return;

@@ -4,8 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { User } from '@supabase/supabase-js';
 import { SupabaseConnector } from '../../services/supabase-connector';
-import { ModalService } from '../../services/modal.service';
-import { WarningModal, WarningModalData } from '../../components/warning-modal/warning-modal';
+import { ConfirmModalService } from '../../services/confirm-modal.service';
 import { Profile, Timestamp } from '../../types';
 
 @Component({
@@ -17,7 +16,7 @@ import { Profile, Timestamp } from '../../types';
 export class Account implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly supabaseService = inject(SupabaseConnector);
-  private readonly modalService = inject(ModalService);
+  private readonly confirmModal = inject(ConfirmModalService);
   private readonly router = inject(Router);
 
   readonly isLoading = signal(true);
@@ -138,14 +137,11 @@ export class Account implements OnInit {
   }
 
   protected async logout(): Promise<void> {
-    const confirmed = await this.modalService.open<WarningModalData, boolean>({
-      component: WarningModal,
-      data: {
-        title: 'Abmelden?',
-        message: 'Möchtest du dich wirklich abmelden?',
-        confirmText: 'Abmelden',
-        cancelText: 'Abbrechen',
-      },
+    const confirmed = await this.confirmModal.confirm({
+      title: 'Abmelden?',
+      message: 'Möchtest du dich wirklich abmelden?',
+      confirmText: 'Abmelden',
+      cancelText: 'Abbrechen',
     });
 
     if (!confirmed) {
