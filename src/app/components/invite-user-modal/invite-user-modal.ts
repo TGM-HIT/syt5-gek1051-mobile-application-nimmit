@@ -1,6 +1,7 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, X } from 'lucide-angular';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ModalService } from '../../services/modal.service';
 import { SupabaseConnector } from '../../services/supabase-connector';
 
@@ -17,13 +18,14 @@ export interface InviteUserResult {
 
 @Component({
   selector: 'app-invite-user-modal',
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, TranslocoModule],
   templateUrl: './invite-user-modal.html',
   styleUrl: './invite-user-modal.scss',
 })
 export class InviteUserModal {
   private readonly modalService = inject(ModalService);
   private readonly supabase = inject(SupabaseConnector);
+  private readonly transloco = inject(TranslocoService);
 
   readonly data = input<InviteUserData>();
   readonly icons = { X };
@@ -61,15 +63,15 @@ export class InviteUserModal {
     this.resolvedUsername.set(null);
 
     if (!this.isValidEmail(email)) {
-      this.errorMessage.set('Bitte gib eine gültige E-Mail-Adresse ein.');
+      this.errorMessage.set(this.transloco.translate('modals.inviteUser.errors.invalidEmail'));
       return;
     }
     if (email.toLowerCase() === this.inviterEmail.toLowerCase()) {
-      this.errorMessage.set('Du kannst dich nicht selbst einladen.');
+      this.errorMessage.set(this.transloco.translate('modals.inviteUser.errors.selfInvite'));
       return;
     }
     if (this.data()?.currentUsers.some(user => user.email.toLowerCase() === email.toLowerCase())) {
-      this.errorMessage.set('Dieser Nutzer ist bereits Mitglied der Liste.');
+      this.errorMessage.set(this.transloco.translate('modals.inviteUser.errors.alreadyMember'));
       return;
     }
 
@@ -77,12 +79,16 @@ export class InviteUserModal {
     try {
       const resolved = await this.supabase.resolveInviteeByEmail(email);
       if (!resolved.userId) {
-        this.errorMessage.set('Kein Nutzer mit dieser E-Mail gefunden.');
+        this.errorMessage.set(this.transloco.translate('modals.inviteUser.errors.userNotFound'));
         return;
       }
       this.resolvedUsername.set(resolved.username);
     } catch (error) {
-      this.errorMessage.set(error instanceof Error ? error.message : 'Nutzer konnte nicht geprüft werden.');
+      this.errorMessage.set(
+        error instanceof Error
+          ? error.message
+          : this.transloco.translate('modals.inviteUser.errors.checkFailed')
+      );
     } finally {
       this.isResolving.set(false);
     }
@@ -95,11 +101,11 @@ export class InviteUserModal {
 
     const listId = this.data()?.listId;
     if (!listId) {
-      this.errorMessage.set('Liste konnte nicht ermittelt werden.');
+      this.errorMessage.set(this.transloco.translate('modals.inviteUser.errors.listNotFound'));
       return;
     }
     if (this.data()?.currentUsers.some(user => user.email.toLowerCase() === this.inviteEmail().trim().toLowerCase())) {
-      this.errorMessage.set('Dieser Nutzer ist bereits Mitglied der Liste.');
+      this.errorMessage.set(this.transloco.translate('modals.inviteUser.errors.alreadyMember'));
       return;
     }
 
@@ -113,7 +119,11 @@ export class InviteUserModal {
         invitedUsername: result.username,
       });
     } catch (error) {
-      this.errorMessage.set(error instanceof Error ? error.message : 'Einladung konnte nicht gesendet werden.');
+      this.errorMessage.set(
+        error instanceof Error
+          ? error.message
+          : this.transloco.translate('modals.inviteUser.errors.sendFailed')
+      );
     } finally {
       this.isSubmitting.set(false);
     }

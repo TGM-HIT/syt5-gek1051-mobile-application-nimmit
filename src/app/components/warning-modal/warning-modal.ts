@@ -1,6 +1,7 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { LucideAngularModule, X } from 'lucide-angular';
 import { ModalService } from '../../services/modal.service';
+import { TranslocoModule } from '@jsverse/transloco';
 
 export interface WarningModalData {
   title?: string;
@@ -11,7 +12,7 @@ export interface WarningModalData {
 
 @Component({
   selector: 'app-warning-modal',
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, TranslocoModule],
   templateUrl: './warning-modal.html',
   styleUrl: './warning-modal.scss',
 })
@@ -20,11 +21,6 @@ export class WarningModal {
 
   readonly data = input<WarningModalData>();
   readonly icons = { X };
-
-  readonly title = computed(() => this.data()?.title ?? 'Warnung');
-  readonly message = computed(() => this.data()?.message ?? '');
-  readonly confirmText = computed(() => this.data()?.confirmText ?? 'Bestätigen');
-  readonly cancelText = computed(() => this.data()?.cancelText ?? 'Abbrechen');
 
   cancel(): void {
     this.modalService.dismiss();

@@ -1,6 +1,7 @@
 import { Component, inject, signal, input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, X, Trash2 } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 import { ModalService } from '../../services/modal.service';
 
 export interface EditListData {
@@ -17,7 +18,7 @@ export interface EditListResult {
 
 @Component({
   selector: 'app-edit-list-modal',
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, TranslocoModule],
   templateUrl: './edit-list-modal.html',
   styleUrl: './edit-list-modal.scss',
 })

@@ -1,6 +1,7 @@
 import { Component, computed, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, Search, Trash2, Pencil, Star, Plus, Coffee, Apple, Milk, Drumstick, Croissant, Snowflake, Candy, Brush, Package } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 import { FavouriteItem } from '../../models';
 import { ShoppingListService, ModalService } from '../../services';
 import { EditFavouriteModal, EditFavouriteData, EditFavouriteResult } from '../../components/edit-favourite-modal/edit-favourite-modal';
@@ -8,7 +9,7 @@ import { AddItemModal, AddItemData, AddItemResult } from '../../components/add-i
 
 @Component({
   selector: 'app-favourites',
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, TranslocoModule],
   templateUrl: './favourites.html',
   styleUrl: './favourites.scss',
 })

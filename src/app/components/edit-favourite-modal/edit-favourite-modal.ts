@@ -1,6 +1,7 @@
 import { Component, inject, signal, input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, X } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 import { ModalService } from '../../services/modal.service';
 import { Unit } from '../../models/shopping-list.model';
 
@@ -20,7 +21,7 @@ export interface EditFavouriteResult {
 
 @Component({
   selector: 'app-edit-favourite-modal',
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, TranslocoModule],
   templateUrl: './edit-favourite-modal.html',
   styleUrl: './edit-favourite-modal.scss',
 })

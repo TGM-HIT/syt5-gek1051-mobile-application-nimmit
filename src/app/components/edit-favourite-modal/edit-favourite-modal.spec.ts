@@ -3,6 +3,8 @@ import { EditFavouriteModal } from './edit-favourite-modal';
 import { ModalService } from '../../services/modal.service';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentRef } from '@angular/core';
+import { provideTransloco, translocoConfig } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../../transloco/transloco-loader';
 
 describe('EditFavouriteModal', () => {
   let component: EditFavouriteModal;
@@ -19,6 +21,15 @@ describe('EditFavouriteModal', () => {
     await TestBed.configureTestingModule({
       imports: [EditFavouriteModal],
       providers: [
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
         { provide: ModalService, useValue: mockModalService }
       ]
     }).compileComponents();

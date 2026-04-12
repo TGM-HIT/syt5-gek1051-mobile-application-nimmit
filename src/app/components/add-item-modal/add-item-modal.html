@@ -1,8 +1,8 @@
 <div class="modal-content">
   <!-- Header -->
   <div class="modal-header">
-    <h2 class="modal-title">{{ modalTitle() }}</h2>
-    <button class="close-btn" (click)="close()">
+    <h2 class="modal-title">{{ modalTitle() | transloco }}</h2>
+    <button type="button" class="close-btn" (click)="close()" [attr.aria-label]="'common.close' | transloco">
       <lucide-icon [img]="icons.X" [size]="24" [strokeWidth]="2"></lucide-icon>
     </button>
   </div>
@@ -11,13 +11,13 @@
   <form class="modal-form" (ngSubmit)="submit()">
     <!-- Produktname -->
     <div class="form-group">
-      <label for="name">Produktname *</label>
+      <label for="name">{{ 'modals.addItem.productName' | transloco }}</label>
       <div class="size-unit-control" style="position: relative;">
-        <input type="text" id="name" class="form-input" placeholder="z.B. Milch, Brot, Äpfel..." [ngModel]="name()"
+        <input type="text" id="name" class="form-input" [attr.placeholder]="'modals.addItem.productNamePlaceholder' | transloco" [ngModel]="name()"
           (ngModelChange)="onNameChange($event)" (focus)="showAutocomplete.set(true)" (blur)="hideAutocomplete()"
           name="name" autocomplete="off" required />
         <button type="button" class="favourite-btn" [class.active]="isCurrentFavourite()" (click)="toggleFavourite()"
-          [disabled]="isNameEmpty()" title="Als Favorit speichern">
+          [disabled]="isNameEmpty()" [attr.title]="'modals.addItem.saveAsFavourite' | transloco" [attr.aria-label]="'modals.addItem.saveAsFavourite' | transloco">
           <lucide-icon [img]="icons.Star" [size]="24" [strokeWidth]="2"
             [class.filled]="isCurrentFavourite()"></lucide-icon>
         </button>
@@ -58,7 +58,7 @@
 
     <!-- Kategorie -->
     <div class="form-group">
-      <label for="category">Kategorie</label>
+      <label for="category">{{ 'modals.addItem.category' | transloco }}</label>
       <select id="category" class="form-select" [ngModel]="category()" (ngModelChange)="category.set($event)"
         name="category">
         @for (cat of categories(); track cat.id) {
@@ -69,7 +69,7 @@
 
     <!-- Menge -->
     <div class="form-group">
-      <label>Menge</label>
+      <label>{{ 'modals.addItem.quantity' | transloco }}</label>
       <div class="quantity-control">
         <button type="button" class="quantity-btn" (click)="decrementQuantity()" [disabled]="quantity() <= 1">
           <lucide-icon [img]="icons.Minus" [size]="20" [strokeWidth]="2"></lucide-icon>
@@ -83,9 +83,9 @@
 
     <!-- Größe/Einheit -->
     <div class="form-group">
-      <label>Größe (optional)</label>
+      <label>{{ 'modals.addItem.sizeOptional' | transloco }}</label>
       <div class="size-unit-control">
-        <input type="number" class="form-input size-input" placeholder="z.B. 500" [ngModel]="size()"
+        <input type="number" class="form-input size-input" [attr.placeholder]="'modals.addItem.sizePlaceholder' | transloco" [ngModel]="size()"
           (ngModelChange)="size.set($event)" name="size" min="0" />
         <select class="form-select unit-select" [ngModel]="unit()" (ngModelChange)="unit.set($event)" name="unit">
           @for (u of units; track u) {
@@ -97,14 +97,14 @@
 
     <!-- Info/Beschreibung -->
     <div class="form-group">
-      <label for="info">Beschreibung (optional)</label>
-      <textarea id="info" class="form-textarea" placeholder="z.B. Bitte das grüne kaufen..." [ngModel]="info()"
+      <label for="info">{{ 'modals.addItem.descriptionOptional' | transloco }}</label>
+      <textarea id="info" class="form-textarea" [attr.placeholder]="'modals.addItem.descriptionPlaceholder' | transloco" [ngModel]="info()"
         (ngModelChange)="info.set($event)" name="info" rows="3"></textarea>
     </div>
 
     <!-- Submit Button -->
     <button type="submit" class="submit-btn" [disabled]="isNameEmpty()">
-      {{ submitButtonText() }}
+      {{ submitButtonText() | transloco }}
     </button>
   </form>
 </div>

@@ -2,8 +2,8 @@
   <!-- Header -->
   <header class="list-header">
     <div class="list-header-content">
-      <h1 class="list-title">Favoriten</h1>
-      <p class="list-description">Deine gespeicherten Produkte</p>
+      <h1 class="list-title">{{ 'favourites.title' | transloco }}</h1>
+      <p class="list-description">{{ 'favourites.subtitle' | transloco }}</p>
     </div>
   </header>
 
@@ -11,7 +11,7 @@
   <div class="search-container">
     <div class="search-input-wrapper">
       <lucide-icon class="search-icon" [img]="icons.Search" [size]="20" [strokeWidth]="2"></lucide-icon>
-      <input type="text" class="search-input" placeholder="Finde einen Favoriten..." [ngModel]="searchQuery()"
+      <input type="text" class="search-input" [attr.placeholder]="'favourites.searchPlaceholder' | transloco" [ngModel]="searchQuery()"
         (ngModelChange)="onSearchQueryChange($event)" autocomplete="off" />
     </div>
   </div>
@@ -21,7 +21,7 @@
     <!-- Keine Ergebnisse gefunden -->
     @if (hasNoResults()) {
     <div class="no-results">
-      <p>Kein Favorit gefunden</p>
+      <p>{{ 'favourites.noResults' | transloco }}</p>
     </div>
     }
 
@@ -56,10 +56,10 @@
             </div>
           </div>
           <div class="action-buttons">
-            <button class="icon-btn edit-btn" (click)="editFavourite(item)">
+            <button class="icon-btn edit-btn" (click)="editFavourite(item)" [attr.aria-label]="'common.edit' | transloco" [attr.title]="'common.edit' | transloco">
               <lucide-icon [img]="icons.Pencil" [size]="20" [strokeWidth]="2"></lucide-icon>
             </button>
-            <button class="icon-btn delete-btn" (click)="deleteFavourite(item)">
+            <button class="icon-btn delete-btn" (click)="deleteFavourite(item)" [attr.aria-label]="'common.delete' | transloco" [attr.title]="'common.delete' | transloco">
               <lucide-icon [img]="icons.Trash2" [size]="20" [strokeWidth]="2"></lucide-icon>
             </button>
           </div>
@@ -70,8 +70,8 @@
     
     @if (favourites().length === 0 && !hasNoResults()) {
       <div class="no-results">
-        <p>Du hast noch keine Favoriten gespeichert.</p>
-        <p>Tipp: In der Einkaufsliste kannst du Produkte mit dem Stern als Favoriten markieren.</p>
+        <p>{{ 'favourites.emptyTitle' | transloco }}</p>
+        <p>{{ 'favourites.emptyHint' | transloco }}</p>
       </div>
     }
   </div>

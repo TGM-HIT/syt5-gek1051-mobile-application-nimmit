@@ -1,8 +1,8 @@
 <div class="modal-content">
   <!-- Header -->
   <div class="modal-header">
-    <h2 class="modal-title">Favorit bearbeiten</h2>
-    <button class="close-btn" (click)="close()">
+    <h2 class="modal-title">{{ 'modals.editFavourite.title' | transloco }}</h2>
+    <button type="button" class="close-btn" (click)="close()" [attr.aria-label]="'common.close' | transloco">
       <lucide-icon [img]="icons.X" [size]="24" [strokeWidth]="2"></lucide-icon>
     </button>
   </div>
@@ -11,12 +11,12 @@
   <form class="modal-form" (ngSubmit)="submit()">
     <!-- Produktname -->
     <div class="form-group">
-      <label for="favName">Produktname *</label>
+      <label for="favName">{{ 'modals.editFavourite.name' | transloco }}</label>
       <input
         type="text"
         id="favName"
         class="form-input"
-        placeholder="z.B. Äpfel..."
+        [attr.placeholder]="'modals.editFavourite.namePlaceholder' | transloco"
         [ngModel]="name()"
         (ngModelChange)="name.set($event)"
         name="favName"
@@ -26,7 +26,7 @@
 
     <!-- Kategorie -->
     <div class="form-group">
-      <label for="favCategory">Kategorie</label>
+      <label for="favCategory">{{ 'modals.editFavourite.category' | transloco }}</label>
       <select
         id="favCategory"
         class="form-input"
@@ -43,12 +43,12 @@
     <!-- Menge und Einheit -->
     <div class="form-row form-row-2">
       <div class="form-group">
-        <label for="favSize">Menge (optional)</label>
+        <label for="favSize">{{ 'modals.editFavourite.amountOptional' | transloco }}</label>
         <input
           type="number"
           id="favSize"
           class="form-input"
-          placeholder="z.B. 500"
+          [attr.placeholder]="'modals.addItem.sizePlaceholder' | transloco"
           [ngModel]="size()"
           (ngModelChange)="setSize($event)"
           name="favSize"
@@ -57,7 +57,7 @@
         />
       </div>
       <div class="form-group">
-        <label for="favUnit">Einheit</label>
+        <label for="favUnit">{{ 'modals.editFavourite.unit' | transloco }}</label>
         <select
           id="favUnit"
           class="form-select"
@@ -74,7 +74,7 @@
 
     <!-- Submit Button -->
     <button type="submit" class="submit-btn" [disabled]="!name().trim()">
-      Speichern
+      {{ 'common.save' | transloco }}
     </button>
   </form>
 </div>
