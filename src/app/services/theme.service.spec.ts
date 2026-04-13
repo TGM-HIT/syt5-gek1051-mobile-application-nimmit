@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { ThemeService, Theme } from './theme.service';
+import { ThemeService } from './theme.service';
+import { Theme } from '../types';
 import { PLATFORM_ID } from '@angular/core';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 

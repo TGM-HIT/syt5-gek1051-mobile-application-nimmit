@@ -63,7 +63,7 @@
   font-size: var(--font-size-base);
   color: var(--color-text);
   background-color: var(--color-elevated);
-  border: 1px solid var(--color-border);
+  border: none;
   border-radius: var(--radius-default);
   outline: none;
   transition: border-color 0.2s ease;
@@ -114,9 +114,9 @@
   padding: var(--spacing-4);
   font-size: var(--font-size-base);
   font-weight: 600;
-  color: var(--color-danger-700);
-  background-color: color-mix(in srgb, var(--color-danger-500) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-danger-500) 25%, transparent);
+  color: var(--color-text);
+  background-color: var(--color-error);
+  border: none;
   border-radius: var(--radius-default);
   cursor: pointer;
   transition: all 0.2s ease;

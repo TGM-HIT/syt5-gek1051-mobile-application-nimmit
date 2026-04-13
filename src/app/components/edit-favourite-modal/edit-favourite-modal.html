@@ -1,0 +1,80 @@
+<div class="modal-content">
+  <!-- Header -->
+  <div class="modal-header">
+    <h2 class="modal-title">{{ 'modals.editFavourite.title' | transloco }}</h2>
+    <button type="button" class="close-btn" (click)="close()" [attr.aria-label]="'common.close' | transloco">
+      <lucide-icon [img]="icons.X" [size]="24" [strokeWidth]="2"></lucide-icon>
+    </button>
+  </div>
+
+  <!-- Form -->
+  <form class="modal-form" (ngSubmit)="submit()">
+    <!-- Produktname -->
+    <div class="form-group">
+      <label for="favName">{{ 'modals.editFavourite.name' | transloco }}</label>
+      <input
+        type="text"
+        id="favName"
+        class="form-input"
+        [attr.placeholder]="'modals.editFavourite.namePlaceholder' | transloco"
+        [ngModel]="name()"
+        (ngModelChange)="name.set($event)"
+        name="favName"
+        required
+      />
+    </div>
+
+    <!-- Kategorie -->
+    <div class="form-group">
+      <label for="favCategory">{{ 'modals.editFavourite.category' | transloco }}</label>
+      <select
+        id="favCategory"
+        class="form-input"
+        [ngModel]="category()"
+        (ngModelChange)="setCategory($event)"
+        name="favCategory"
+      >
+        @for (cat of categories; track cat) {
+          <option [value]="cat">{{ ('categories.' + cat) | transloco }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Menge und Einheit -->
+    <div class="form-row form-row-2">
+      <div class="form-group">
+        <label for="favSize">{{ 'modals.editFavourite.amountOptional' | transloco }}</label>
+        <input
+          type="number"
+          id="favSize"
+          class="form-input"
+          [attr.placeholder]="'modals.addItem.sizePlaceholder' | transloco"
+          [ngModel]="size()"
+          (ngModelChange)="setSize($event)"
+          name="favSize"
+          min="0"
+          step="0.1"
+        />
+      </div>
+      <div class="form-group">
+        <label for="favUnit">{{ 'modals.editFavourite.unit' | transloco }}</label>
+        <select
+          id="favUnit"
+          class="form-select"
+          [ngModel]="unit()"
+          (ngModelChange)="setUnit($event)"
+          name="favUnit"
+        >
+          @for (u of units; track u) {
+            <option [value]="u">{{ ('units.' + u) | transloco }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="submit-btn" [disabled]="!name().trim()">
+      {{ 'common.save' | transloco }}
+    </button>
+  </form>
+</div>

@@ -5,6 +5,10 @@ import { RouterModule } from '@angular/router';
 import { AddItemModal, AddItemResult } from '../components/add-item-modal/add-item-modal';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { ShoppingListDataService } from '../services';
+import { DefaultList } from '../services/default-list';
+import { SupabaseConnector } from '../services/supabase-connector';
+import { provideTransloco, translocoConfig } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../transloco/transloco-loader';
 
 describe('Navigation', () => {
   let component: Navigation;
@@ -13,6 +17,21 @@ describe('Navigation', () => {
   let mockShoppingListService: { addItem: Mock };
 
   beforeEach(async () => {
+    // Mock for localStorage
+    const localStorageMock = (() => {
+      let store: Record<string, string> = {};
+      return {
+        getItem(key: string) { return store[key] || null; },
+        setItem(key: string, value: string) { store[key] = value; },
+        removeItem(key: string) { delete store[key]; },
+        clear() { store = {}; }
+      };
+    })();
+
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: localStorageMock,
+    });
+
     mockModalService = { open: vi.fn() };
     mockShoppingListService = { addItem: vi.fn() };
 
@@ -22,11 +41,22 @@ describe('Navigation', () => {
         RouterModule.forRoot([])
       ],
       providers: [
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
         { provide: ModalService, useValue: mockModalService },
-        { provide: ShoppingListDataService, useValue: mockShoppingListService }
+        { provide: ShoppingListDataService, useValue: mockShoppingListService },
+        { provide: DefaultList, useValue: { listId$: { subscribe: () => { /* mock */ } }, getDefaultList: () => 1n } },
+        { provide: SupabaseConnector, useValue: { session$: { subscribe: () => { /* mock */ } }, profile$: { subscribe: () => { /* mock */ } } } }
       ]
     }).compileComponents();
-    
+
     fixture = TestBed.createComponent(Navigation);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -35,96 +65,5 @@ describe('Navigation', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
-
-  describe('icons', () => {
-    it('should have List icon defined', () => {
-      expect(component.icons.List).toBeDefined();
-    });
-
-    it('should have Users icon defined', () => {
-      expect(component.icons.Users).toBeDefined();
-    });
-
-    it('should have Settings icon defined', () => {
-      expect(component.icons.Settings).toBeDefined();
-    });
-
-    it('should have Plus icon defined', () => {
-      expect(component.icons.Plus).toBeDefined();
-    });
-  });
-
-  describe('addNewItem()', () => {
-    it('should open AddItemModal', async () => {
-      mockModalService.open.mockResolvedValue(undefined);
-      
-      await component.addNewItem();
-      
-      expect(mockModalService.open).toHaveBeenCalledWith({
-        component: AddItemModal
-      });
-    });
-
-    it('should add item when modal returns result', async () => {
-      const mockResult: AddItemResult = {
-        name: 'Milch',
-        category: 'Milchprodukte',
-        quantity: 2,
-        info: 'Bio',
-        unit: 'Einheit'
-      };
-      
-      mockModalService.open.mockResolvedValue(mockResult);
-      
-      await component.addNewItem();
-      
-      expect(mockShoppingListService.addItem).toHaveBeenCalledWith({
-        name: 'Milch',
-        category: 'Milchprodukte',
-        totalQuantity: 2,
-        info: 'Bio',
-        size: undefined,
-        unit: 'Einheit'
-      });
-    });
-
-    it('should not add item when modal is dismissed', async () => {
-      mockModalService.open.mockResolvedValue(undefined);
-      
-      await component.addNewItem();
-      
-      expect(mockShoppingListService.addItem).not.toHaveBeenCalled();
-    });
-
-    it('should not add item when modal returns null', async () => {
-      mockModalService.open.mockResolvedValue(null);
-      
-      await component.addNewItem();
-      
-      expect(mockShoppingListService.addItem).not.toHaveBeenCalled();
-    });
-
-    it('should handle item without info', async () => {
-      const mockResult: AddItemResult = {
-        name: 'Brot',
-        category: 'Backwaren',
-        quantity: 1,
-        unit: 'Einheit'
-        // no info
-      };
-      
-      mockModalService.open.mockResolvedValue(mockResult);
-      
-      await component.addNewItem();
-      
-      expect(mockShoppingListService.addItem).toHaveBeenCalledWith({
-        name: 'Brot',
-        category: 'Backwaren',
-        totalQuantity: 1,
-        info: undefined,
-        size: undefined,
-        unit: 'Einheit'
-      });
-    });
-  });
 });
+

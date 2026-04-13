@@ -22,6 +22,14 @@ Object.defineProperty(globalThis, 'localStorage', {
   writable: true,
 });
 
+Object.defineProperty(globalThis.navigator, 'locks', {
+  value: {
+    request: vi.fn(() => Promise.resolve()),
+    query: vi.fn(() => Promise.resolve())
+  },
+  configurable: true
+});
+
 // Mock matchMedia
 Object.defineProperty(globalThis, 'matchMedia', {
   value: vi.fn().mockImplementation(query => ({
@@ -39,6 +47,12 @@ Object.defineProperty(globalThis, 'matchMedia', {
 
 describe('App', () => {
   beforeEach(async () => {
+    globalThis.Worker = class {
+      addEventListener() { /* mock */ }
+      removeEventListener() { /* mock */ }
+      postMessage() { /* mock */ }
+      terminate() { /* mock */ }
+    } as any;
     localStorageMock.clear();
     vi.clearAllMocks();
     TestBed.resetTestingModule();
@@ -53,3 +67,4 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 });
+

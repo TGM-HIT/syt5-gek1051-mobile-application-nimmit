@@ -100,6 +100,10 @@ export class PowerSyncService {
   public ready$ = this.isReady$.asObservable();
   public readonly error = signal<boolean>(false);
 
+  private authWatcherEnabled = false;
+
+  private readonly isCypressRun = typeof window !== 'undefined' && !!(window as any).Cypress;
+
   private dbConnected = false;
   private subscribed = false;
   private syncStreamNames = ['watch_lists', 'watch_categories', "watch_items"];
@@ -108,9 +112,11 @@ export class PowerSyncService {
 
 
   constructor() {
+    const cypressFlags = this.isCypressRun ? { enableMultiTabs: false } : undefined;
     const factory = new WASQLiteOpenFactory({
-      dbFilename: 'app.db',
-      vfs: WASQLiteVFS.OPFSCoopSyncVFS,
+      dbFilename: 'app_v6.db',
+      vfs: this.isCypressRun ? WASQLiteVFS.IDBBatchAtomicVFS : WASQLiteVFS.OPFSCoopSyncVFS,
+      ...(cypressFlags ? { flags: cypressFlags } : {}),
       // Specify the path to the worker script
       worker: '@powersync/worker/WASQLiteDB.umd.js'
     });
@@ -118,12 +124,17 @@ export class PowerSyncService {
     this.db = new PowerSyncDatabase({
       schema: publicSchema,
       database: factory,
+      ...(cypressFlags ? { flags: cypressFlags } : {}),
 
       sync: {
         // Specify the path to the worker script
         worker: '@powersync/worker/SharedSyncImplementation.umd.js'
       }
     });
+
+    if (typeof window !== 'undefined') {
+        (window as any).powerSync = this.db;
+    }
 
     this.currentUserId = this.getOrCreateUserId();
   }
@@ -172,10 +183,21 @@ export class PowerSyncService {
 
   watchWithCallback(sql: string, callback: (result: QueryResult) => void, parameters: unknown[] = []) {
     const injectedParameters = parameters.map(param => param === USER_ID_PLACEHOLDER ? this.currentUserId : param);
-    this.db.watchWithCallback(sql, injectedParameters, {
-      onResult: callback,
-      onError: (error) => console.error('Watch error:', error)
-    }, {triggerImmediate: true});
+
+    const controller = new AbortController();
+    this.db.watchWithCallback(
+      sql,
+      injectedParameters,
+      {
+        onResult: callback,
+        onError: (error) => console.error('Watch error:', error)
+      },
+      {
+        signal: controller.signal
+      }
+    );
+
+    return () => controller.abort();
   }
 
   getOrCreateUserId(): string {
@@ -233,16 +255,18 @@ export class PowerSyncService {
       }
     }
     if (this.currentUserId !== session.user.id) {
-      if (this.currentUserId === null) {
-        this.currentUserId = this.getOrCreateUserId();
-      } else {
-        this.migrateUserIid(this.currentUserId, session.user.id)
-      }
+      const previousUserId = this.currentUserId;
+      await this.migrateUserIid(previousUserId, session.user.id);
+      this.currentUserId = session.user.id;
     }
+
     await this.db.connect(this.connector);
     await this.subscibeAllSyncStreams();
-    await this.db.waitForFirstSync();
     this.dbConnected = true;
+
+    void this.db.waitForFirstSync().catch((error) => {
+      console.error('PowerSync first sync failed:', error);
+    });
   }
 
   async disconnectDb() {
@@ -267,6 +291,11 @@ export class PowerSyncService {
       return;
     }
 
+    if (this.authWatcherEnabled) {
+      return;
+    }
+    this.authWatcherEnabled = true;
+
     this.connector.client.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN") {
         if (!this.dbConnected) {
@@ -279,9 +308,10 @@ export class PowerSyncService {
           }
         }
       } else if (event === "SIGNED_OUT") {
-        if (this.dbConnected) {
-          await this.disconnectDb();
-        }
+        this.isReady$.next(false);
+        await this.disconnectDb();
+        this.currentUserId = this.getOrCreateUserId();
+        this.isReady$.next(true);
       }
     });
   }
@@ -291,14 +321,21 @@ export class PowerSyncService {
       await this.db.init();
       if (connector) {
         this.connector = connector;
+        this.toggleSignInWatcher();
         const session = await connector.getSession();
         if (!session) {
           console.warn('No active session found for PowerSync setup - database will operate in offline mode only with local user ID: ', this.currentUserId);
-          this.toggleSignInWatcher();
           this.isReady$.next(true);
           return;
         }
         this.currentUserId = session.user.id;
+
+        // Cypress E2E runs use a mocked Supabase session. Avoid connecting to the real
+        // PowerSync backend, as it would require a valid access token and can hang/flap in CI.
+        if (this.isCypressRun) {
+          this.isReady$.next(true);
+          return;
+        }
         if (navigator.onLine) {
           await this.connectDb(session);
         }

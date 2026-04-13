@@ -1,13 +1,16 @@
 describe('Authentication', () => {
   beforeEach(() => {
     cy.visit('/login');
+    cy.waitForAppReady();
   });
 
   it('should display login page', () => {
-    cy.get('h1').contains('Anmelden');
+    // Don't assert translated strings here (CI locale can differ).
+    cy.location('pathname').should('include', '/login');
+    cy.get('section.login-card').should('be.visible');
     cy.get('input#email').should('be.visible');
     cy.get('input#password').should('be.visible');
-    cy.get('button[type="submit"]').contains('Anmelden');
+    cy.get('button[type="submit"]').should('be.visible');
   });
 
   it('should show validation errors on empty submit', () => {
@@ -24,17 +27,25 @@ describe('Authentication', () => {
   });
 
   it('should navigate to register page', () => {
-    cy.contains('Hier registrieren').click();
-    cy.url().should('include', '/register');
-    cy.get('h1').contains('Konto erstellen');
+    cy.get('button[type="button"].login-btn').click();
+    cy.location('pathname').should('include', '/register');
+    cy.get('section.register-card').should('be.visible');
+    cy.get('input#username').should('be.visible');
   });
 
   // Note: Actual login to Supabase could be simulated if we had test credentials
   // but for E2E basics we ensure the UI behaves properly.
   it('should allow user to type in credentials and attempt login', () => {
+    cy.intercept('POST', '**/auth/v1/token?grant_type=password', {
+      statusCode: 400,
+      body: { error: 'invalid_credentials', error_description: 'Invalid login credentials' }
+    }).as('loginRequest');
+
     cy.get('input#email').type('test@example.com');
     cy.get('input#password').type('wrong_password');
     cy.get('button[type="submit"]').click();
+
+    cy.wait('@loginRequest');
 
     // Just check the feedback or if the button was clicked
     // The exact error depends on Supabase response

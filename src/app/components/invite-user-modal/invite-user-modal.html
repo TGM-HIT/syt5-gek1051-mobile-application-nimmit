@@ -1,7 +1,7 @@
 <div class="modal-content">
   <div class="modal-header">
-    <h2 class="modal-title">Nutzer einladen</h2>
-    <button class="close-btn" (click)="close()" [disabled]="isSubmitting()">
+    <h2 class="modal-title">{{ 'modals.inviteUser.title' | transloco }}</h2>
+    <button type="button" class="close-btn" (click)="close()" [disabled]="isSubmitting()" [attr.aria-label]="'common.close' | transloco">
       <lucide-icon [img]="icons.X" [size]="24" [strokeWidth]="2"></lucide-icon>
     </button>
   </div>
@@ -9,7 +9,7 @@
   <form class="modal-form" (ngSubmit)="submit()">
     <div class="form-group users-section">
       <div class="users-header">
-        <p class="users-title">Nutzer in dieser Liste</p>
+        <p class="users-title">{{ 'modals.inviteUser.usersInList' | transloco }}</p>
         <span class="users-count">{{ this.data()?.currentUsers?.length || 0 }}</span>
       </div>
 
@@ -21,24 +21,24 @@
                 {{ (user.username || user.email).charAt(0).toUpperCase() }}
               </div>
               <div class="user-meta">
-                <p class="user-name">{{ user.username || 'Unbekannt' }}</p>
+                <p class="user-name">{{ user.username || ('modals.inviteUser.unknown' | transloco) }}</p>
                 <p class="user-email">{{ user.email }}</p>
               </div>
             </li>
           }
         </ul>
       } @else {
-        <p class="users-empty">Noch keine Nutzer in dieser Liste.</p>
+        <p class="users-empty">{{ 'modals.inviteUser.usersEmpty' | transloco }}</p>
       }
     </div>
     <div class="form-group">
-      <label for="inviteEmail">E-Mail des Nutzers *</label>
+      <label for="inviteEmail">{{ 'modals.inviteUser.emailLabel' | transloco }}</label>
       <div class="email-row">
         <input
           type="email"
           id="inviteEmail"
           class="form-input"
-          placeholder="name@beispiel.at"
+          [attr.placeholder]="'modals.inviteUser.emailPlaceholder' | transloco"
           [ngModel]="inviteEmail()"
           (ngModelChange)="onEmailChange($event)"
           name="inviteEmail"
@@ -50,7 +50,7 @@
           (click)="resolveUsername()"
           [disabled]="isResolving() || isSubmitting()"
         >
-          {{ isResolving() ? 'Prüfen...' : 'Prüfen' }}
+          {{ isResolving() ? ('modals.inviteUser.checking' | transloco) : ('modals.inviteUser.check' | transloco) }}
         </button>
       </div>
     </div>
@@ -58,12 +58,12 @@
     @if (hasChecked()) {
       <div class="verification-box" [class.success]="resolvedUsername()" [class.error]="!!errorMessage()">
         @if (resolvedUsername()) {
-          <p class="verification-label">Supabase-Bestätigung</p>
-          <p class="verification-value">Benutzername: {{ resolvedUsername() }}</p>
+          <p class="verification-label">{{ 'modals.inviteUser.supabaseVerification' | transloco }}</p>
+          <p class="verification-value">{{ 'modals.inviteUser.usernameLabel' | transloco : { username: resolvedUsername() } }}</p>
         } @else if (errorMessage()) {
           <p class="verification-error">{{ errorMessage() }}</p>
         } @else {
-          <p class="verification-error">Kein Benutzername verfügbar.</p>
+          <p class="verification-error">{{ 'modals.inviteUser.noUsername' | transloco }}</p>
         }
       </div>
     }
@@ -73,7 +73,7 @@
     }
 
     <button type="submit" class="submit-btn" [disabled]="!canSubmit">
-      {{ isSubmitting() ? 'Sende Einladung...' : 'Einladung senden' }}
+      {{ isSubmitting() ? ('modals.inviteUser.sending' | transloco) : ('modals.inviteUser.sendInvite' | transloco) }}
     </button>
   </form>
 </div>

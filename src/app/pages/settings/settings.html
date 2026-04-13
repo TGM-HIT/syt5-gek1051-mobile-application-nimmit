@@ -1,0 +1,93 @@
+<div class="page-container">
+  <h1>{{ 'settings.title' | transloco }}</h1>
+
+  <div class="setting-item">
+    <span class="setting-label">{{ 'settings.theme' | transloco }}</span>
+    <div class="theme-buttons">
+      <button class="theme-btn" [class.active]="themeService.theme() === 'light'" (click)="setTheme('light')">
+        {{ 'settings.themeOptions.light' | transloco }}
+      </button>
+      <button class="theme-btn" [class.active]="themeService.theme() === 'dark'" (click)="setTheme('dark')">
+        {{ 'settings.themeOptions.dark' | transloco }}
+      </button>
+      <button class="theme-btn" [class.active]="themeService.theme() === 'system'" (click)="setTheme('system')">
+        {{ 'settings.themeOptions.system' | transloco }}
+      </button>
+    </div>
+  </div>
+
+  <div class="setting-item">
+      <span class="setting-label">Bezugswährung</span>
+      <div class="theme-buttons">
+          @for (c of currencyService.availableCurrencies; track c) {
+            <button
+              class="theme-btn"
+              [class.active]="currencyService.currentCurrency() === c"
+              (click)="currencyService.setCurrency(c)"
+            >
+              {{ c }}
+            </button>
+          }
+      </div>
+  </div>
+
+  <div class="setting-item">
+    <span class="setting-label">{{ 'settings.language' | transloco }}</span>
+    <div class="dropdown-container">
+      <button class="dropdown-trigger" (click)="toggleLanguageDropdown()" type="button">
+        <span class="dropdown-value">{{ ('settings.languages.' + languageService.language()) | transloco }}</span>
+        <lucide-angular [img]="icons.ChevronDown" [class.open]="isLanguageDropdownOpen()"></lucide-angular>
+      </button>
+
+      @if (isLanguageDropdownOpen()) {
+        <div class="dropdown-menu">
+          @for (lang of languages; track lang) {
+            <button class="dropdown-option" type="button" (click)="selectLanguage(lang)">
+              <span>{{ ('settings.languages.' + lang) | transloco }}</span>
+              @if (isLanguageSelected(lang)) {
+                <lucide-angular class="check-icon" [img]="icons.Check"></lucide-angular>
+              }
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="setting-item">
+    <span class="setting-label">{{ 'settings.defaultList' | transloco }}</span>
+    <div class="dropdown-container">
+      <button class="dropdown-trigger" (click)="toggleListDropdown()" type="button">
+        <span class="dropdown-value">{{ selectedListName() || ('common.none' | transloco) }}</span>
+        <lucide-angular [img]="icons.ChevronDown" [class.open]="isListDropdownOpen()"></lucide-angular>
+      </button>
+
+      @if (isListDropdownOpen()) {
+        <div class="dropdown-menu">
+          <button class="dropdown-option" type="button" (click)="selectNoDefaultList()">
+            <span>{{ 'common.none' | transloco }}</span>
+            @if (isNoneSelected()) {
+              <lucide-angular class="check-icon" [img]="icons.Check"></lucide-angular>
+            }
+          </button>
+
+          @for (list of lists(); track list.id.toString()) {
+            <button class="dropdown-option" type="button" (click)="selectDefaultList(list.id)">
+              <span>{{ list.name }}</span>
+              @if (isListSelected(list.id)) {
+                <lucide-angular class="check-icon" [img]="icons.Check"></lucide-angular>
+              }
+            </button>
+          } @empty {
+            <div class="dropdown-empty">{{ 'settings.noListsFound' | transloco }}</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="setting-item">
+    <span class="setting-label">{{ 'settings.account' | transloco }}</span>
+    <button type="button" class="theme-btn" routerLink="/account">{{ 'settings.accountSettings' | transloco }}</button>
+  </div>
+</div>

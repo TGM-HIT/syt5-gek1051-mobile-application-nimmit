@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { EditListModal, EditListData, EditListResult } from './edit-list-modal';
 import { ModalService } from '../../services/modal.service';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { provideTransloco, translocoConfig } from '@jsverse/transloco';
+import { TranslocoAppLoader } from '../../transloco/transloco-loader';
 
 describe('EditListModal', () => {
   let component: EditListModal;
@@ -17,6 +19,15 @@ describe('EditListModal', () => {
     await TestBed.configureTestingModule({
       imports: [EditListModal],
       providers: [
+        provideTransloco({
+          config: translocoConfig({
+            availableLangs: ['de', 'en'],
+            defaultLang: 'de',
+            reRenderOnLangChange: true,
+            prodMode: true,
+          }),
+          loader: TranslocoAppLoader,
+        }),
         { provide: ModalService, useValue: mockModalService }
       ]
     }).compileComponents();
@@ -137,24 +148,28 @@ describe('EditListModal', () => {
   });
 
   describe('deleteList()', () => {
-    it('should close modal with delete action when confirmed', () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    it('should close modal with delete action when user is alone in list', () => {
+      (component as any).data = () => ({
+        name: 'Meine Liste',
+        description: 'Beschreibung',
+        aloneInList: true,
+      } as EditListData);
 
       component.deleteList();
 
-      expect(confirmSpy).toHaveBeenCalled();
       expect(mockModalService.close).toHaveBeenCalledWith({ action: 'delete' });
-      confirmSpy.mockRestore();
     });
 
-    it('should not close modal when delete is canceled', () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    it('should close modal with leave action when user is not alone in list', () => {
+      (component as any).data = () => ({
+        name: 'Meine Liste',
+        description: 'Beschreibung',
+        aloneInList: false,
+      } as EditListData);
 
       component.deleteList();
 
-      expect(confirmSpy).toHaveBeenCalled();
-      expect(mockModalService.close).not.toHaveBeenCalledWith({ action: 'delete' });
-      confirmSpy.mockRestore();
+      expect(mockModalService.close).toHaveBeenCalledWith({ action: 'leave' });
     });
   });
 

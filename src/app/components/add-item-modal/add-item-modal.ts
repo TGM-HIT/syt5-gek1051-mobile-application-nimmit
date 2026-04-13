@@ -1,17 +1,22 @@
-import { Component, inject, signal, input, OnInit } from '@angular/core';
+import { Component, inject, signal, input, OnInit, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, X, Plus, Minus } from 'lucide-angular';
+import { LucideAngularModule, X, Plus, Minus, Star } from 'lucide-angular';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ModalService } from '../../services/modal.service';
 import { Currency, ShoppingItemRow, ShoppingListDataService, Unit } from '../../services/shopping-list-data.service';
 import { Category } from '../../types';
 import { PowerSyncService } from '../../services/powersync';
 import { CurrencyService } from '../../services/currency.service';
+import { ShoppingListService } from '../../services/shopping-list.service';
+import { FavouriteItem } from '../../models';
 
 type EditableShoppingItem = Pick<ShoppingItemRow, 'id' | 'name' | 'category' | 'totalQuantity' | 'info' | 'size' | 'unit' | 'price' | 'currency'>;
 
 export interface AddItemData {
   editItem?: EditableShoppingItem;
   prefillName?: string;
+  prefillUnit?: Unit;
+  prefillSize?: number;
 }
 
 export interface AddItemResult {
@@ -28,22 +33,50 @@ export interface AddItemResult {
 
 @Component({
   selector: 'app-add-item-modal',
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, TranslocoModule],
   templateUrl: './add-item-modal.html',
   styleUrl: './add-item-modal.scss',
 })
 export class AddItemModal implements OnInit {
   private readonly modalService = inject(ModalService);
+  private readonly transloco = inject(TranslocoService);
+
   private readonly shoppingListDataService = inject(ShoppingListDataService);
   private readonly currencyService = inject(CurrencyService);
-
+  private readonly shoppingListService = inject(ShoppingListService);
   // Input data from modal service
   readonly data = input<AddItemData>();
 
-  readonly icons = { X, Plus, Minus };
+  readonly icons = { X, Plus, Minus, Star };
+
+  // Favourites
+  readonly favourites = this.shoppingListService.favourites;
+  readonly isCurrentFavourite = computed(() => {
+    return this.shoppingListService.isCurrentFavourite(this.name(), this.unit(), this.size());
+  });
+
+  readonly filteredFavourites = computed(() => {
+    const query = this.name().toLowerCase().trim();
+    const favs = this.favourites();
+    if (!query) {
+      return favs;
+    }
+    return favs.filter((fav: FavouriteItem) => fav.name.toLowerCase().includes(query));
+  });
 
   // Form State
   readonly name = signal('');
+  readonly showAutocomplete = signal(false);
+  readonly isNameEmpty = computed(() => !this.name().trim());
+
+  readonly shouldShowAutocomplete = computed(() =>
+    this.showAutocomplete() && !this.isNameEmpty() && this.filteredFavourites().length > 0
+  );
+
+  readonly shouldShowFavouritesList = computed(() =>
+    this.isNameEmpty() && this.favourites().length > 0
+  );
+
   readonly category = signal('Sonstiges');
   readonly quantity = signal(1);
   readonly info = signal('');
@@ -55,6 +88,9 @@ export class AddItemModal implements OnInit {
   // Edit mode
   readonly isEditMode = signal(false);
   private editItemId: string | undefined;
+
+  readonly modalTitle = computed(() => this.isEditMode() ? 'modals.addItem.titleEdit' : 'modals.addItem.titleAdd');
+  readonly submitButtonText = computed(() => this.isEditMode() ? 'common.save' : 'common.add');
 
   // Predefined categories
   readonly categories = signal<Category[]>([{ id: BigInt(9), name: 'Sonstiges', created_at: new Date().toISOString() }]);
@@ -96,8 +132,16 @@ export class AddItemModal implements OnInit {
       this.unit.set(item.unit || 'Einheit');
       this.currency.set(item.currency || this.currencyService.currentCurrency());
       this.price.set(item.price || undefined);
-    } else if (inputData?.prefillName) {
-      this.name.set(inputData.prefillName);
+    } else if (inputData) {
+      if (inputData.prefillName) {
+        this.name.set(inputData.prefillName);
+      }
+      if (inputData.prefillUnit) {
+        this.unit.set(inputData.prefillUnit);
+      }
+      if (inputData.prefillSize !== undefined) {
+        this.size.set(inputData.prefillSize);
+      }
     }
   }
 
@@ -116,7 +160,7 @@ export class AddItemModal implements OnInit {
   }
 
   submit(): void {
-    if (!this.name().trim()) {
+    if (this.isNameEmpty()) {
       return;
     }
 
@@ -133,5 +177,36 @@ export class AddItemModal implements OnInit {
     };
 
     this.modalService.close(result);
+  }
+
+  toggleFavourite(): void {
+    if (this.isNameEmpty()) return;
+    this.shoppingListService.toggleFavourite(this.name(), this.category(), this.unit(), this.size());
+  }
+
+  getFavouriteDetails(fav: FavouriteItem): string {
+    const sizeStr = fav.size ? `${fav.size} ` : '';
+    const unitStr = fav.unit !== 'Einheit' ? this.transloco.translate(`units.${fav.unit}`) : '';
+    return `${sizeStr}${unitStr}`;
+  }
+
+  hasFavouriteDetails(fav: FavouriteItem): boolean {
+    return !!(fav.size || fav.unit !== 'Einheit');
+  }
+
+  selectFavourite(fav: FavouriteItem): void {
+    this.name.set(fav.name);
+    this.unit.set(fav.unit);
+    this.size.set(fav.size);
+    this.showAutocomplete.set(false);
+  }
+
+  onNameChange(newName: string): void {
+    this.name.set(newName);
+    this.showAutocomplete.set(true);
+  }
+
+  hideAutocomplete(): void {
+    this.showAutocomplete.set(false);
   }
 }

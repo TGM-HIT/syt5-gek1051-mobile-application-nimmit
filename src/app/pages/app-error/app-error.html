@@ -1,20 +1,19 @@
 <section class="app-error-page">
 	<header class="app-error-header">
-		<h1>App Error aufgetreten</h1>
-		<p>Beim Laden der Website ist ein unerwarteter Fehler aufgetreten.</p>
+		<h1>{{ 'appError.title' | transloco }}</h1>
+		<p>{{ 'appError.subtitle' | transloco }}</p>
 	</header>
 
 	<article class="app-error-card">
-		<h2>Bitte versuche es erneut</h2>
+		<h2>{{ 'appError.cardTitle' | transloco }}</h2>
 		<p class="app-error-message">
-			Lade die Website neu. Falls der Fehler weiterhin auftritt, sende bitte einen
-			Bug-Report an
+			{{ 'appError.message' | transloco }}
 			<a href="mailto:fschmid@student.tgm.ac.at">fschmid@student.tgm.ac.at</a>.
 		</p>
 
 		<div class="actions">
 			<button class="action-btn secondary" type="button" onclick="window.location.reload()">
-				Website neu laden
+				{{ 'appError.reload' | transloco }}
 			</button>
 		</div>
 	</article>
