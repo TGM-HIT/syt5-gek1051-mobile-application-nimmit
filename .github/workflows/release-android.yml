@@ -37,6 +37,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Add Android Platform
+        run: npx cap add android --force
+
       - name: Sync Capacitor
         run: npx cap sync android
 
